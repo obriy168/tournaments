@@ -1,19 +1,20 @@
-"""create_order_table
+"""Initial migration
 
-Revision ID: 72ca8535d810
-Revises: 0d217bd67623
-Create Date: 2026-04-05 13:36:51.938407
+Revision ID: 07bedd5ca031
+Revises: 
+Create Date: 2026-04-05 22:56:21.328831
 
 """
 from typing import Sequence, Union
 
 from alembic import op
-import sqlmodel
 import sqlalchemy as sa
+import sqlmodel
+
 
 # revision identifiers, used by Alembic.
-revision: str = '72ca8535d810'
-down_revision: Union[str, Sequence[str], None] = '0d217bd67623'
+revision: str = '07bedd5ca031'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
