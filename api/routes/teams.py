@@ -3,6 +3,7 @@ from database.schemas.schema import Team
 from services.teams_service import TeamsService
 from fastapi import Depends
 from typing import Annotated
+from services.models.team_model import TeamModel
 
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -17,3 +18,7 @@ async def read_team(team_id: int, teams_service: TeamsService = Depends(TeamsSer
 @team_router.get("/", dependencies=[Depends(TeamsService)])
 async def read_item(teams_service: Annotated[TeamsService, Depends(TeamsService)]):
     return await teams_service.get_all_teams()
+
+@team_router.post("/", dependencies=[Depends(TeamsService)])
+async def create_team(team: TeamModel, teams_service: Annotated[TeamsService, Depends(TeamsService)]):
+    return await teams_service.create_team(team)

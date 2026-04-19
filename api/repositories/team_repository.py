@@ -17,3 +17,9 @@ class TeamRepository:
     async def get_teams(self) -> list[Team]:
         result = await self.db.execute(select(Team))
         return result.scalars().all()
+    
+    async def create_team(self, team: Team) -> Team:
+        self.db.add(team)
+        await self.db.commit()
+        await self.db.refresh(team)
+        return team
