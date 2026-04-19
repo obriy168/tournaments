@@ -1,21 +1,13 @@
-from fastapi import FastAPI, Body
-from pydantic import BaseModel, Field
-from typing import Annotated
-from database.schemas.schema import Team, Tournament
-from sqlmodel import create_engine, Session, SQLModel
+from fastapi import FastAPI, Depends
 from routes.tournaments import tournament_router
 from routes.teams import team_router
-
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-engine = create_engine(os.getenv("DATABASE_URL"))
-
-app = FastAPI()
+from repositories.team_repository import TeamRepository
+from services.teams_service import TeamsService
+from util.database import get_db
 
 
+
+app = FastAPI(dependencies=[Depends(get_db), Depends(TeamRepository), Depends(TeamsService)])
     
 app.include_router(tournament_router)
 app.include_router(team_router)
