@@ -3,5 +3,5 @@ uvicorn
 pydantic
 sqlmodel
 alembic
-psycopg2
+asyncpg
 dotenv

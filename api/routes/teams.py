@@ -1,37 +1,24 @@
-from fastapi import FastAPI, APIRouter
-from sqlmodel import create_engine, Session
-from dotenv import load_dotenv
+from fastapi import APIRouter
 from database.schemas.schema import Team
-import os
-
-load_dotenv()
-
-engine = create_engine(os.getenv("DATABASE_URL"))
+from services.teams_service import TeamsService
+from fastapi import Depends
+from typing import Annotated
+from services.models.team_model import TeamModel
 
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 
 @team_router.get("/{team_id}")
-async def read_team(team_id: int):
-    with Session(engine) as session:
-        team = session.get(Team, team_id)
-        if team is None:
-            return {"error": "Team not found"}
-        return team
+async def read_team(team_id: int, teams_service: TeamsService = Depends(TeamsService)):
+    team = await teams_service.get_team_by_id(team_id)
+    if team is None:
+        return {"error": "Team not found"}
+    return team
 
 
-@team_router.get("/")
-async def read_item():
-    with Session(engine) as session:
-        teams = session.get(Team).all()
-        return teams
-    
+@team_router.get("/", dependencies=[Depends(TeamsService)])
+async def read_item(teams_service: Annotated[TeamsService, Depends(TeamsService)]):
+    return await teams_service.get_all_teams()
 
-
-
-@team_router.post("/")
-async def create_team(team: Team):
-    with Session(engine) as session:
-        session.add(team)
-        session.commit()
-        session.refresh(team)
-        return team
+@team_router.post("/", dependencies=[Depends(TeamsService)])
+async def create_team(team: TeamModel, teams_service: Annotated[TeamsService, Depends(TeamsService)]):
+    return await teams_service.create_team(team)
