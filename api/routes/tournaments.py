@@ -1,44 +1,47 @@
-from fastapi import FastAPI, APIRouter
-from sqlmodel import create_engine, Session
-from dotenv import load_dotenv
 from database.schemas.schema import Tournament
-import os
+from services.models.tournament_model import TournamentModel
+from services.tournaments_service import TournamentsService
+from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
 
-load_dotenv()
-
-engine = create_engine(os.getenv("DATABASE_URL"))
+@tournament_router.get("/{tournament_id}")
+async def read_tournament_by_id(tournament_id: int, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    tournament = await tournaments_service.get_tournament_by_id(tournament_id)
+    if not tournament:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return tournament
 
 @tournament_router.get("/")
-async def get_tournaments():
-    with Session(engine) as session:
-        tournaments = session.query(Tournament).all()
-        return tournaments
-    
-@tournament_router.post("/test-tournament")
-async def test_tournament():
-    with Session(engine) as session:
-        tournament = Tournament(
-            name="Test Tournament",
-            description="This is a test tournament",
-            start_date="2026-01-01T00:00:00Z",
-            registartion_start_date="2025-12-01T00:00:00Z",
-            registration_end_date="2025-12-31T23:59:59Z",
-            max_teams=16,
-            min_user_count=1,
-            max_user_count=5,
-            status="Draft"
-        )
-        session.add(tournament)
-        session.commit()
-    return {"message": "Tournament created successfully"}
+async def read_tournaments(tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    tournaments = await tournaments_service.get_all_tournaments()
+    if not tournaments:
+        return HTTPException(status_code=404, detail="Tournaments not found")
+    return HTTPException(status_code=200, detail=tournaments)
 
+@tournament_router.post("/")
+async def create_tournament(tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    return await tournaments_service.create_tournament(tournament)
 
-@tournament_router.post("/tournament")
-async def create_tournament(tournament: Tournament):
-    with Session(engine) as session:
-        session.add(tournament)
-        session.commit()
-        session.refresh(tournament)
-        return tournament
+@tournament_router.put("/{tournament_id}")
+async def update_tournament(tournament_id: int, tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    tournament = await tournaments_service.update_tournament(tournament_id, tournament)
+    if not tournament:
+        return HTTPException(status_code=404, detail="Tournament not found")
+    return HTTPException(status_code=200, detail=tournament)
+
+@tournament_router.patch("/{tournament_id}/status")
+async def update_tournament_status(tournament_id: int, status: str, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    result = await tournaments_service.update_tournament_status(tournament_id, status)
+    if not result:
+        raise HTTPException(status_code=400, detail="Status transition not allowed or tournament not found")
+    return result
+
+@tournament_router.delete("/{tournament_id}")
+async def delete_tournament(tournament_id: int, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
+    deleted = await tournaments_service.delete_tournament(tournament_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return {"detail": "Tournament deleted successfully"}
+

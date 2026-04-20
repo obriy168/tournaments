@@ -5,8 +5,6 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.future import select
 
-
-
 class TeamRepository:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
         self.db = db

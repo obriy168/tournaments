@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class TeamModel(BaseModel):
-    id: int = Optional[int]
+    id: Optional[int] = None
     tournament_id: int
     name: str
     city: str

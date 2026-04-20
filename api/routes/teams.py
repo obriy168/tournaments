@@ -14,7 +14,6 @@ async def read_team(team_id: int, teams_service: TeamsService = Depends(TeamsSer
         return {"error": "Team not found"}
     return team
 
-
 @team_router.get("/", dependencies=[Depends(TeamsService)])
 async def read_item(teams_service: Annotated[TeamsService, Depends(TeamsService)]):
     return await teams_service.get_all_teams()
