@@ -8,7 +8,7 @@ class TeamsService:
     def __init__(self, team_repository: Annotated[TeamRepository, Depends(TeamRepository)]):
         self.team_repository = team_repository
 
-    async def get_all_teams(self):
+    async def get_all_teams(self) -> list[Team]:
         return await self.team_repository.get_teams()
 
     async def get_team_by_id(self, team_id: int):
@@ -33,4 +33,6 @@ class TeamsService:
     async def delete_team(self, team_id: int) -> bool:
         return await self.team_repository.delete_team(team_id)
 
-
+    async def get_teams_by_tournament_id(self, tournament_id: int) -> list[Team]:
+        return await self.team_repository.get_teams_by_tournament_id(tournament_id)
+        

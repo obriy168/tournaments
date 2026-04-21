@@ -29,3 +29,9 @@ class TeamRepository:
         await self.db.delete(team)
         await self.db.commit()
         return True
+    
+    async def get_teams_by_tournament_id(self, tournament_id: int):
+        query = select(Team).where(Team.tournament_id == tournament_id)
+    
+        teams = await self.db.execute(query)
+        return teams.scalars().all()

@@ -1,4 +1,3 @@
-from database.schemas.schema import Tournament
 from services.models.tournament_model import TournamentModel
 from services.tournaments_service import TournamentsService
 from fastapi import APIRouter, Depends, HTTPException
