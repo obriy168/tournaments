@@ -16,9 +16,7 @@ async def read_tournament_by_id(tournament_id: int, tournaments_service: Annotat
 @tournament_router.get("/")
 async def read_tournaments(tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
     tournaments = await tournaments_service.get_all_tournaments()
-    if not tournaments:
-        return HTTPException(status_code=404, detail="Tournaments not found")
-    return HTTPException(status_code=200, detail=tournaments)
+    return tournaments
 
 @tournament_router.post("/")
 async def create_tournament(tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
@@ -28,20 +26,20 @@ async def create_tournament(tournament: TournamentModel, tournaments_service: An
 async def update_tournament(tournament_id: int, tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
     tournament = await tournaments_service.update_tournament(tournament_id, tournament)
     if not tournament:
-        return HTTPException(status_code=404, detail="Tournament not found")
-    return HTTPException(status_code=200, detail=tournament)
+        raise HTTPException(status_code=404, detail="Tournament not found")
+    return tournament
 
 @tournament_router.patch("/{tournament_id}/status")
 async def update_tournament_status(tournament_id: int, status: str, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
-    result = await tournaments_service.update_tournament_status(tournament_id, status)
-    if not result:
+    tournament = await tournaments_service.update_tournament_status(tournament_id, status)
+    if not tournament:
         raise HTTPException(status_code=400, detail="Status transition not allowed or tournament not found")
-    return result
+    return tournament
 
 @tournament_router.delete("/{tournament_id}")
 async def delete_tournament(tournament_id: int, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
-    deleted = await tournaments_service.delete_tournament(tournament_id)
-    if not deleted:
+    is_deleted = await tournaments_service.delete_tournament(tournament_id)
+    if not is_deleted:
         raise HTTPException(status_code=404, detail="Tournament not found")
     return {"detail": "Tournament deleted successfully"}
 

@@ -16,8 +16,16 @@ class TeamRepository:
         result = await self.db.execute(select(Team))
         return result.scalars().all()
     
-    async def create_team(self, team: Team) -> Team:
+    async def save_team(self, team: Team) -> Team:
         self.db.add(team)
         await self.db.commit()
         await self.db.refresh(team)
         return team
+    
+    async def delete_team(self, team_id: int) -> bool:
+        team = await self.get_team(team_id)
+        if team is None:
+            return False
+        await self.db.delete(team)
+        await self.db.commit()
+        return True

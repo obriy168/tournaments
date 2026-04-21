@@ -25,7 +25,7 @@ class TournamentsService:
     
         if not db_tournament:
             return None
-        new_tournament = tournament.model_dump(exclude={"id"})
+        new_tournament = tournament.model_dump(exclude_unset=True, exclude={"id"})
 
         db_tournament.sqlmodel_update(new_tournament)
 

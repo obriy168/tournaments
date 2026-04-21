@@ -15,10 +15,22 @@ class TeamsService:
         return await self.team_repository.get_team(team_id)
     
     async def create_team(self, team: TeamModel) -> Team:
-        team_entity = Team(
-            tournament_id=team.tournament_id,
-            name=team.name,
-            city=team.city,
-            organization=team.organization
-        )
-        return await self.team_repository.create_team(team_entity)
+        data = team.model_dump(exclude={"id"})
+        team_entity = Team(**data)
+        return await self.team_repository.save_team(team_entity)
+
+    async def update_team(self, team_id: int, team: TeamModel) -> Team:
+        db_team = await self.team_repository.get_team(team_id)
+
+        if not db_team:
+            return None
+        new_team = team.model_dump(exclude_unset=True, exclude={"id"})
+
+        db_team.sqlmodel_update(new_team)
+
+        return await self.team_repository.save_team(db_team)
+
+    async def delete_team(self, team_id: int) -> bool:
+        return await self.team_repository.delete_team(team_id)
+
+
