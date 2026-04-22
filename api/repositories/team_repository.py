@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import Team
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy.future import select
+from sqlalchemy import select, delete
 
 class TeamRepository:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
@@ -35,3 +35,8 @@ class TeamRepository:
     
         teams = await self.db.execute(query)
         return teams.scalars().all()
+    
+    async def delete_teams_by_tournament(self, tournament_id: int):
+        query = delete(Team).where(Team.tournament_id == tournament_id)
+        await self.db.execute(query)
+        return True

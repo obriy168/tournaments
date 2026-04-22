@@ -35,4 +35,7 @@ class TeamsService:
 
     async def get_teams_by_tournament_id(self, tournament_id: int) -> list[Team]:
         return await self.team_repository.get_teams_by_tournament_id(tournament_id)
+    
+    async def delete_all_teams_by_tournament(self, tournament_id: int):
+        return await self.team_repository.delete_teams_by_tournament(tournament_id)
         

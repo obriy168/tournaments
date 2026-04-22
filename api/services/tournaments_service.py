@@ -1,12 +1,21 @@
 from repositories.tournament_repository import TournamentRepository
 from database.schemas.schema import Tournament, TournamentStatus
 from services.models.tournament_model import TournamentModel
+from services.teams_service import TeamsService
+from services.task_service import TaskService
+from services.user_team_service import UserTeamService
 from typing import Annotated
 from fastapi import Depends
 
 class TournamentsService:
-    def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)]):
+    def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)], 
+                       task_service: Annotated[TaskService, Depends(TaskService)],
+                       team_service: Annotated[TeamsService, Depends(TeamsService)],
+                       user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
         self.tournament_repository = tournament_repository
+        self.task_service= task_service
+        self.team_service = team_service
+        self.user_team_service = user_team_service
 
     async def get_all_tournaments(self):
         return await self.tournament_repository.get_tournaments()
@@ -55,4 +64,7 @@ class TournamentsService:
         return await self.tournament_repository.save_tournament(db_tournament)
 
     async def delete_tournament(self, tournament_id: int) -> bool:
+        task_deleted = await self.task_service.delete_all_tasks_by_tournament(tournament_id)
+        users_team_deleted = await self.user_team_service.delete_user_team_relations_by_tournament(tournament_id)
+        team_deleted = await self.team_service.delete_all_teams_by_tournament(tournament_id)
         return await self.tournament_repository.delete_tournament(tournament_id)

@@ -14,6 +14,6 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
     return user
 
 @user_router.post("/")
-async def get_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
+async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
     return await users_service.create_user(user)
 
