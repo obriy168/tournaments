@@ -29,10 +29,12 @@ class UserTeamRepository:
         await self.db.refresh(user_team)
         return user_team
 
-    async def delete_user_from_team(self, user_team_id) -> bool:
-        user_to_del = await self.get_user_team(user_team_id)
-        if user_to_del is None:
-            return False
+    async def get_leader_by_team(self, team_id):
+        query = select(UserTeam).where(UserTeam.is_lead == True, UserTeam.team_id == team_id)
+        leader = await self.db.execute(query)
+        return leader.scalars().first()
+    
+    async def delete_user_from_team(self, user_to_del: UserTeam) -> bool:
         await self.db.delete(user_to_del)
         await self.db.commit()
         return True
@@ -41,4 +43,3 @@ class UserTeamRepository:
         teams_query = select(Team.id).where(Team.tournament_id == tournament_id)
         query = delete(UserTeam).where(UserTeam.team_id.in_(teams_query))
         await self.db.execute(query)
-

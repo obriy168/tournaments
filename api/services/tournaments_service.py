@@ -67,4 +67,8 @@ class TournamentsService:
         task_deleted = await self.task_service.delete_all_tasks_by_tournament(tournament_id)
         users_team_deleted = await self.user_team_service.delete_user_team_relations_by_tournament(tournament_id)
         team_deleted = await self.team_service.delete_all_teams_by_tournament(tournament_id)
-        return await self.tournament_repository.delete_tournament(tournament_id)
+        
+        tournament = await self.tournament_repository.get_tournament(tournament_id)
+        if tournament is None:
+            return False
+        return await self.tournament_repository.delete_tournament(tournament)

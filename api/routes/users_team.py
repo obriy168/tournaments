@@ -17,6 +17,15 @@ async def add_user_to_team(team_id: int, user_id: int, user_team_service: Annota
 async def get_teams_by_user_id(user_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     return await user_team_service.get_teams_by_user_id(user_id)
 
+@user_team_router.get("/leader/{team_id}")
+async def get_leader(team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
+    return await user_team_service.get_leader(team_id)
+
+@user_team_router.patch("/change_leader/{team_id}/{user_id}")
+async def change_leader(team_id: int, user_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
+
+    return await user_team_service.change_leader(team_id, user_id)
+
 @user_team_router.delete("/{user_team_id}")
 async def delete_user_from_team(user_team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     is_deleted = await user_team_service.delete_user_in_team(user_team_id)

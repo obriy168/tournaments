@@ -21,9 +21,36 @@ class UserTeamService:
     
     async def get_teams_by_user_id(self, user_id):
         return await self.user_team_repository.get_teams_by_user_id(user_id)
+    
+    async def get_leader(self, team_id):
+        return await self.user_team_repository.get_leader_by_team(team_id)
+    
+    async def change_leader(self, team_id: int, user_id: int):
+        db_leader = await self.user_team_repository.get_leader_by_team(team_id)
+
+        if db_leader and db_leader.user_id == user_id:
+            return None
+
+        if db_leader:
+            db_leader.is_lead = False
+
+        new_leader = await self.user_team_repository.get_link(team_id, user_id)
+
+        if not new_leader:
+            return None
+
+        new_leader.is_lead = True
+
+        await self.user_team_repository.db.commit() 
+        await self.user_team_repository.db.refresh(new_leader)
+    
+        return new_leader
 
     async def delete_user_in_team(self, user_team_id: int):
-        return await self.user_team_repository.delete_user_from_team(user_team_id)
+        user_to_del = await self.user_team_repository.get_user_team(user_team_id)
+        if user_to_del is None:
+            return False
+        return await self.user_team_repository.delete_user_from_team(user_to_del)
 
     async def delete_user_team_relations_by_tournament(self, tournament_id: int):
         return await self.user_team_repository.delete_user_team_relations_by_tournament(tournament_id)

@@ -22,10 +22,7 @@ class TournamentRepository:
         await self.db.refresh(tournament)
         return tournament
 
-    async def delete_tournament(self, tournament_id: int) -> bool:
-        tournament = await self.get_tournament(tournament_id)
-        if tournament is None:
-            return False
+    async def delete_tournament(self, tournament: Tournament) -> bool:
         await self.db.delete(tournament)
         await self.db.commit()
         return True

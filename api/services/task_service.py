@@ -54,6 +54,11 @@ class TaskService:
         return await self.task_repository.get_tasks_by_tournment(tournament_id)
 
     async def delete_task(self, task_id: int):
+        task = await self.task_repository.get_task(task_id)
+        
+        if task is None:
+            return False
+        
         return await self.task_repository.delete_task(task_id)
 
     async def delete_all_tasks_by_tournament(self, tournament_id: int):

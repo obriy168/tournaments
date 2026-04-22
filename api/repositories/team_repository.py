@@ -22,10 +22,7 @@ class TeamRepository:
         await self.db.refresh(team)
         return team
     
-    async def delete_team(self, team_id: int) -> bool:
-        team = await self.get_team(team_id)
-        if team is None:
-            return False
+    async def delete_team(self, team: Team) -> bool:
         await self.db.delete(team)
         await self.db.commit()
         return True

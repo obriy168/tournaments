@@ -5,6 +5,7 @@ from routes.teams import team_router
 from routes.users import user_router
 from routes.users_team import user_team_router
 from routes.tasks import task_router
+from routes.user_role import user_role_router
 
 # from repositories.team_repository import TeamRepository
 # from repositories.tournament_repository import TournamentRepository
@@ -26,4 +27,4 @@ app.include_router(team_router)
 app.include_router(user_router)
 app.include_router(user_team_router)
 app.include_router(task_router)
-
+app.include_router(user_role_router)

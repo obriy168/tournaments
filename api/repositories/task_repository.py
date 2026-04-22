@@ -23,12 +23,7 @@ class TaskRepository:
         result = await self.db.execute(query)
         return result.scalars().all()
 
-    async def delete_task(self, task_id: int) -> bool:
-        task = await self.get_task(task_id)
-
-        if task is None:
-            return False
-        
+    async def delete_task(self, task: Task) -> bool:
         await self.db.delete(task)
         await self.db.commit()
         return True
