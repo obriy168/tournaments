@@ -4,25 +4,9 @@ from database.schemas.schema import Tournament
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.future import select
+from repositories.base_repository import BaseRepository
 
-class TournamentRepository:
+class TournamentRepository(BaseRepository[Tournament]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
-        self.db = db
+        super().__init__(model=Tournament, db=db)
 
-    async def get_tournament(self, tournament_id: int) -> Tournament:
-        return await self.db.get(Tournament, tournament_id)
-    
-    async def get_tournaments(self) -> list[Tournament]:
-        result = await self.db.execute(select(Tournament))
-        return result.scalars().all()
-
-    async def save_tournament(self, tournament: Tournament) -> Tournament:
-        self.db.add(tournament)
-        await self.db.commit()
-        await self.db.refresh(tournament)
-        return tournament
-
-    async def delete_tournament(self, tournament: Tournament) -> bool:
-        await self.db.delete(tournament)
-        await self.db.commit()
-        return True

@@ -13,7 +13,14 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
+@user_router.get("/")
+async def get_all_users(users_service: Annotated[UserService, Depends(UserService)]):
+    return await users_service.get_all_users()
+
 @user_router.post("/")
 async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
     return await users_service.create_user(user)
 
+@user_router.delete("")
+async def delete_user(user_id: int, users_service: Annotated[UserService, Depends(UserService)]):
+    return await users_service.delete_user(user_id)

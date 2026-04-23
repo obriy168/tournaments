@@ -15,4 +15,4 @@ class UserRoleService:
     async def set_user_role(self, user: UserRoleModel) -> UserRole:
         data = user.model_dump(exclude={"id"})
         user_entity = UserRole(**data)
-        return await self.user_role_repository.save_user_role(user_entity)
+        return await self.user_role_repository.save(user_entity)
