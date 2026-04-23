@@ -7,14 +7,14 @@ from services.models.team_model import TeamModel
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 
 @team_router.get("/{team_id}")
-async def read_team(team_id: int, teams_service: Annotated[TeamsService, Depends(TeamsService)]):
+async def get_team_by_id(team_id: int, teams_service: Annotated[TeamsService, Depends(TeamsService)]):
     team = await teams_service.get_team_by_id(team_id)
     if team is None:
         raise HTTPException(status_code=404, detail="Team not found")
     return team
 
 @team_router.get("/")
-async def read_item(teams_service: Annotated[TeamsService, Depends(TeamsService)]):
+async def get_all_teams(teams_service: Annotated[TeamsService, Depends(TeamsService)]):
     teams = await teams_service.get_all_teams()
     return teams
 
