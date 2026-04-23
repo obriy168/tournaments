@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from routes.tournaments import tournament_router
 from routes.teams import team_router
@@ -7,21 +8,16 @@ from routes.users_team import user_team_router
 from routes.tasks import task_router
 from routes.user_role import user_role_router
 
-# from repositories.team_repository import TeamRepository
-# from repositories.tournament_repository import TournamentRepository
-# from repositories.user_repository import UserRepository
-
-# from services.teams_service import TeamsService
-# from services.tournaments_service import TournamentsService
-# from services.user_service import UserService
-
-from util.database import get_db
-
-# app = FastAPI(dependencies=[Depends(get_db), Depends(TeamRepository), Depends(TeamsService),
-#                                              Depends(TournamentRepository), Depends(TournamentsService),
-#                                              Depends(UserRepository), Depends(UserService)])
 app = FastAPI()
     
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(tournament_router)
 app.include_router(team_router)
 app.include_router(user_router)
