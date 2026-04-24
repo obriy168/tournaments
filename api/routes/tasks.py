@@ -8,10 +8,10 @@ task_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
 @task_router.get("/{task_id}")
 async def get_task_by_id(task_id: int, tasks_service: Annotated[TaskService, Depends(TaskService)]):
-    user = await tasks_service.get_task_by_id(task_id)
-    if user is None:
+    task = await tasks_service.get_task_by_id(task_id)
+    if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
-    return user
+    return task
 
 @task_router.post("/")
 async def create_task(task: TaskModel, tasks_service: Annotated[TaskService, Depends(TaskService)]):

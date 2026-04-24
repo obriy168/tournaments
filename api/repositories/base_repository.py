@@ -24,10 +24,11 @@ class BaseRepository(Generic[T]):
         await self.db.refresh(entity)
         return entity
     
-    async def delete(self, entity: T) -> bool:
-        await self.db.delete(entity)
+    async def delete(self, id: int) -> bool:
+        query = delete(self.model).where(self.model.id == id)
+        result = await self.db.execute(query)
         await self.db.commit()
-        return True
+        return result.rowcount > 0
 
     async def commit(self):
         await self.db.commit()

@@ -20,7 +20,4 @@ class UserService:
         return await self.user_repository.save(user_entity)
 
     async def delete_user(self, user_id: id):
-        user = await self.user_repository.get_by_id(user_id)
-        if user is None:
-            return False
-        return await self.user_repository.delete(user)
+        return await self.user_repository.delete(user_id)

@@ -31,10 +31,7 @@ class TeamsService:
         return await self.team_repository.save(db_team)
 
     async def delete_team(self, team_id: int) -> bool:
-        team = await self.team_repository.get_by_id(team_id)
-        if team is None:
-            return False
-        return await self.team_repository.delete(team)
+        return await self.team_repository.delete(team_id)
 
     async def get_teams_by_tournament_id(self, tournament_id: int) -> list[Team]:
         return await self.team_repository.get_teams_by_tournament_id(tournament_id)

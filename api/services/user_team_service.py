@@ -47,7 +47,4 @@ class UserTeamService:
         return new_leader
 
     async def delete_user_in_team(self, user_team_id: int):
-        user_to_del = await self.user_team_repository.get_by_id(user_team_id)
-        if user_to_del is None:
-            return False
-        return await self.user_team_repository.delete(user_to_del)
+        return await self.user_team_repository.delete(user_team_id)
