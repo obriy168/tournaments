@@ -55,7 +55,4 @@ class TournamentsService:
         return await self.tournament_repository.save(db_tournament)
 
     async def delete_tournament(self, tournament_id: int) -> bool:
-        tournament = await self.tournament_repository.get_by_id(tournament_id)
-        if tournament is None:
-            return False
-        return await self.tournament_repository.delete(tournament)
+        return await self.tournament_repository.delete(tournament_id)

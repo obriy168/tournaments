@@ -7,6 +7,8 @@ from routes.users import user_router
 from routes.users_team import user_team_router
 from routes.tasks import task_router
 from routes.user_role import user_role_router
+from routes.requirements import requirement_router
+from routes.requirements_group import requirement_group_router
 
 app = FastAPI()
     
@@ -24,3 +26,5 @@ app.include_router(user_router)
 app.include_router(user_team_router)
 app.include_router(task_router)
 app.include_router(user_role_router)
+app.include_router(requirement_router)
+app.include_router(requirement_group_router)
