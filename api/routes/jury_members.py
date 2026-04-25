@@ -1,6 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.jury_member_service import JuryMemberService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.jury_member_model import JuryMemberModel
 

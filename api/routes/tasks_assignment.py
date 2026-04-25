@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException
 from services.task_assigment_service import TaskAssignmentService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.task_assigment_model import TaskAssigmentModel
 

@@ -1,8 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.user_team_service import UserTeamService
-from fastapi import Depends, HTTPException
 from typing import Annotated
-from services.models.user_team_model import UserTeamModel
 
 user_team_router = APIRouter(prefix="/users_team", tags=["users_team"])
 

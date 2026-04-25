@@ -1,6 +1,6 @@
+from fastapi import APIRouter, Depends, HTTPException
 from services.models.user_role_model import UserRoleModel
 from services.user_role_service import UserRoleService
-from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 
 user_role_router = APIRouter(prefix="/user_role", tags=["user_role"])

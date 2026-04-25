@@ -1,6 +1,6 @@
+from fastapi import APIRouter, Depends, HTTPException
 from services.models.tournament_model import TournamentModel
 from services.tournaments_service import TournamentsService
-from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])

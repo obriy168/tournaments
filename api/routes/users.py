@@ -1,6 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.user_service import UserService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.user_model import UserModel
 

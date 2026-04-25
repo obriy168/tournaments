@@ -1,6 +1,5 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, HTTPException
 from typing import Annotated
-from fastapi import Depends, HTTPException
 from services.evaluation_service import EvaluationService
 from services.models.evaluation_model import EvaluationModel
 

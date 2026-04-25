@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import UserRole, Role
+from database.schemas.schema import UserRole
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select

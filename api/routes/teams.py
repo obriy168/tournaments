@@ -1,6 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.teams_service import TeamsService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.team_model import TeamModel
 

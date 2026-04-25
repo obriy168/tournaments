@@ -3,7 +3,6 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import Tournament
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy.future import select
 from repositories.base_repository import BaseRepository
 
 class TournamentRepository(BaseRepository[Tournament]):

@@ -1,6 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.task_service import TaskService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.task_model import TaskModel
 

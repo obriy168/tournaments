@@ -1,6 +1,5 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from services.requirement_group_service import RequirementGroupService
-from fastapi import Depends, HTTPException
 from typing import Annotated
 from services.models.requirement_group_model import RequirementGroupModel
 

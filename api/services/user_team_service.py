@@ -1,5 +1,4 @@
 from repositories.user_team_repository import UserTeamRepository
-from services.models.user_team_model import UserTeamModel
 from database.schemas.schema import UserTeam
 from typing import Annotated
 from fastapi import Depends
