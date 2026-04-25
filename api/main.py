@@ -11,6 +11,8 @@ from routes.requirements import requirement_router
 from routes.requirements_group import requirement_group_router
 from routes.submissions import submissions_router
 from routes.jury_members import jury_member_router
+from routes.tasks_assignment import task_assignment_router
+from routes.evaluations import evaluation_router
 
 app = FastAPI()
     
@@ -32,3 +34,5 @@ app.include_router(requirement_router)
 app.include_router(requirement_group_router)
 app.include_router(submissions_router)
 app.include_router(jury_member_router)
+app.include_router(task_assignment_router)
+app.include_router(evaluation_router)

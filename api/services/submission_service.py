@@ -33,10 +33,5 @@ class SubmissionService:
 
         return await self.submission_repository.save(db_submission)
     
-    async def delete_submission(self, submission_id: int):
-        submission = await self.submission_repository.get_by_id(submission_id)
-        
-        if submission is None:
-            return False
-        
+    async def delete_submission(self, submission_id: int) -> bool:
         return await self.submission_repository.delete(submission_id)

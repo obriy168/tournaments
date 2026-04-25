@@ -33,4 +33,4 @@ async def delete_submissions(submission_id: int, submission_service: Annotated[S
     is_deleted = await submission_service.delete_submission(submission_id)
     if not is_deleted:
         raise HTTPException(status_code=404, detail="Submission not found")
-    return {"detail": "Sask deleted successfully"}
+    return {"detail": "Submission deleted successfully"}
