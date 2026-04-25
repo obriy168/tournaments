@@ -1,0 +1,25 @@
+from fastapi import APIRouter, Depends, HTTPException
+from services.user_service import UserService
+from typing import Annotated
+from services.models.user_model import UserModel
+
+user_router = APIRouter(prefix="/users", tags=["users"])
+
+@user_router.get("/{user_id}")
+async def get_user(user_id: int, users_service: Annotated[UserService, Depends(UserService)]):
+    user = await users_service.get_user_by_id(user_id)
+    if user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
+@user_router.get("/")
+async def get_all_users(users_service: Annotated[UserService, Depends(UserService)]):
+    return await users_service.get_all_users()
+
+@user_router.post("/")
+async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
+    return await users_service.create_user(user)
+
+@user_router.delete("")
+async def delete_user(user_id: int, users_service: Annotated[UserService, Depends(UserService)]):
+    return await users_service.delete_user(user_id)

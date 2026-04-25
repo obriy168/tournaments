@@ -3,23 +3,15 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import Team
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy.future import select
+from sqlalchemy import select
+from repositories.base_repository import BaseRepository
 
-
-
-class TeamRepository:
+class TeamRepository(BaseRepository[Team]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
-        self.db = db
-
-    async def get_team(self, team_id: int) -> Team:
-        return await self.db.get(Team, team_id)
+        super().__init__(model=Team, db=db)
     
-    async def get_teams(self) -> list[Team]:
-        result = await self.db.execute(select(Team))
-        return result.scalars().all()
+    async def get_teams_by_tournament_id(self, tournament_id: int):
+        query = select(Team).where(Team.tournament_id == tournament_id)
     
-    async def create_team(self, team: Team) -> Team:
-        self.db.add(team)
-        await self.db.commit()
-        await self.db.refresh(team)
-        return team
+        teams = await self.db.execute(query)
+        return teams.scalars().all()
