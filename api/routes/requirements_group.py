@@ -11,9 +11,9 @@ async def create_requirement_group(requirement_group: RequirementGroupModel, req
     return await requirements_group_service.create_requirement_group(requirement_group)
 
 @requirement_group_router.get("/{task_id}")
-async def create_requirement_group(task_id: int, requirements_group_service: Annotated[RequirementGroupService, Depends(RequirementGroupService)]):
+async def get_requirement_groups_by_task_id(task_id: int, requirements_group_service: Annotated[RequirementGroupService, Depends(RequirementGroupService)]):
     return await requirements_group_service.get_requirement_groups_by_task_id(task_id)
 
 @requirement_group_router.delete("/{requirement_group_id}")
-async def create_requirement_group(requirement_group_id: int, requirements_group_service: Annotated[RequirementGroupService, Depends(RequirementGroupService)]):
+async def delete_requirement_group(requirement_group_id: int, requirements_group_service: Annotated[RequirementGroupService, Depends(RequirementGroupService)]):
     return await requirements_group_service.delete_requirement_group(requirement_group_id)

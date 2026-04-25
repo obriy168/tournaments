@@ -10,6 +10,7 @@ from routes.user_role import user_role_router
 from routes.requirements import requirement_router
 from routes.requirements_group import requirement_group_router
 from routes.submissions import submissions_router
+from routes.jury_members import jury_member_router
 
 app = FastAPI()
     
@@ -30,3 +31,4 @@ app.include_router(user_role_router)
 app.include_router(requirement_router)
 app.include_router(requirement_group_router)
 app.include_router(submissions_router)
+app.include_router(jury_member_router)
