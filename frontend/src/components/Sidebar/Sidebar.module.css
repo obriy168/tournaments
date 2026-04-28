@@ -1,0 +1,79 @@
+.sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 2px solid black;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.header {
+  padding: 30px 24px;
+  border-bottom: 1px solid #eee;
+}
+
+.logo {
+  color: black;
+  font-weight: 700;
+  font-size: 24px;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.nav {
+  flex: 1;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.link {
+  color: #555;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: 0.2s;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+}
+
+.link:hover {
+  color: black;
+  background-color: #f5f5f5;
+}
+
+.linkCurrent {
+  color: white;
+  background-color: #000000;
+  font-weight: 600;
+}
+
+.linkCurrent:hover {
+  color: white;
+  background-color: #000000;
+}
+
+.linkDanger {
+  color: #dc2626;
+}
+
+.linkDanger:hover {
+  color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.footer {
+  padding: 24px 16px;
+  border-top: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
