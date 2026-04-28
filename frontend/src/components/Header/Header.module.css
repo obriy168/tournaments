@@ -1,0 +1,49 @@
+.header {
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px 10%;
+  height: 80px;
+}
+.logo {
+  color: black;
+  font-weight: 600;
+  font-size: 25px;
+}
+.nav {
+  display: flex;
+  align-items: center;
+}
+.link {
+  color: #666;
+  margin: 0 15px;
+  border-bottom: 2px solid transparent;
+  padding-bottom: 2px;
+  transition: 0.2s;
+}
+.link:hover {
+  color: black;
+  border-bottom: 2px solid #666;
+}
+.linkCurrent {
+  color: black;
+  border-bottom: 2px solid black;
+}
+.linkOutlined {
+  color: black;
+  margin: 0;
+  padding: 10px 15px;
+  border: 2px solid black;
+  border-radius: 15px;
+  transition: 0.2s;
+}
+.linkOutlined:hover {
+  color: white;
+  background-color: black;
+}
