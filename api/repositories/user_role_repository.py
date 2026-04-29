@@ -12,6 +12,6 @@ class UserRoleRepository(BaseRepository[UserRole]):
         super().__init__(model=UserRole, db=db)
 
     async def get_role_by_user_id(self, user_id: int, tournament_id: int):
-        query = select(UserRole).where(UserRole.user_id == user_id, UserRole.tournament_id == tournament_id).options(selectinload(UserRole.role))
+        query = select(UserRole).where(UserRole.user_id == user_id, UserRole.tournament_id == tournament_id)
         result = await self.db.execute(query)
-        return result.scalars().first().role.name
+        return result.scalars().first()

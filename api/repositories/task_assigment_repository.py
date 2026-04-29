@@ -10,7 +10,7 @@ class TaskAssignmentRepository(BaseRepository[TaskAssignment]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
         super().__init__(model=TaskAssignment, db=db)
 
-    async def get_tasks_assignment_by_jury_member_id(self, jury_member_id: int):
-        query = select(TaskAssignment).where(TaskAssignment.jury_member_id == jury_member_id)
+    async def get_tasks_assignment_by_evaluator_id(self, evaluator_id: int):
+        query = select(TaskAssignment).where(TaskAssignment.evaluator_id == evaluator_id)
         result = await self.db.execute(query)
         return result

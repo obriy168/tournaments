@@ -45,5 +45,8 @@ class UserTeamService:
     
         return new_leader
 
+    async def is_user_leader(self, team_id: int, user_id: int) -> bool:
+        return await self.user_team_repository.is_user_leader(team_id, user_id)
+
     async def delete_user_in_team(self, user_team_id: int):
         return await self.user_team_repository.delete(user_team_id)
