@@ -25,3 +25,8 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         query = select(UserTeam).where(UserTeam.is_lead == True, UserTeam.team_id == team_id)
         leader = await self.db.execute(query)
         return leader.scalars().first()
+
+    async def is_user_leader(self, team_id: int, user_id: int) -> bool:
+        query = select(UserTeam).where(UserTeam.is_lead == True, UserTeam.team_id == team_id, UserTeam.user_id == user_id)
+        result = await self.db.execute(query)
+        return result.scalars().first() is not None

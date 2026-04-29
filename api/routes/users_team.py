@@ -24,6 +24,10 @@ async def change_leader(team_id: int, user_id: int, user_team_service: Annotated
 
     return await user_team_service.change_leader(team_id, user_id)
 
+@user_team_router.get("/is_leader/{team_id}/{user_id}")
+async def is_user_leader(team_id: int, user_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
+    return await user_team_service.is_user_leader(team_id, user_id)
+
 @user_team_router.delete("/{user_team_id}")
 async def delete_user_from_team(user_team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     is_deleted = await user_team_service.delete_user_in_team(user_team_id)

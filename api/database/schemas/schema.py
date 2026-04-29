@@ -18,6 +18,11 @@ class TaskStatus(str, Enum):
     SUBMISSION_CLOSED = "SubmissionClosed"
     EVALUATED = "Evaluated"
 
+class RoleEnum(str, Enum):
+    ADMIN = "Admin"
+    JURY = "Jury"
+    PARTICIPANT = "Participant"
+
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     first_name: str = Field(nullable=False)
@@ -26,7 +31,6 @@ class User(SQLModel, table=True):
     password: str = Field(nullable=False)
     user_teams: list["UserTeam"] = Relationship(back_populates="user", cascade_delete=True)
     user_roles: list["UserRole"] = Relationship(back_populates="user", cascade_delete=True)
-    jury_member: list["JuryMember"] = Relationship(back_populates="user", cascade_delete=True)
     
 class Team(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -61,19 +65,14 @@ class Tournament(SQLModel, table=True):
     user_roles: list["UserRole"] = Relationship(back_populates="tournament", cascade_delete=True)
     tasks: list["Task"] = Relationship(back_populates="tournament", cascade_delete=True)
 
-class Role(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    name: str = Field(nullable=False)
-    user_roles: list["UserRole"] = Relationship(back_populates="role")
-
 class UserRole(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    role_id: int = Field(foreign_key="role.id", ondelete="CASCADE")
     user_id: int = Field(foreign_key="user.id", ondelete="CASCADE")
     tournament_id: int = Field(foreign_key="tournament.id", ondelete="CASCADE")
-    role: "Role" = Relationship(back_populates="user_roles")
+    role: RoleEnum = Field(nullable=False)
     user: "User" = Relationship(back_populates="user_roles")
     tournament: "Tournament" = Relationship(back_populates="user_roles")
+    assignments: list["TaskAssignment"] = Relationship(back_populates="evaluator", cascade_delete=True)
     
 class Task(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -95,6 +94,7 @@ class Requirement(SQLModel, table=True):
     max_score: int = Field(nullable=False)
     requirement_group_id: int = Field(foreign_key="requirementgroup.id", ondelete="CASCADE")
     requirement_group: "RequirementGroup" = Relationship(back_populates="requirements")
+    evaluations: list["Evaluation"] = Relationship(back_populates="requirement", cascade_delete=True)
 
 class RequirementGroup(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -116,25 +116,20 @@ class Submission(SQLModel, table=True):
     task: "Task" = Relationship(back_populates="submissions")
     assignments: list["TaskAssignment"] = Relationship(back_populates="submission", cascade_delete=True)
 
-class JuryMember(SQLModel, table=True):
-    id: int = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id", ondelete="CASCADE")
-    tournament_id: int = Field(foreign_key="tournament.id", ondelete="CASCADE")
-    user: "User" = Relationship(back_populates="jury_member")
-    assignments: list["TaskAssignment"] = Relationship(back_populates="jury_member", cascade_delete=True)
-
 class TaskAssignment(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    jury_member_id: int = Field(foreign_key="jurymember.id", ondelete="CASCADE")
+    evaluator_id: int = Field(foreign_key="userrole.id", ondelete="CASCADE")
     submission_id: int = Field(foreign_key="submission.id", ondelete="CASCADE")
     is_completed: bool = Field(default=False)
-    jury_member: "JuryMember" = Relationship(back_populates="assignments")
+    evaluator: "UserRole" = Relationship(back_populates="assignments")
     submission: "Submission" = Relationship(back_populates="assignments")
     evaluations: list["Evaluation"] = Relationship(back_populates="assignment", cascade_delete=True)
 
 class Evaluation(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     assignment_id: int = Field(foreign_key="taskassignment.id", ondelete="CASCADE")
+    requirement_id: int = Field(foreign_key="requirement.id", ondelete="CASCADE")
     scores: int = Field(nullable=False)
     comment: Optional[str] = None
     assignment: "TaskAssignment" = Relationship(back_populates="evaluations")
+    requirement: "Requirement" = Relationship(back_populates="evaluations")
