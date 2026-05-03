@@ -13,8 +13,9 @@
 }
 .logo {
   color: black;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 25px;
+  letter-spacing: -1px;
 }
 .nav {
   display: flex;

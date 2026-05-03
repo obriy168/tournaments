@@ -90,3 +90,7 @@
 .auth__link:hover {
   color: #333;
 }
+.auth__inputError {
+  border-color: #dc2626 !important;
+  background-color: #fef2f2 !important;
+}

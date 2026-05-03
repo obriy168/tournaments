@@ -1,22 +1,33 @@
 import { Link } from "react-router-dom";
+import { useAuth } from "../../features/auth/hooks/useAuth";
 import { useTournaments } from "../../features/Tournaments/hooks/useTournaments";
-import TournamentCard from "../../features/Tournaments/components/TournamentCard/TournamentCard";
+import TournamentCard from "../../features/Tournaments/components/tournamentCard/TournamentCard";
 import styles from "./MainPage.module.css";
 
 export default function MainPage() {
-  const { tournaments, isLoading, error } = useTournaments();
+  const { user } = useAuth();
+  const { data, isLoading, error, refetch } = useTournaments();
 
   return (
     <>
       <section className={styles.hero}>
         <div className={styles.hero__container}>
-          <h1 className={styles.hero__title}>Welcome to skyline</h1>
+          <h1 className={styles.hero__title}>Welcome to Skyline</h1>
           <p className={styles.hero__description}>
             Join the world's most prestigious online programming tournaments.
           </p>
-          <Link to="/login" className={styles.hero__button}>
-            Join a Tournament
-          </Link>
+          {user ? (
+            <Link
+              to={`/app/${user.role === "captain" ? "participant" : user.role}`}
+              className={styles.hero__button}
+            >
+              Go to Dashboard
+            </Link>
+          ) : (
+            <Link to="/login" className={styles.hero__button}>
+              Join a Tournament
+            </Link>
+          )}
         </div>
       </section>
 
@@ -28,25 +39,27 @@ export default function MainPage() {
           </p>
 
           {isLoading && (
-            <div className={styles.loading}>Loading tournaments...</div>
+            <div className={styles.loading}>Loading tournaments…</div>
           )}
 
           {error && (
             <div className={styles.error}>
-              {error}
-              <button onClick={() => window.location.reload()} className={styles.retry}>
+              <p>{error.message}</p>
+              <button onClick={() => refetch()} className={styles.retry}>
                 Retry
               </button>
             </div>
           )}
 
-          {!isLoading && !error && tournaments.length === 0 && (
-            <div className={styles.empty}>No active tournaments at the moment.</div>
+          {!isLoading && !error && data && data.length === 0 && (
+            <div className={styles.empty}>
+              No active tournaments at the moment.
+            </div>
           )}
 
-          {!isLoading && !error && tournaments.length > 0 && (
+          {!isLoading && !error && data && data.length > 0 && (
             <div className={styles.tournaments__grid}>
-              {tournaments.map((tournament) => (
+              {data.map((tournament) => (
                 <TournamentCard key={tournament.id} tournament={tournament} />
               ))}
             </div>

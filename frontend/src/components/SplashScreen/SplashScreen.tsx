@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import styles from "./SplashScreen.module.css";
 
 interface Props {
@@ -6,48 +6,51 @@ interface Props {
 }
 
 const MINIMUM_DISPLAY_MS = 1400;
-const EXIT_ANIMATION_MS = 500;
+const EXIT_ANIMATION_MS = 400;
 
 export default function SplashScreen({ visible }: Props) {
-  const [shouldRender, setShouldRender] = useState(false);
-  const [isExiting, setIsExiting] = useState(false);
-
+  const overlayRef = useRef<HTMLDivElement>(null);
   const startTimeRef = useRef(0);
+  const everShownRef = useRef(false);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
-    const timers: ReturnType<typeof setTimeout>[] = [];
-    const schedule = (fn: () => void, delay: number) => {
-      timers.push(setTimeout(fn, delay));
-    };
+    const overlay = overlayRef.current;
+    if (!overlay) return;
+
+    timersRef.current.forEach(clearTimeout);
+    timersRef.current = [];
 
     if (visible) {
+      everShownRef.current = true;
       startTimeRef.current = performance.now();
-
-      schedule(() => {
-        setShouldRender(true);
-        setIsExiting(false);
-      }, 0);
-    } else {
+      overlay.style.display = "flex";
+      overlay.classList.remove(styles.exit);
+    } else if (everShownRef.current) {
       const elapsed = performance.now() - startTimeRef.current;
       const remaining = Math.max(0, MINIMUM_DISPLAY_MS - elapsed);
 
-      schedule(() => {
-        setIsExiting(true);
-        schedule(() => setShouldRender(false), EXIT_ANIMATION_MS);
+      const t1 = setTimeout(() => {
+        overlay.classList.add(styles.exit);
+        const t2 = setTimeout(() => {
+          overlay.style.display = "none";
+        }, EXIT_ANIMATION_MS);
+        timersRef.current.push(t2);
       }, remaining);
+      timersRef.current.push(t1);
     }
 
-    return () => timers.forEach(clearTimeout);
+    return () => {
+      timersRef.current.forEach(clearTimeout);
+    };
   }, [visible]);
-
-  if (!shouldRender) return null;
 
   return (
     <div
-      className={`${styles.overlay} ${isExiting ? styles.exit : styles.enter}`}
-      aria-hidden={isExiting}
-      role="status"
-      aria-live="polite"
+      ref={overlayRef}
+      className={styles.overlay}
+      style={{ display: "none" }}
+      aria-hidden="true"
     >
       <div className={styles.content}>
         <h1 className={styles.logo}>Skyline</h1>

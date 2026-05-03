@@ -9,6 +9,12 @@
   letter-spacing: -1px;
 }
 
+.loading {
+  color: #888;
+  font-size: 16px;
+  padding: 40px 0;
+}
+
 .card {
   background-color: #ffffff;
   border: 2px solid black;
@@ -67,4 +73,9 @@
 .logout:hover {
   background: #dc2626;
   color: #fff;
+}
+
+.logout:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }

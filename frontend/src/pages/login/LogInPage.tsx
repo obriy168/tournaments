@@ -1,26 +1,44 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../features/auth/context/AuthContext";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../features/auth/hooks/useAuth";
 import styles from "../../features/auth/components/Auth.module.css";
+
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
+
+interface LocationState {
+  from?: { pathname: string };
+}
 
 export default function LogInPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const [error, setError] = useState("");
+  const location = useLocation();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setError("");
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError,
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+  });
 
-    const formData = new FormData(e.currentTarget);
-    const email = formData.get("email") as string;
-    const password = formData.get("password") as string;
-
+  const onSubmit = async (data: LoginForm) => {
     try {
-      const user = await login(email, password);
-      navigate(`/app/${user.role}`, { replace: true });
+      const user = await login(data.email, data.password);
+      const rolePath = user.role === "captain" ? "participant" : user.role;
+      const state = location.state as LocationState | null;
+      const from = state?.from?.pathname || `/app/${rolePath}`;
+      navigate(from, { replace: true });
     } catch {
-      setError("Invalid email or password");
+      setError("root", { message: "Invalid email or password" });
     }
   };
 
@@ -28,34 +46,72 @@ export default function LogInPage() {
     <section className={styles.auth}>
       <div className={styles.auth__container}>
         <h1 className={styles.auth__title}>Welcome back</h1>
-        {error && (
-          <p style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}>
-            {error}
+
+        {errors.root && (
+          <p
+            style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}
+          >
+            {errors.root.message}
           </p>
         )}
-        <form className={styles.auth__form} onSubmit={handleSubmit}>
+
+        <form
+          className={styles.auth__form}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div className={styles.auth__field}>
             <input
               type="email"
-              name="email"
               placeholder="Email"
-              required
-              className={styles.auth__input}
+              autoFocus
+              className={`${styles.auth__input} ${errors.email ? styles.auth__inputError : ""}`}
+              {...register("email")}
             />
+            {errors.email && (
+              <span
+                style={{
+                  color: "#dc2626",
+                  fontSize: 13,
+                  marginTop: 4,
+                  display: "block",
+                }}
+              >
+                {errors.email.message}
+              </span>
+            )}
           </div>
+
           <div className={styles.auth__field}>
             <input
               type="password"
-              name="password"
               placeholder="Password"
-              required
-              className={styles.auth__input}
+              className={`${styles.auth__input} ${errors.password ? styles.auth__inputError : ""}`}
+              {...register("password")}
             />
+            {errors.password && (
+              <span
+                style={{
+                  color: "#dc2626",
+                  fontSize: 13,
+                  marginTop: 4,
+                  display: "block",
+                }}
+              >
+                {errors.password.message}
+              </span>
+            )}
           </div>
-          <button type="submit" className={styles.auth__button}>
-            Log in
+
+          <button
+            type="submit"
+            className={styles.auth__button}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Logging in…" : "Log in"}
           </button>
         </form>
+
         <p className={styles.auth__footer}>
           Don't have an account?{" "}
           <Link to="/signup" className={styles.auth__link}>
