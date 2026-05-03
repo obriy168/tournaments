@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getTournaments } from "../../../services/api";
-import type { Tournament } from "../../../services/api";
+import { getTournaments } from "@/services/api";
+import type { Tournament } from "@/services/api";
 
 export const tournamentsKeys = {
   all: ["tournaments"] as const,

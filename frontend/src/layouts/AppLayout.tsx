@@ -1,7 +1,5 @@
 import { Outlet } from "react-router-dom";
-import Sidebar from "../components/Sidebar/Sidebar";
-
-const SIDEBAR_WIDTH = 260;
+import Sidebar from "@/components/Sidebar/Sidebar";
 
 export default function AppLayout() {
   return (
@@ -11,7 +9,7 @@ export default function AppLayout() {
         style={{
           flex: 1,
           padding: "40px",
-          marginLeft: `${SIDEBAR_WIDTH}px`,
+          marginLeft: "var(--sidebar-width)",
           minWidth: 0,
         }}
       >

@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "../features/auth/hooks/useAuth";
-import type { UserRole } from "../features/auth/context/authContextValue";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import type { UserRole } from "@/features/auth/context/authContextValue";
 
 function normalizeRole(role: UserRole): Exclude<UserRole, "captain"> {
   return role === "captain" ? "participant" : role;
@@ -63,25 +63,25 @@ export function LoadingFallback() {
 }
 
 export function RequireAuth() {
-  const { user, loading, initializing } = useAuth();
+  const { user, initializing } = useAuth();
   const location = useLocation();
 
-  if (loading || initializing) return <LoadingFallback />;
+  if (initializing) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" state={{ from: location }} replace />;
   return <Outlet />;
 }
 
 export function PublicOnly() {
-  const { user, loading, initializing } = useAuth();
-  if (loading || initializing) return <LoadingFallback />;
-  if (user) return <Navigate to="/app" replace />;
+  const { user, initializing } = useAuth();
+  if (initializing) return <LoadingFallback />;
+  if (user) return <Navigate to={`/app/${getRolePath(user.role)}`} replace />;
   return <Outlet />;
 }
 
 export function RoleGuard({ allowed }: { allowed: UserRole[] }) {
-  const { user, loading, initializing } = useAuth();
+  const { user, initializing } = useAuth();
 
-  if (loading || initializing) return <LoadingFallback />;
+  if (initializing) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
 
   const effectiveRole = normalizeRole(user.role);
@@ -94,8 +94,8 @@ export function RoleGuard({ allowed }: { allowed: UserRole[] }) {
 }
 
 export function RoleRedirect() {
-  const { user, loading, initializing } = useAuth();
-  if (loading || initializing) return <LoadingFallback />;
+  const { user, initializing } = useAuth();
+  if (initializing) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
   return <Navigate to={`/app/${getRolePath(user.role)}`} replace />;
 }

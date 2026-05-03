@@ -1,12 +1,19 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
-import type { Tournament } from "../../../../services/api";
+import type { Tournament } from "@/services/api";
 import styles from "./TournamentCard.module.css";
 
 interface Props {
   tournament: Tournament;
+  actionUrl?: string;
+  actionLabel?: string;
 }
 
-export default function TournamentCard({ tournament }: Props) {
+function TournamentCard({
+  tournament,
+  actionUrl = "/login",
+  actionLabel = "Join Tournament",
+}: Props) {
   const isOpen = tournament.status === "Registration";
 
   return (
@@ -44,8 +51,8 @@ export default function TournamentCard({ tournament }: Props) {
         </dl>
       </div>
 
-      <Link to="/login" className={styles.button}>
-        Join Tournament
+      <Link to={actionUrl} className={styles.button}>
+        {actionLabel}
       </Link>
     </article>
   );
@@ -58,3 +65,5 @@ function formatDate(dateStr: string): string {
     year: "numeric",
   });
 }
+
+export default memo(TournamentCard);

@@ -1,12 +1,25 @@
-import { Link } from "react-router-dom";
-import { useAuth } from "../../features/auth/hooks/useAuth";
-import { useTournaments } from "../../features/Tournaments/hooks/useTournaments";
-import TournamentCard from "../../features/Tournaments/components/tournamentCard/TournamentCard";
+import { useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
+import TournamentCard from "@/features/Tournaments/components/tournamentCard/TournamentCard";
 import styles from "./MainPage.module.css";
 
 export default function MainPage() {
-  const { user } = useAuth();
+  const { user, initializing } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading, error, refetch } = useTournaments();
+
+  useEffect(() => {
+    if (!initializing && user) {
+      const rolePath = user.role === "captain" ? "participant" : user.role;
+      navigate(`/app/${rolePath}`, { replace: true });
+    }
+  }, [user, initializing, navigate]);
+
+  if (initializing || user) {
+    return null;
+  }
 
   return (
     <>
@@ -16,18 +29,9 @@ export default function MainPage() {
           <p className={styles.hero__description}>
             Join the world's most prestigious online programming tournaments.
           </p>
-          {user ? (
-            <Link
-              to={`/app/${user.role === "captain" ? "participant" : user.role}`}
-              className={styles.hero__button}
-            >
-              Go to Dashboard
-            </Link>
-          ) : (
-            <Link to="/login" className={styles.hero__button}>
-              Join a Tournament
-            </Link>
-          )}
+          <Link to="/login" className={styles.hero__button}>
+            Join a Tournament
+          </Link>
         </div>
       </section>
 
@@ -38,32 +42,37 @@ export default function MainPage() {
             Check out the tournaments currently in progress.
           </p>
 
-          {isLoading && (
-            <div className={styles.loading}>Loading tournaments…</div>
-          )}
+          <div className={styles.tournaments__content}>
+            {isLoading && (
+              <div className={styles.loading}>Loading tournaments…</div>
+            )}
 
-          {error && (
-            <div className={styles.error}>
-              <p>{error.message}</p>
-              <button onClick={() => refetch()} className={styles.retry}>
-                Retry
-              </button>
-            </div>
-          )}
+            {error && (
+              <div className={styles.error}>
+                <p>{error.message}</p>
+                <button onClick={() => refetch()} className={styles.retry}>
+                  Retry
+                </button>
+              </div>
+            )}
 
-          {!isLoading && !error && data && data.length === 0 && (
-            <div className={styles.empty}>
-              No active tournaments at the moment.
-            </div>
-          )}
+            {!isLoading && !error && data && data.length === 0 && (
+              <div className={styles.empty}>No active tournaments at the moment.</div>
+            )}
 
-          {!isLoading && !error && data && data.length > 0 && (
-            <div className={styles.tournaments__grid}>
-              {data.map((tournament) => (
-                <TournamentCard key={tournament.id} tournament={tournament} />
-              ))}
-            </div>
-          )}
+            {!isLoading && !error && data && data.length > 0 && (
+              <div className={styles.tournaments__grid}>
+                {data.map((tournament) => (
+                  <TournamentCard
+                    key={tournament.id}
+                    tournament={tournament}
+                    actionUrl="/login"
+                    actionLabel="Join Tournament"
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </section>
     </>

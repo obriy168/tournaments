@@ -15,6 +15,32 @@ declare module "axios" {
   }
 }
 
+function getPathname(url: string | undefined): string {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url, API_BASE_URL);
+    return parsed.pathname;
+  } catch {
+    return url.startsWith("/") ? url : `/${url}`;
+  }
+}
+
+function getCsrfToken(): string | null {
+  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+api.interceptors.request.use((config) => {
+  const method = config.method?.toLowerCase();
+  if (method && method !== "get" && method !== "head") {
+    const token = getCsrfToken();
+    if (token) {
+      config.headers["X-CSRF-Token"] = token;
+    }
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let failedQueue: Array<{
   resolve: (value?: unknown) => void;
@@ -30,26 +56,24 @@ api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) return Promise.reject(error);
 
-    if (
-      error.response?.status === 401 &&
-      originalRequest &&
-      !originalRequest._retry
-    ) {
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const url = originalRequest.url;
-      const normalizedUrl = url?.replace(/^\/+/, "/");
+      const pathname = getPathname(originalRequest.url);
 
-      const isAuthMe = normalizedUrl === "/auth/me";
-      const isAuthEndpoint = normalizedUrl?.startsWith("/auth/");
-
-      if (normalizedUrl === "/auth/refresh") {
-        processQueue(error);
-        isRefreshing = false;
+      if (
+        pathname === "/auth/me" ||
+        pathname === "/auth/login" ||
+        pathname === "/auth/register"
+      ) {
         return Promise.reject(error);
       }
 
-      if (isAuthMe || isAuthEndpoint) {
+      if (pathname === "/auth/refresh") {
+        processQueue(error);
+        isRefreshing = false;
+        window.dispatchEvent(new CustomEvent("skyline:session-expired"));
         return Promise.reject(error);
       }
 
@@ -63,12 +87,7 @@ api.interceptors.response.use(
         } catch (refreshError) {
           processQueue(refreshError);
           isRefreshing = false;
-          const isAuthPage =
-            window.location.pathname.startsWith("/login") ||
-            window.location.pathname.startsWith("/signup");
-          if (!isAuthPage) {
-            window.location.href = "/login";
-          }
+          window.dispatchEvent(new CustomEvent("skyline:session-expired"));
           return Promise.reject(refreshError);
         }
       }
@@ -82,7 +101,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export interface User {
@@ -171,9 +190,7 @@ export interface LeaderboardEntry {
   rank: number;
 }
 
-export async function registerUser(
-  data: RegisterData,
-): Promise<{ id: number } | void> {
+export async function registerUser(data: RegisterData): Promise<{ id: number }> {
   const { data: res } = await api.post("/auth/register", data);
   return res;
 }
@@ -188,29 +205,18 @@ export async function getTournament(id: number): Promise<Tournament> {
   return data;
 }
 
-export async function createTournament(
-  data: Partial<Tournament>,
-): Promise<Tournament> {
+export async function createTournament(data: Partial<Tournament>): Promise<Tournament> {
   const { data: res } = await api.post<Tournament>("/tournaments/", data);
   return res;
 }
 
-export async function updateTournament(
-  id: number,
-  data: Partial<Tournament>,
-): Promise<Tournament> {
+export async function updateTournament(id: number, data: Partial<Tournament>): Promise<Tournament> {
   const { data: res } = await api.put<Tournament>(`/tournaments/${id}`, data);
   return res;
 }
 
-export async function updateTournamentStatus(
-  id: number,
-  status: Tournament["status"],
-): Promise<Tournament> {
-  const { data: res } = await api.patch<Tournament>(
-    `/tournaments/${id}/status`,
-    { status },
-  );
+export async function updateTournamentStatus(id: number, status: Tournament["status"]): Promise<Tournament> {
+  const { data: res } = await api.patch<Tournament>(`/tournaments/${id}/status`, { status });
   return res;
 }
 
@@ -218,14 +224,8 @@ export async function deleteTournament(id: number): Promise<void> {
   await api.delete(`/tournaments/${id}`);
 }
 
-export async function registerTeam(
-  tournamentId: number,
-  teamData: Partial<Team>,
-): Promise<Team> {
-  const { data } = await api.post<Team>(
-    `/tournaments/${tournamentId}/teams`,
-    teamData,
-  );
+export async function registerTeam(tournamentId: number, teamData: Partial<Team>): Promise<Team> {
+  const { data } = await api.post<Team>(`/tournaments/${tournamentId}/teams`, teamData);
   return data;
 }
 
@@ -239,25 +239,16 @@ export async function getTeam(id: number): Promise<Team> {
   return data;
 }
 
-export async function updateTeam(
-  id: number,
-  teamData: Partial<Team>,
-): Promise<Team> {
+export async function updateTeam(id: number, teamData: Partial<Team>): Promise<Team> {
   const { data } = await api.put<Team>(`/teams/${id}`, teamData);
   return data;
 }
 
-export async function addTeamMember(
-  teamId: number,
-  userId: number,
-): Promise<void> {
+export async function addTeamMember(teamId: number, userId: number): Promise<void> {
   await api.post(`/teams/${teamId}/members`, { user_id: userId });
 }
 
-export async function removeTeamMember(
-  teamId: number,
-  userId: number,
-): Promise<void> {
+export async function removeTeamMember(teamId: number, userId: number): Promise<void> {
   await api.delete(`/teams/${teamId}/members/${userId}`);
 }
 
@@ -266,14 +257,8 @@ export async function getTasks(tournamentId: number): Promise<Task[]> {
   return data;
 }
 
-export async function createTask(
-  tournamentId: number,
-  taskData: Partial<Task>,
-): Promise<Task> {
-  const { data } = await api.post<Task>(
-    `/tournaments/${tournamentId}/tasks`,
-    taskData,
-  );
+export async function createTask(tournamentId: number, taskData: Partial<Task>): Promise<Task> {
+  const { data } = await api.post<Task>(`/tournaments/${tournamentId}/tasks`, taskData);
   return data;
 }
 
@@ -282,10 +267,7 @@ export async function getTask(id: number): Promise<Task> {
   return data;
 }
 
-export async function updateTask(
-  id: number,
-  taskData: Partial<Task>,
-): Promise<Task> {
+export async function updateTask(id: number, taskData: Partial<Task>): Promise<Task> {
   const { data } = await api.put<Task>(`/tasks/${id}`, taskData);
   return data;
 }
@@ -294,26 +276,14 @@ export async function deleteTask(id: number): Promise<void> {
   await api.delete(`/tasks/${id}`);
 }
 
-export async function createSubmission(
-  taskId: number,
-  submissionData: FormData | object,
-): Promise<Submission> {
-  const { data } = await api.post<Submission>(
-    `/tasks/${taskId}/submissions`,
-    submissionData,
-    {
-      headers:
-        submissionData instanceof FormData
-          ? { "Content-Type": "multipart/form-data" }
-          : undefined,
-    },
-  );
+export async function createSubmission(taskId: number, submissionData: FormData | object): Promise<Submission> {
+  const { data } = await api.post<Submission>(`/tasks/${taskId}/submissions`, submissionData, {
+    headers: submissionData instanceof FormData ? undefined : { "Content-Type": "application/json" },
+  });
   return data;
 }
 
-export async function getTaskSubmissions(
-  taskId: number,
-): Promise<Submission[]> {
+export async function getTaskSubmissions(taskId: number): Promise<Submission[]> {
   const { data } = await api.get<Submission[]>(`/tasks/${taskId}/submissions`);
   return data;
 }
@@ -323,14 +293,8 @@ export async function getSubmission(id: number): Promise<Submission> {
   return data;
 }
 
-export async function updateSubmission(
-  id: number,
-  submissionData: Partial<Submission>,
-): Promise<Submission> {
-  const { data } = await api.put<Submission>(
-    `/submissions/${id}`,
-    submissionData,
-  );
+export async function updateSubmission(id: number, submissionData: Partial<Submission>): Promise<Submission> {
+  const { data } = await api.put<Submission>(`/submissions/${id}`, submissionData);
   return data;
 }
 
@@ -338,17 +302,11 @@ export async function deleteSubmission(id: number): Promise<void> {
   await api.delete(`/submissions/${id}`);
 }
 
-export async function assignJury(
-  tournamentId: number,
-  userId: number,
-): Promise<void> {
+export async function assignJury(tournamentId: number, userId: number): Promise<void> {
   await api.post(`/tournaments/${tournamentId}/jury`, { user_id: userId });
 }
 
-export async function assignTaskJury(
-  taskId: number,
-  juryId: number,
-): Promise<void> {
+export async function assignTaskJury(taskId: number, juryId: number): Promise<void> {
   await api.post(`/tasks/${taskId}/assign-jury`, { jury_id: juryId });
 }
 
@@ -357,46 +315,27 @@ export async function getJuryAssignments(): Promise<JuryAssignment[]> {
   return data;
 }
 
-export async function evaluateSubmission(
-  submissionId: number,
-  evaluation: { score: number; comment?: string },
-): Promise<void> {
+export async function evaluateSubmission(submissionId: number, evaluation: { score: number; comment?: string }): Promise<void> {
   await api.post(`/submissions/${submissionId}/evaluate`, evaluation);
 }
 
-export async function getSubmissionScores(
-  submissionId: number,
-): Promise<Score[]> {
-  const { data } = await api.get<Score[]>(
-    `/submissions/${submissionId}/scores`,
-  );
+export async function getSubmissionScores(submissionId: number): Promise<Score[]> {
+  const { data } = await api.get<Score[]>(`/submissions/${submissionId}/scores`);
   return data;
 }
 
-export async function getLeaderboard(
-  tournamentId: number,
-): Promise<LeaderboardEntry[]> {
-  const { data } = await api.get<LeaderboardEntry[]>(
-    `/tournaments/${tournamentId}/leaderboard`,
-  );
+export async function getLeaderboard(tournamentId: number): Promise<LeaderboardEntry[]> {
+  const { data } = await api.get<LeaderboardEntry[]>(`/tournaments/${tournamentId}/leaderboard`);
   return data;
 }
 
 export async function getRequirements(taskId: number): Promise<Requirement[]> {
-  const { data } = await api.get<Requirement[]>(
-    `/tasks/${taskId}/requirements`,
-  );
+  const { data } = await api.get<Requirement[]>(`/tasks/${taskId}/requirements`);
   return data;
 }
 
-export async function createRequirement(
-  taskId: number,
-  requirement: Partial<Requirement>,
-): Promise<Requirement> {
-  const { data } = await api.post<Requirement>(
-    `/tasks/${taskId}/requirements`,
-    requirement,
-  );
+export async function createRequirement(taskId: number, requirement: Partial<Requirement>): Promise<Requirement> {
+  const { data } = await api.post<Requirement>(`/tasks/${taskId}/requirements`, requirement);
   return data;
 }
 

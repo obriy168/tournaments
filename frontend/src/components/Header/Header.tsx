@@ -1,19 +1,11 @@
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "../../features/auth/hooks/useAuth";
+import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLogout } from "@/features/auth/hooks/useLogout";
 import styles from "./Header.module.css";
 
 export default function Header() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/login", { replace: true });
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  const { user } = useAuth();
+  const logout = useLogout();
 
   return (
     <header className={styles.header}>
@@ -29,7 +21,7 @@ export default function Header() {
                 {user.first_name}
               </NavLink>
               <button
-                onClick={handleLogout}
+                onClick={logout}
                 className={styles.linkOutlined}
                 type="button"
               >
