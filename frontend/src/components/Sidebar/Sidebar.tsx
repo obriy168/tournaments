@@ -1,22 +1,38 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth, type UserRole } from "../../features/auth/context/AuthContext";
+import { useMemo } from "react";
+import { useAuth } from "../../features/auth/hooks/useAuth";
+import type { UserRole } from "../../features/auth/context/authContextValue";
 import styles from "./Sidebar.module.css";
+
+interface LinkItem {
+  to: string;
+  label: string;
+  end: boolean;
+}
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
+    try {
+      await logout();
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      navigate("/login", { replace: true });
+    }
   };
+
+  const links = useMemo(() => {
+    if (!user) return [];
+    return getLinksByRole(user.role);
+  }, [user]);
 
   if (!user) return null;
 
-  const links = getLinksByRole(user.role);
-
   return (
-    <aside className={styles.sidebar}>
+    <aside className={styles.sidebar} aria-label="Main navigation">
       <div className={styles.header}>
         <NavLink to="/app" className={styles.logo}>
           Skyline
@@ -28,7 +44,7 @@ export default function Sidebar() {
           <NavLink
             key={link.to}
             to={link.to}
-            end={link.to === "/app/admin" || link.to === "/app/jury" || link.to === "/app/participant"}
+            end={link.end}
             className={({ isActive }) =>
               isActive ? `${styles.link} ${styles.linkCurrent}` : styles.link
             }
@@ -47,7 +63,11 @@ export default function Sidebar() {
         >
           Profile
         </NavLink>
-        <button onClick={handleLogout} className={`${styles.link} ${styles.linkDanger}`}>
+        <button
+          onClick={handleLogout}
+          className={`${styles.link} ${styles.linkDanger}`}
+          type="button"
+        >
           Log out
         </button>
       </div>
@@ -55,26 +75,27 @@ export default function Sidebar() {
   );
 }
 
-function getLinksByRole(role: UserRole) {
+function getLinksByRole(role: UserRole): LinkItem[] {
   switch (role) {
     case "admin":
       return [
-        { to: "/app/admin", label: "Dashboard" },
-        { to: "/app/admin/tournaments", label: "Tournaments" },
-        { to: "/app/admin/teams", label: "Teams" },
-        { to: "/app/admin/jury", label: "Jury" },
+        { to: "/app/admin", label: "Dashboard", end: true },
+        { to: "/app/admin/tournaments", label: "Tournaments", end: false },
+        { to: "/app/admin/teams", label: "Teams", end: false },
+        { to: "/app/admin/jury", label: "Jury", end: false },
       ];
     case "jury":
       return [
-        { to: "/app/jury", label: "Dashboard" },
-        { to: "/app/jury/assignments", label: "Assignments" },
-        { to: "/app/jury/evaluation", label: "Evaluation" },
+        { to: "/app/jury", label: "Dashboard", end: true },
+        { to: "/app/jury/assignments", label: "Assignments", end: false },
+        { to: "/app/jury/evaluation", label: "Evaluation", end: false },
       ];
     case "participant":
+    case "captain":
       return [
-        { to: "/app/participant", label: "Dashboard" },
-        { to: "/app/participant/team", label: "My Team" },
-        { to: "/app/participant/submissions", label: "Submissions" },
+        { to: "/app/participant", label: "Dashboard", end: true },
+        { to: "/app/participant/team", label: "My Team", end: false },
+        { to: "/app/participant/submissions", label: "Submissions", end: false },
       ];
     default:
       return [];

@@ -10,27 +10,44 @@ export default function TournamentCard({ tournament }: Props) {
   const isOpen = tournament.status === "Registration";
 
   return (
-    <div className={styles.card}>
+    <article className={styles.card}>
       <h3 className={styles.title}>{tournament.name}</h3>
       <p className={styles.description}>{tournament.description}</p>
-      
+
       <div className={styles.info}>
         <span className={`${styles.status} ${isOpen ? styles.statusOpen : ""}`}>
-          <span className={styles.dot}></span>
-          {isOpen ? "Registration Open" : tournament.status}
+          <span className={styles.dot} aria-hidden="true" />
+          {tournament.status}
         </span>
-        <span className={styles.date}>
-          {formatDate(tournament.start_date)} - {formatDate(tournament.registration_end_date)}
-        </span>
+
+        <dl className={styles.dates}>
+          {tournament.registration_start_date && (
+            <div className={styles.dateRow}>
+              <dt className={styles.dateLabel}>Registration opens</dt>
+              <dd className={styles.dateValue}>
+                {formatDate(tournament.registration_start_date)}
+              </dd>
+            </div>
+          )}
+          <div className={styles.dateRow}>
+            <dt className={styles.dateLabel}>Registration closes</dt>
+            <dd className={styles.dateValue}>
+              {formatDate(tournament.registration_end_date)}
+            </dd>
+          </div>
+          <div className={styles.dateRow}>
+            <dt className={styles.dateLabel}>Tournament starts</dt>
+            <dd className={styles.dateValue}>
+              {formatDate(tournament.start_date)}
+            </dd>
+          </div>
+        </dl>
       </div>
-      
-      <Link 
-        to="/login" 
-        className={styles.button}
-      >
+
+      <Link to="/login" className={styles.button}>
         Join Tournament
       </Link>
-    </div>
+    </article>
   );
 }
 

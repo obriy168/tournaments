@@ -29,8 +29,8 @@
 .info {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 16px 0;
+  gap: 16px;
+  padding: 20px 0;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
 }
@@ -59,13 +59,36 @@
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
-.date {
+.dates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+}
+
+.dateRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 14px;
+}
+
+.dateLabel {
   color: #888;
+}
+
+.dateValue {
+  color: #000;
+  font-weight: 500;
 }
 
 .button {
