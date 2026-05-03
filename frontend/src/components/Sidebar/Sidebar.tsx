@@ -1,7 +1,7 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { useMemo } from "react";
-import { useAuth } from "../../features/auth/hooks/useAuth";
-import type { UserRole } from "../../features/auth/context/authContextValue";
+import { NavLink } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useLogout } from "@/features/auth/hooks/useLogout";
+import type { UserRole } from "@/features/auth/context/authContextValue";
 import styles from "./Sidebar.module.css";
 
 interface LinkItem {
@@ -11,23 +11,10 @@ interface LinkItem {
 }
 
 export default function Sidebar() {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
+  const logout = useLogout();
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-    } catch (err) {
-      console.error("Logout failed:", err);
-    } finally {
-      navigate("/login", { replace: true });
-    }
-  };
-
-  const links = useMemo(() => {
-    if (!user) return [];
-    return getLinksByRole(user.role);
-  }, [user]);
+  const links = user ? getLinksByRole(user.role) : [];
 
   if (!user) return null;
 
@@ -64,7 +51,7 @@ export default function Sidebar() {
           Profile
         </NavLink>
         <button
-          onClick={handleLogout}
+          onClick={logout}
           className={`${styles.link} ${styles.linkDanger}`}
           type="button"
         >

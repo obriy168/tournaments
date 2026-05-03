@@ -2,9 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../features/auth/hooks/useAuth";
-import { registerUser } from "../../services/api";
-import styles from "../../features/auth/components/Auth.module.css";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { registerUser } from "@/services/api";
+import { getAuthErrorMessage } from "@/features/auth/utils/errors";
+import styles from "@/features/auth/components/Auth.module.css";
 
 const registerSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
@@ -14,12 +15,6 @@ const registerSchema = z.object({
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
-
-function isApiError(
-  err: unknown,
-): err is { response?: { data?: { detail?: string } } } {
-  return typeof err === "object" && err !== null && "response" in err;
-}
 
 export default function SignUpPage() {
   const { login } = useAuth();
@@ -38,11 +33,7 @@ export default function SignUpPage() {
     try {
       await registerUser(data);
     } catch (err: unknown) {
-      const message =
-        isApiError(err) && err.response?.data?.detail
-          ? err.response.data.detail
-          : "Registration failed. Please try again.";
-      setError("root", { message });
+      setError("root", { message: getAuthErrorMessage(err) });
       return;
     }
 
@@ -51,8 +42,7 @@ export default function SignUpPage() {
       navigate("/app", { replace: true });
     } catch {
       setError("root", {
-        message:
-          "Account created, but automatic login failed. Please log in manually.",
+        message: "Account created, but automatic login failed. Please log in manually.",
       });
     }
   };
@@ -63,56 +53,46 @@ export default function SignUpPage() {
         <h1 className={styles.auth__title}>Create an account</h1>
 
         {errors.root && (
-          <p
-            style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}
-          >
+          <p role="alert" style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}>
             {errors.root.message}
           </p>
         )}
 
-        <form
-          className={styles.auth__form}
-          onSubmit={handleSubmit(onSubmit)}
-          noValidate
-        >
+        <form className={styles.auth__form} onSubmit={handleSubmit(onSubmit)} noValidate>
           <div className={styles.auth__field__row}>
             <div style={{ flex: 1 }}>
               <input
+                id="first_name"
                 type="text"
                 placeholder="First name"
                 autoFocus
+                disabled={isSubmitting}
+                aria-label="First name"
+                aria-invalid={!!errors.first_name}
+                aria-describedby={errors.first_name ? "first_name-error" : undefined}
                 className={`${styles.auth__input} ${errors.first_name ? styles.auth__inputError : ""}`}
                 {...register("first_name")}
               />
               {errors.first_name && (
-                <span
-                  style={{
-                    color: "#dc2626",
-                    fontSize: 13,
-                    marginTop: 4,
-                    display: "block",
-                  }}
-                >
+                <span id="first_name-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
                   {errors.first_name.message}
                 </span>
               )}
             </div>
             <div style={{ flex: 1 }}>
               <input
+                id="last_name"
                 type="text"
                 placeholder="Last name"
+                disabled={isSubmitting}
+                aria-label="Last name"
+                aria-invalid={!!errors.last_name}
+                aria-describedby={errors.last_name ? "last_name-error" : undefined}
                 className={`${styles.auth__input} ${errors.last_name ? styles.auth__inputError : ""}`}
                 {...register("last_name")}
               />
               {errors.last_name && (
-                <span
-                  style={{
-                    color: "#dc2626",
-                    fontSize: 13,
-                    marginTop: 4,
-                    display: "block",
-                  }}
-                >
+                <span id="last_name-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
                   {errors.last_name.message}
                 </span>
               )}
@@ -121,20 +101,18 @@ export default function SignUpPage() {
 
           <div className={styles.auth__field}>
             <input
+              id="email"
               type="email"
               placeholder="Email"
+              disabled={isSubmitting}
+              aria-label="Email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "email-error" : undefined}
               className={`${styles.auth__input} ${errors.email ? styles.auth__inputError : ""}`}
               {...register("email")}
             />
             {errors.email && (
-              <span
-                style={{
-                  color: "#dc2626",
-                  fontSize: 13,
-                  marginTop: 4,
-                  display: "block",
-                }}
-              >
+              <span id="email-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
                 {errors.email.message}
               </span>
             )}
@@ -142,20 +120,18 @@ export default function SignUpPage() {
 
           <div className={styles.auth__field}>
             <input
+              id="password"
               type="password"
               placeholder="Password"
+              disabled={isSubmitting}
+              aria-label="Password"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "password-error" : undefined}
               className={`${styles.auth__input} ${errors.password ? styles.auth__inputError : ""}`}
               {...register("password")}
             />
             {errors.password && (
-              <span
-                style={{
-                  color: "#dc2626",
-                  fontSize: 13,
-                  marginTop: 4,
-                  display: "block",
-                }}
-              >
+              <span id="password-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
                 {errors.password.message}
               </span>
             )}
@@ -165,6 +141,7 @@ export default function SignUpPage() {
             type="submit"
             className={styles.auth__button}
             disabled={isSubmitting}
+            aria-busy={isSubmitting}
           >
             {isSubmitting ? "Signing up…" : "Sign up"}
           </button>
