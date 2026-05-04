@@ -20,6 +20,17 @@ async def get_task_assignment_by_evaluator_id(evaluator_id: int, task_assignment
 async def create_task_assignment(task_assignment: TaskAssigmentModel, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
     return await task_assignment_service.create_task_assignment(task_assignment)
 
+@task_assignment_router.post("/{jury_to_evaluate}")
+async def auto_assign_tasks(jury_to_evaluate: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
+    return await task_assignment_service.auto_assign_tasks(jury_to_evaluate)
+
+@task_assignment_router.patch("/{task_assignment_id}/status")
+async def update_task_assignment_is_completed(task_assignment_id: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)], status: bool = True):
+    task_assignment = await task_assignment_service.update_task_assignment_is_completed(task_assignment_id, status)
+    if task_assignment is None:
+        raise HTTPException(status_code=400, detail="Task assignment already completed or task assignment not found")
+    return task_assignment
+
 @task_assignment_router.delete("/{task_assignment_id}")
 async def delete_task_assignment(task_assignment_id: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
     is_deleted = await task_assignment_service.delete_task_assignment(task_assignment_id)

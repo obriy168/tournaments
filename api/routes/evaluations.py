@@ -18,7 +18,10 @@ async def get_evaluation_by_id(task_id: int, evaluation_service: Annotated[Evalu
 
 @evaluation_router.post("/")
 async def create_evaluation(evaluation: EvaluationModel, evaluation_service: Annotated[EvaluationService, Depends(EvaluationService)]):
-    return await evaluation_service.create_evaluation(evaluation)
+    evaluation = await evaluation_service.create_evaluation(evaluation)
+    if evaluation is None:
+        raise HTTPException(status_code=400, detail="Invalid evaluation data")
+    return evaluation
 
 @evaluation_router.put("/{evaluation_id}")
 async def update_evaluation(evaluation_id: int, evaluation: EvaluationModel, evaluation_service: Annotated[EvaluationService, Depends(EvaluationService)]):
