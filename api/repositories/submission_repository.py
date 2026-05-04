@@ -14,3 +14,8 @@ class SubmissionRepository(BaseRepository[Submission]):
         query = select(Submission).join(Team, Submission.team_id == Team.id).where(Team.tournament_id == tournament_id)
         result = await self.db.execute(query)
         return result.scalars().all()
+    
+    async def get_submissions_by_task_id(self, task_id: int):
+        query = select(Submission).where(Submission.task_id == task_id)
+        result = await self.db.execute(query)
+        return result.scalars().all()

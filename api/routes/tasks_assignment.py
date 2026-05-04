@@ -12,7 +12,7 @@ async def get_task_assignment_by_id(task_assignment_id: int, task_assignment_ser
         raise HTTPException(status_code=404, detail="Task assignment not found")
     return task_assignment
 
-@task_assignment_router.get("/{evaluator_id}")
+@task_assignment_router.get("/evaluator/{evaluator_id}")
 async def get_task_assignment_by_evaluator_id(evaluator_id: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
     return await task_assignment_service.get_tasks_assignment_by_evaluator_id(evaluator_id)
 
@@ -20,9 +20,12 @@ async def get_task_assignment_by_evaluator_id(evaluator_id: int, task_assignment
 async def create_task_assignment(task_assignment: TaskAssigmentModel, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
     return await task_assignment_service.create_task_assignment(task_assignment)
 
-@task_assignment_router.post("/{jury_to_evaluate}")
-async def auto_assign_tasks(jury_to_evaluate: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
-    return await task_assignment_service.auto_assign_tasks(jury_to_evaluate)
+@task_assignment_router.post("/auto-assign/{task_id}/{min_jury_to_evaluate}")
+async def auto_assign_tasks(task_id: int, min_jury_to_evaluate: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)]):
+    task_assignments = await task_assignment_service.auto_assign_tasks(task_id, min_jury_to_evaluate)
+    if task_assignments is None:
+        raise HTTPException(status_code=400, detail=task_assignments["detail"])
+    return task_assignments
 
 @task_assignment_router.patch("/{task_assignment_id}/status")
 async def update_task_assignment_is_completed(task_assignment_id: int, task_assignment_service: Annotated[TaskAssignmentService, Depends(TaskAssignmentService)], status: bool = True):
