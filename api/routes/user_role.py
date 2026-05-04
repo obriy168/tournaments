@@ -15,3 +15,7 @@ async def get_user_role(user_id: int, tournament_id: int, user_role_service: Ann
 @user_role_router.post("/")
 async def set_user_role(user_role: UserRoleModel, user_role_service: Annotated[UserRoleService, Depends(UserRoleService)]):
     return await user_role_service.set_user_role(user_role)
+
+@user_role_router.get("/role/{role_name}/{tournament_id}")
+async def get_users_by_role_name(role_name: str, tournament_id: int, user_role_service: Annotated[UserRoleService, Depends(UserRoleService)]):
+    return await user_role_service.get_users_by_role_name(role_name, tournament_id)
