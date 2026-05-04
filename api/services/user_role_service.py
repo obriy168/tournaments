@@ -18,3 +18,6 @@ class UserRoleService:
         data = user.model_dump(exclude={"id"})
         user_entity = UserRole(**data)
         return await self.user_role_repository.save(user_entity)
+    
+    async def get_users_by_role_name(self, role_name: str, tournament_id: int):
+        return await self.user_role_repository.get_users_by_role_name(role_name, tournament_id)
