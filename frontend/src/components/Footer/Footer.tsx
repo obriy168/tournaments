@@ -27,6 +27,14 @@ export function Footer() {
         </div>
         <div className={styles.bottom}>
           <p className={styles.copyright}>© 2026 Skyline.</p>
+          <div className={styles.legal}>
+            <Link to="/privacy" className={styles.legal__link}>
+              Privacy and Cookie Policy
+            </Link>
+            <Link to="/terms" className={styles.legal__link}>
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
@@ -38,6 +46,14 @@ export function FooterMinimal() {
     <footer className={styles.footer__minimal}>
       <div className={styles.container}>
         <p className={styles.copyright}>© 2026 Skyline.</p>
+        <div className={styles.legal}>
+          <Link to="/privacy" className={styles.legal__link}>
+            Privacy and Cookie Policy
+          </Link>
+          <Link to="/terms" className={styles.legal__link}>
+            Terms of Service
+          </Link>
+        </div>
       </div>
     </footer>
   );

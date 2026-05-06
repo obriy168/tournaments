@@ -1,0 +1,87 @@
+.page {
+  background-color: #ffffff;
+  margin: 40px 10%;
+  min-height: 60vh;
+  padding: 60px 10%;
+}
+
+.container {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  letter-spacing: -1px;
+}
+
+.meta {
+  margin-bottom: 40px;
+}
+
+.updated {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 0;
+}
+
+.updated + .updated {
+  margin-top: 4px;
+}
+
+.section {
+  margin-bottom: 32px;
+}
+
+.section h2 {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.section p {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.section p:last-child {
+  margin-bottom: 0;
+}
+
+.section strong {
+  color: #333;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  color: #555;
+  margin-top: 12px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #e0e0e0;
+  padding: 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  background-color: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+.table td:first-child {
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
