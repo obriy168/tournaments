@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.security import APIKeyCookie
+from routes.auth import auth_router
 from routes.tournaments import tournament_router
 from routes.teams import team_router
 from routes.users import user_router
@@ -14,6 +15,8 @@ from routes.tasks_assignment import task_assignment_router
 from routes.evaluations import evaluation_router
 
 app = FastAPI()
+
+auth_scheme = APIKeyCookie(name="session_id")
     
 app.add_middleware(
     CORSMiddleware,
@@ -23,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(tournament_router)
 app.include_router(team_router)
 app.include_router(user_router)
