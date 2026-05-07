@@ -1,3 +1,5 @@
+import datetime
+
 from repositories.tournament_repository import TournamentRepository
 from database.schemas.schema import Tournament, TournamentStatus
 from services.models.tournament_model import TournamentModel
@@ -12,11 +14,19 @@ class TournamentsService:
         return await self.tournament_repository.get_all()
     
     async def get_tournament_by_id(self, tournament_id: int):
-        return await self.tournament_repository.get_by_id(tournament_id)
+        tournamnent = await self.tournament_repository.get_by_id(tournament_id)
+        tournamnent.start_date = tournamnent.start_date.replace(tzinfo=datetime.UTC)
+        tournamnent.registration_start_date = tournamnent.registration_start_date.replace(tzinfo=datetime.UTC)
+        tournamnent.registration_end_date = tournamnent.registration_end_date.replace(tzinfo=datetime.UTC)
+        return tournamnent
 
     async def create_tournament(self, tournament: TournamentModel) -> Tournament:
         data = tournament.model_dump(exclude={"id"})
         tournament_entity = Tournament(**data)
+
+        tournament_entity.start_date = tournament_entity.start_date.replace(tzinfo=None)
+        tournament_entity.registration_start_date = tournament_entity.registration_start_date.replace(tzinfo=None)
+        tournament_entity.registration_end_date = tournament_entity.registration_end_date.replace(tzinfo=None)
 
         return await self.tournament_repository.save(tournament_entity)
 
