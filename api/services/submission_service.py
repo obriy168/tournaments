@@ -11,8 +11,8 @@ class SubmissionService:
     async def get_submission_by_id(self, submission_id: int):
         return await self.submission_repository.get_by_id(submission_id)
     
-    async def get_submissions_by_tournament_id(self, tournament_id: int):
-        return await self.submission_repository.get_submissions_by_tournament_id(tournament_id)
+    async def get_submissions_by_task_id(self, task_id: int):
+        return await self.submission_repository.get_submissions_by_task_id(task_id)
     
     async def get_submission_by_id(self, submission_id: int):
         return await self.submission_repository.get_by_id(submission_id)

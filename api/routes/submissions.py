@@ -12,9 +12,9 @@ async def get_submission_by_id(submission_id: int, submission_service: Annotated
         raise HTTPException(status_code=404, detail="Submission not found")
     return submission
 
-@submissions_router.get("/{tournament_id}")
-async def get_submissions_by_tournament_id(tournament_id: int, submission_service: Annotated[SubmissionService, Depends(SubmissionService)]):
-    return await submission_service.get_submissions_by_tournament_id(tournament_id)
+@submissions_router.get("/task/{task_id}")
+async def get_submissions_by_task_id(task_id: int, submission_service: Annotated[SubmissionService, Depends(SubmissionService)]):
+    return await submission_service.get_submissions_by_task_id(task_id)
 
 @submissions_router.post("/")
 async def create_submission(submission: SubmissionModel, submission_service: Annotated[SubmissionService, Depends(SubmissionService)]):
