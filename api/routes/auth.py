@@ -4,6 +4,7 @@ from services.models.user_model import UserModel
 from services.user_service import UserService
 from typing import Annotated
 from routes.models.login_model import LoginModel
+from routes.models.login_response import LoginResponse
 
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -28,7 +29,7 @@ async def get_current_user(user_service: Annotated[UserService, Depends(UserServ
         raise HTTPException(status_code=401, detail="Invalid session")
     
     data = user.model_dump(exclude={"password"})
-    user_data = UserModel(**data)
+    user_data = LoginResponse(**data)
     
     return user_data
 
