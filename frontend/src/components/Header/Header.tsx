@@ -1,11 +1,12 @@
+// src/components/Header/Header.tsx
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useLogout } from "@/features/auth/hooks/useLogout";
 import styles from "./Header.module.css";
 
 export default function Header() {
-  const { user } = useAuth();
-  const logout = useLogout();
+  const { user, initializing } = useAuth();
+
+  const showAuthButtons = !initializing && !user;
 
   return (
     <header className={styles.header}>
@@ -15,20 +16,7 @@ export default function Header() {
         </Link>
 
         <nav className={styles.nav} aria-label="User navigation">
-          {user ? (
-            <>
-              <NavLink to="/app/profile" className={styles.link}>
-                {user.first_name}
-              </NavLink>
-              <button
-                onClick={logout}
-                className={styles.linkOutlined}
-                type="button"
-              >
-                Log out
-              </button>
-            </>
-          ) : (
+          {showAuthButtons ? (
             <>
               <NavLink to="/signup" className={styles.link}>
                 Sign up
@@ -37,7 +25,7 @@ export default function Header() {
                 Log in
               </NavLink>
             </>
-          )}
+          ) : null}
         </nav>
       </div>
     </header>

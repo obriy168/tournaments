@@ -78,6 +78,9 @@ function getLinksByRole(role: UserRole): LinkItem[] {
         { to: "/app/jury/evaluation", label: "Evaluation", end: false },
       ];
     case "participant":
+      return [
+        { to: "/app/participant", label: "Dashboard", end: true },
+      ];
     case "captain":
       return [
         { to: "/app/participant", label: "Dashboard", end: true },

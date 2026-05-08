@@ -86,9 +86,10 @@ const AdminJury = lazy(() => import("@/pages/dashboard/admin/AdminJury"));
 const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
 const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignments"));
 const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
-const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/ParticipantDashboard"));
+const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/dashboard/ParticipantDashboard"));
 const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/ParticipantMyTeam"));
 const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/ParticipantSubmissions"));
+const JoinTournamentPage = lazy(() => import("@/pages/dashboard/participant/JoinTournaments/JoinTournamentPage"));
 
 const wrap = (node: ReactNode) => (
   <ErrorBoundaryWrapper>
@@ -156,6 +157,7 @@ const router = createBrowserRouter([
                       { path: "/app/participant", element: wrap(<ParticipantDashboard />) },
                       { path: "/app/participant/team", element: wrap(<ParticipantMyTeam />) },
                       { path: "/app/participant/submissions", element: wrap(<ParticipantSubmissions />) },
+                      { path: "/app/participant/join", element: wrap(<JoinTournamentPage />) },
                       { path: "/app/participant/*", element: <Navigate to="/app/participant" replace /> },
                     ],
                   },

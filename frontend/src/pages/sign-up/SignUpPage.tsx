@@ -44,8 +44,9 @@ export default function SignUpPage() {
     }
 
     try {
-      await login(data.email, data.password);
-      navigate("/app", { replace: true });
+      const user = await login(data.email, data.password);
+      const rolePath = user.role === "captain" ? "participant" : user.role;
+      navigate(`/app/${rolePath}`, { replace: true });
     } catch {
       setError("root", {
         message: "Account created, but automatic login failed. Please log in manually.",

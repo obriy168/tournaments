@@ -17,6 +17,13 @@ interface AuthState {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+function normalizeUserRole(user: User): User {
+  if (!user.role) {
+    return { ...user, role: "participant" };
+  }
+  return user;
+}
+
 export const useAuthStore = create<AuthState>()(
   devtools(
     (set, get) => ({
@@ -31,7 +38,8 @@ export const useAuthStore = create<AuthState>()(
         const attemptFetch = async (attempt: number): Promise<void> => {
           try {
             const { data } = await api.get<User>("/auth/me");
-            set({ user: data, initializing: false, initialized: true });
+            const normalizedUser = normalizeUserRole(data);
+            set({ user: normalizedUser, initializing: false, initialized: true });
           } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
               const status = err.response?.status;
@@ -61,7 +69,8 @@ export const useAuthStore = create<AuthState>()(
         try {
           await api.post("/auth/refresh");
           const { data } = await api.get<User>("/auth/me");
-          set({ user: data });
+          const normalizedUser = normalizeUserRole(data);
+          set({ user: normalizedUser });
         } catch {
           set({ user: null });
         }
@@ -72,8 +81,9 @@ export const useAuthStore = create<AuthState>()(
         try {
           await api.post("/auth/login", { email, password });
           const { data } = await api.get<User>("/auth/me");
-          set({ user: data, isLoading: false, initialized: true });
-          return data;
+          const normalizedUser = normalizeUserRole(data);
+          set({ user: normalizedUser, isLoading: false, initialized: true });
+          return normalizedUser;
         } catch (error) {
           set({ isLoading: false });
           throw error;
