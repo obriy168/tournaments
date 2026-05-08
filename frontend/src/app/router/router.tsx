@@ -87,9 +87,14 @@ const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"))
 const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignments"));
 const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
 const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/dashboard/ParticipantDashboard"));
-const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/ParticipantMyTeam"));
+const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/MyTeam/ParticipantMyTeam"));
 const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/ParticipantSubmissions"));
 const JoinTournamentPage = lazy(() => import("@/pages/dashboard/participant/JoinTournaments/JoinTournamentPage"));
+const TournamentRegistrationPage = lazy(() => import("@/pages/dashboard/participant/TournamentRegistration/TournamentRegistrationPage"));
+const CreateTeamStep1 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep1"));
+const CreateTeamStep2 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep2"));
+const CreateTeamStep3 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep3"));
+const CreateTeamSuccess = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamSuccess"));
 
 const wrap = (node: ReactNode) => (
   <ErrorBoundaryWrapper>
@@ -155,7 +160,12 @@ const router = createBrowserRouter([
                     element: <RoleGuard allowed={["participant", "captain"]} />,
                     children: [
                       { path: "/app/participant", element: wrap(<ParticipantDashboard />) },
+                      { path: "/app/participant/team/create/step1", element: wrap(<CreateTeamStep1 />) },
+                      { path: "/app/participant/team/create/step2", element: wrap(<CreateTeamStep2 />) },
+                      { path: "/app/participant/team/create/step3", element: wrap(<CreateTeamStep3 />) },
+                      { path: "/app/participant/team/create/success", element: wrap(<CreateTeamSuccess />) },
                       { path: "/app/participant/team", element: wrap(<ParticipantMyTeam />) },
+                      { path: "/app/participant/tournaments", element: wrap(<TournamentRegistrationPage />) },
                       { path: "/app/participant/submissions", element: wrap(<ParticipantSubmissions />) },
                       { path: "/app/participant/join", element: wrap(<JoinTournamentPage />) },
                       { path: "/app/participant/*", element: <Navigate to="/app/participant" replace /> },

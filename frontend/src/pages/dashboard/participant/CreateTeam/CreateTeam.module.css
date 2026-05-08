@@ -1,0 +1,359 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  flex: 1;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.registration {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  flex: 1;
+}
+
+.registrationContent {
+  background: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  flex: 1;
+}
+
+.registrationContentCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 400px;
+}
+
+.registrationHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.registrationTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.registrationSubtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.registrationForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formInline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+}
+
+.formRow .field {
+  flex: 1;
+  min-width: 0;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: "Inter", sans-serif;
+  transition: 0.2s;
+  background-color: #fafafa;
+  color: #000;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.input:focus {
+  outline: none;
+  border-color: black;
+  background-color: white;
+}
+
+.inputError {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.fieldError {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  margin: 0 0 4px 0;
+}
+
+.addBtn {
+  padding: 14px 24px;
+  background: #f3f4f6;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: 0.2s;
+  white-space: nowrap;
+  height: fit-content;
+  margin-bottom: 1px;
+}
+
+.addBtn:hover {
+  background: #e5e7eb;
+}
+
+.roster {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 16px;
+}
+
+.memberAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #000000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.memberHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.memberName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #000;
+}
+
+.memberRole {
+  font-size: 12px;
+  font-weight: 600;
+  color: #000000;
+  background: #dddddd;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.memberEmail {
+  font-size: 13px;
+  color: #666;
+}
+
+.memberDelete {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  color: #999;
+  cursor: pointer;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.memberDelete:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  text-decoration: none;
+  border: 2px solid transparent;
+  font-family: inherit;
+}
+
+.btnPrimary {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  border-color: #000000;
+}
+
+.btnPrimary:hover {
+  background: #000000;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btnPrimary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btnSecondary {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  border-color: #000000;
+}
+
+.btnSecondary:hover {
+  background: #000000;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 480px;
+}
+
+.successIcon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  color: #15803d;
+}
+
+.successTitle {
+  font-size: 28px;
+  font-weight: 700;
+  color: #000;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.successText {
+  font-size: 16px;
+  color: #666;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 14px;
+  text-align: center;
+}

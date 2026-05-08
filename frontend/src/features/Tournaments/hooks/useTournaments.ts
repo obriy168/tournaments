@@ -13,27 +13,17 @@ function filterAndSortTournaments(data: Tournament[]): Tournament[] {
   const activeAndUpcoming = data.filter((t) => {
     if (t.status === "Draft" || t.status === "Finished") return false;
     if (t.status === "Running") return true;
-    const regEndDate = new Date(t.registration_end_date);
-    return now <= regEndDate;
+    return now <= new Date(t.registration_end_date);
   });
 
   return activeAndUpcoming.sort((a, b) => {
-    const aIsRunning = a.status === "Running";
-    const bIsRunning = b.status === "Running";
-
-    if (aIsRunning && !bIsRunning) return -1;
-    if (!aIsRunning && bIsRunning) return 1;
-
-    if (aIsRunning && bIsRunning) {
-      return (
-        new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
-      );
+    const aRunning = a.status === "Running";
+    const bRunning = b.status === "Running";
+    if (aRunning !== bRunning) return aRunning ? -1 : 1;
+    if (aRunning) {
+      return new Date(a.start_date).getTime() - new Date(b.start_date).getTime();
     }
-
-    return (
-      new Date(a.registration_end_date).getTime() -
-      new Date(b.registration_end_date).getTime()
-    );
+    return new Date(a.registration_end_date).getTime() - new Date(b.registration_end_date).getTime();
   });
 }
 
