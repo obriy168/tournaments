@@ -20,6 +20,7 @@ class TaskStatus(str, Enum):
 
 class RoleEnum(str, Enum):
     ADMIN = "Admin"
+    ORGANIZER = "Organizer"
     JURY = "Jury"
     PARTICIPANT = "Participant"
 
@@ -68,7 +69,7 @@ class Tournament(SQLModel, table=True):
 class UserRole(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", ondelete="CASCADE")
-    tournament_id: int = Field(foreign_key="tournament.id", ondelete="CASCADE")
+    tournament_id: Optional[int] = Field(default=None, nullable=True, foreign_key="tournament.id", ondelete="CASCADE")
     role: RoleEnum = Field(nullable=False)
     user: "User" = Relationship(back_populates="user_roles")
     tournament: "Tournament" = Relationship(back_populates="user_roles")

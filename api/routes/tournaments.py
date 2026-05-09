@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+from util.auth import validate_session
 from services.models.tournament_model import TournamentModel
 from services.tournaments_service import TournamentsService
 from typing import Annotated
 
-tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
+tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"], dependencies=[Depends(validate_session)])
 
 @tournament_router.get("/{tournament_id}")
 async def read_tournament_by_id(tournament_id: int, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):

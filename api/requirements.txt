@@ -5,3 +5,4 @@ sqlmodel
 alembic
 asyncpg
 dotenv
+pwdlib[argon2]
