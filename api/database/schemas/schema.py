@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, DateTime
 from datetime import datetime, timezone
 from typing import Optional
 from enum import Enum
@@ -55,9 +55,9 @@ class Tournament(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     name: str = Field(nullable=False)
     description: str
-    start_date: datetime = Field(default_factory=utcnow)
-    registration_start_date: datetime = Field(default_factory=utcnow)
-    registration_end_date: datetime = Field(default_factory=utcnow)
+    start_date: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
+    registration_start_date: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
+    registration_end_date: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
     max_teams: int = Field(nullable=False)
     min_user_count: int = Field(nullable=False)
     max_user_count: int = Field(nullable=False)
@@ -81,8 +81,8 @@ class Task(SQLModel, table=True):
     name: str = Field(nullable=False)
     description: str = Field(nullable=False)
     specifications: str = Field(nullable=False)
-    start_date: datetime = Field(default_factory=utcnow)
-    end_date: datetime = Field(default_factory=utcnow)
+    start_date: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
+    end_date: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
     status: TaskStatus
     tournament: "Tournament" = Relationship(back_populates="tasks")
     submissions: list["Submission"] = Relationship(back_populates="task", cascade_delete=True)
@@ -108,7 +108,7 @@ class Submission(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
     team_id: int = Field(foreign_key="team.id", ondelete="CASCADE")
     task_id: int = Field(foreign_key="task.id", ondelete="CASCADE")
-    created_on: datetime = Field(default_factory=utcnow)
+    created_on: datetime = Field(default_factory=utcnow, sa_type=DateTime(timezone=True))
     github_url: str = Field(nullable=False)
     video_url: str = Field(nullable=False)
     live_demo_url: Optional[str] = Field(default=None)
