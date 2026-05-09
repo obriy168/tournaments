@@ -7,27 +7,36 @@ interface Props {
   tournament: Tournament;
   actionUrl?: string;
   actionLabel?: string;
+  hideAction?: boolean;
 }
 
 function TournamentCard({
   tournament,
   actionUrl = "/login",
   actionLabel = "Join Tournament",
+  hideAction = false,
 }: Props) {
   const isOpen = tournament.status === "Registration";
 
   const dates = useMemo(() => {
-    const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const fmt = (d: string) =>
+      new Date(d).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
     return {
-      regStart: tournament.registration_start_date ? fmt(tournament.registration_start_date) : null,
+      regStart: tournament.registration_start_date
+        ? fmt(tournament.registration_start_date)
+        : null,
       regEnd: fmt(tournament.registration_end_date),
       start: fmt(tournament.start_date),
     };
-  }, [tournament.registration_start_date, tournament.registration_end_date, tournament.start_date]);
+  }, [
+    tournament.registration_start_date,
+    tournament.registration_end_date,
+    tournament.start_date,
+  ]);
 
   return (
     <article className={styles.card}>
@@ -58,9 +67,18 @@ function TournamentCard({
         </dl>
       </div>
 
-      <Link to={actionUrl} className={styles.button}>
-        {actionLabel}
-      </Link>
+      {!hideAction &&
+        (isOpen ? (
+          <Link to={actionUrl} className={styles.button}>
+            {actionLabel}
+          </Link>
+        ) : (
+          <span className={styles.closedBadge}>
+            {tournament.status === "Running"
+              ? "Registration Closed"
+              : "Finished"}
+          </span>
+        ))}
     </article>
   );
 }

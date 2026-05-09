@@ -16,7 +16,7 @@ interface CreateTeamPayload {
   name: string;
   city: string;
   organization: string;
-  tournament_id?: number;
+  tournament_id: number;
   verifiedMembers?: TeamMember[];
   pendingMembers?: TeamMember[];
 }
@@ -32,11 +32,17 @@ export function useCreateTeam() {
 
       const { verifiedMembers, pendingMembers, ...teamData } = data;
 
+      if (!teamData.tournament_id) {
+        throw new Error("Tournament is required");
+      }
+
       const team = await createTeam({
-        ...teamData,
-        tournament_id: 0,
+        name: teamData.name,
+        city: teamData.city,
+        organization: teamData.organization,
+        tournament_id: teamData.tournament_id,
       });
-      
+
       await addUserToTeam(team.id, user.id);
       await changeTeamLeader(team.id, user.id);
 
@@ -44,7 +50,7 @@ export function useCreateTeam() {
         await Promise.all(
           verifiedMembers
             .filter((member) => member.userId && member.userId !== user.id)
-            .map((member) => 
+            .map((member) =>
               addUserToTeam(team.id, member.userId!).catch((err) => {
                 console.error(`Failed to add user ${member.email}:`, err);
               })
@@ -56,7 +62,7 @@ export function useCreateTeam() {
         const allInvites = JSON.parse(
           localStorage.getItem("pending_team_invites") || "[]"
         ) as Array<{ email: string; teamId: number; teamName: string; invitedAt: string }>;
-        
+
         for (const member of pendingMembers) {
           allInvites.push({
             email: member.email,

@@ -1,0 +1,360 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 89vh;
+
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.tournamentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 24px;
+}
+
+.tournamentWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.registerBtn {
+  width: 100%;
+  padding: 14px 28px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background-color: black;
+  border: 2px solid black;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.registerBtn:hover:not(:disabled) {
+  background-color: #333;
+  transform: translateY(-2px);
+}
+
+.registerBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.closedBadge {
+  padding: 14px 28px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #888;
+  background: #f5f5f5;
+  text-align: center;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  background-color: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 60px 40px;
+  min-height: 320px;
+}
+
+.error {
+  color: #dc2626;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.retry {
+  padding: 10px 24px;
+  border: 2px solid black;
+  border-radius: 12px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.retry:hover {
+  background: black;
+  color: white;
+}
+
+.button {
+  display: inline-block;
+  padding: 14px 28px;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  transition: 0.2s;
+  text-align: center;
+  min-width: 200px;
+  cursor: pointer;
+  border: 2px solid black;
+  font-family: inherit;
+}
+
+.buttonSecondary {
+  color: black;
+  background-color: white;
+}
+
+.buttonSecondary:hover {
+  color: white;
+  background-color: black;
+  transform: translateY(-2px);
+}
+
+.loadingText {
+  color: #888;
+  font-size: 16px;
+}
+
+.registeredCard {
+  background: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.registeredHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.registeredTitle {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.registeredDesc {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.statusBadge {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+
+.statusDraft {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.statusRegistration {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.statusRunning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusFinished {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #eee;
+}
+
+.infoItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoValue {
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+
+.urgent {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.section {
+  margin-top: 8px;
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 16px 0;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.taskCard {
+  background: #ffffff;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: 0.2s;
+}
+
+.taskCard:hover {
+  border-color: #ccc;
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.taskName {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.taskStatus {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
+.taskStatusDraft {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.taskStatusActive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.taskStatusSubmissionClosed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.taskStatusEvaluated {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.taskDesc {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.taskMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.emptyCard {
+  background: #fafafa;
+  border: 1px dashed #ccc;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.emptyText {
+  color: #666;
+  font-size: 15px;
+  margin: 0;
+}

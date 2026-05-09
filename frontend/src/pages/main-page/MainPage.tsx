@@ -19,23 +19,22 @@ export default function MainPage() {
 
   const content = useMemo(() => {
     if (isLoading) return <div className={styles.loading}>Loading tournaments…</div>;
-    if (error) return (
-      <div className={styles.error}>
-        <p>{error.message}</p>
-        <button onClick={() => refetch()} className={styles.retry}>Retry</button>
-      </div>
-    );
-    if (!data || data.length === 0) return <div className={styles.empty}>No active tournaments at the moment.</div>;
-    
+    if (error)
+      return (
+        <div className={styles.error}>
+          <p>{error.message}</p>
+          <button onClick={() => refetch()} className={styles.retry}>
+            Retry
+          </button>
+        </div>
+      );
+    if (!data || data.length === 0)
+      return <div className={styles.empty}>No active tournaments at the moment.</div>;
+
     return (
       <div className={styles.tournaments__grid}>
         {data.map((tournament) => (
-          <TournamentCard
-            key={tournament.id}
-            tournament={tournament}
-            actionUrl="/login"
-            actionLabel="Join Tournament"
-          />
+          <TournamentCard key={tournament.id} tournament={tournament} />
         ))}
       </div>
     );
@@ -63,9 +62,7 @@ export default function MainPage() {
           <p className={styles.tournaments__description}>
             Check out the tournaments currently in progress.
           </p>
-          <div className={styles.tournaments__content}>
-            {content}
-          </div>
+          <div className={styles.tournaments__content}>{content}</div>
         </div>
       </section>
     </>
