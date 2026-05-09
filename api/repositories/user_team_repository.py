@@ -13,7 +13,11 @@ class UserTeamRepository(BaseRepository[UserTeam]):
     async def get_teams_by_user_id(self, user_id):
         query = select(Team).join(UserTeam).where(UserTeam.user_id == user_id)
         result = await self.db.execute(query)
+        return result.scalars().all()
 
+    async def get_users_by_team_id(self, team_id):
+        query = select(UserTeam).where(UserTeam.team_id == team_id)
+        result = await self.db.execute(query)
         return result.scalars().all()
 
     async def get_link(self, team_id: int, user_id: int):
