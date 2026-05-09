@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
 import { getTournament, getTasks, type Task } from "@/services/api";
-import styles from "./TournamentRegistrationPage.module.css";
+import styles from "./TournamentPage.module.css";
 
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", {
