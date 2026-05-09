@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
@@ -17,9 +17,31 @@ export default function MainPage() {
     }
   }, [user, initializing, navigate]);
 
-  if (initializing || user) {
-    return null;
-  }
+  const content = useMemo(() => {
+    if (isLoading) return <div className={styles.loading}>Loading tournaments…</div>;
+    if (error) return (
+      <div className={styles.error}>
+        <p>{error.message}</p>
+        <button onClick={() => refetch()} className={styles.retry}>Retry</button>
+      </div>
+    );
+    if (!data || data.length === 0) return <div className={styles.empty}>No active tournaments at the moment.</div>;
+    
+    return (
+      <div className={styles.tournaments__grid}>
+        {data.map((tournament) => (
+          <TournamentCard
+            key={tournament.id}
+            tournament={tournament}
+            actionUrl="/login"
+            actionLabel="Join Tournament"
+          />
+        ))}
+      </div>
+    );
+  }, [isLoading, error, data, refetch]);
+
+  if (initializing || user) return null;
 
   return (
     <>
@@ -41,37 +63,8 @@ export default function MainPage() {
           <p className={styles.tournaments__description}>
             Check out the tournaments currently in progress.
           </p>
-
           <div className={styles.tournaments__content}>
-            {isLoading && (
-              <div className={styles.loading}>Loading tournaments…</div>
-            )}
-
-            {error && (
-              <div className={styles.error}>
-                <p>{error.message}</p>
-                <button onClick={() => refetch()} className={styles.retry}>
-                  Retry
-                </button>
-              </div>
-            )}
-
-            {!isLoading && !error && data && data.length === 0 && (
-              <div className={styles.empty}>No active tournaments at the moment.</div>
-            )}
-
-            {!isLoading && !error && data && data.length > 0 && (
-              <div className={styles.tournaments__grid}>
-                {data.map((tournament) => (
-                  <TournamentCard
-                    key={tournament.id}
-                    tournament={tournament}
-                    actionUrl="/login"
-                    actionLabel="Join Tournament"
-                  />
-                ))}
-              </div>
-            )}
+            {content}
           </div>
         </div>
       </section>

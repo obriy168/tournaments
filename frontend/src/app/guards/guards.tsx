@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { UserRole } from "@/features/auth/context/authContextValue";
+import styles from "./guards.module.css";
 
 function normalizeRole(role: UserRole): Exclude<UserRole, "captain"> {
   return role === "captain" ? "participant" : role;
@@ -12,52 +13,11 @@ function getRolePath(role: UserRole): string {
 
 export function LoadingFallback() {
   return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        height: "100vh",
-        background: "#ffffff",
-        flexDirection: "column",
-        gap: "20px",
-      }}
-    >
-      <div
-        style={{
-          fontSize: "28px",
-          fontWeight: 700,
-          letterSpacing: "-1px",
-          fontFamily: '"Inter", sans-serif',
-        }}
-      >
-        Skyline
+    <div className={styles.loadingFallback}>
+      <div className={styles.logo}>Skyline</div>
+      <div className={styles.bar}>
+        <div className={styles.progress} />
       </div>
-      <div
-        style={{
-          width: "120px",
-          height: "3px",
-          background: "#eeeeee",
-          borderRadius: "3px",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: "100%",
-            background: "#000000",
-            borderRadius: "3px",
-            animation: "loadBar 1s ease-in-out infinite",
-          }}
-        />
-      </div>
-      <style>{`
-        @keyframes loadBar {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      `}</style>
     </div>
   );
 }

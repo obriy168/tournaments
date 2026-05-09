@@ -6,6 +6,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const loading = useAuthStore((s) => s.isLoading);
   const initializing = useAuthStore((s) => s.initializing);
+  const hasTeam = useAuthStore((s) => s.hasTeam);
   const login = useAuthStore((s) => s.login);
   const logout = useAuthStore((s) => s.logout);
   const fetchMe = useAuthStore((s) => s.fetchMe);
@@ -32,10 +33,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       initializing,
+      hasTeam,
       login,
       logout,
     }),
-    [user, loading, initializing, login, logout]
+    [user, loading, initializing, hasTeam, login, logout]
   );
 
   return (

@@ -1,0 +1,46 @@
+.errorBoundary {
+  padding: 40px;
+  text-align: center;
+}
+
+.reloadBtn {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border: 2px solid black;
+  border-radius: 12px;
+  background: white;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.pageLoader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60vh;
+}
+
+.loaderBar {
+  width: 120px;
+  height: 3px;
+  background: #eeeeee;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.loaderProgress {
+  height: 100%;
+  width: 100%;
+  background: #000000;
+  border-radius: 3px;
+  animation: loadBar 1s ease-in-out infinite;
+}
+
+@keyframes loadBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

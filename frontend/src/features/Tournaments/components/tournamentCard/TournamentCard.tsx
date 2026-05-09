@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import type { Tournament } from "@/services/api";
 import styles from "./TournamentCard.module.css";
@@ -16,6 +16,19 @@ function TournamentCard({
 }: Props) {
   const isOpen = tournament.status === "Registration";
 
+  const dates = useMemo(() => {
+    const fmt = (d: string) => new Date(d).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    return {
+      regStart: tournament.registration_start_date ? fmt(tournament.registration_start_date) : null,
+      regEnd: fmt(tournament.registration_end_date),
+      start: fmt(tournament.start_date),
+    };
+  }, [tournament.registration_start_date, tournament.registration_end_date, tournament.start_date]);
+
   return (
     <article className={styles.card}>
       <h3 className={styles.title}>{tournament.name}</h3>
@@ -28,25 +41,19 @@ function TournamentCard({
         </span>
 
         <dl className={styles.dates}>
-          {tournament.registration_start_date && (
+          {dates.regStart && (
             <div className={styles.dateRow}>
               <dt className={styles.dateLabel}>Registration opens</dt>
-              <dd className={styles.dateValue}>
-                {formatDate(tournament.registration_start_date)}
-              </dd>
+              <dd className={styles.dateValue}>{dates.regStart}</dd>
             </div>
           )}
           <div className={styles.dateRow}>
             <dt className={styles.dateLabel}>Registration closes</dt>
-            <dd className={styles.dateValue}>
-              {formatDate(tournament.registration_end_date)}
-            </dd>
+            <dd className={styles.dateValue}>{dates.regEnd}</dd>
           </div>
           <div className={styles.dateRow}>
             <dt className={styles.dateLabel}>Tournament starts</dt>
-            <dd className={styles.dateValue}>
-              {formatDate(tournament.start_date)}
-            </dd>
+            <dd className={styles.dateValue}>{dates.start}</dd>
           </div>
         </dl>
       </div>
@@ -56,14 +63,6 @@ function TournamentCard({
       </Link>
     </article>
   );
-}
-
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
 }
 
 export default memo(TournamentCard);

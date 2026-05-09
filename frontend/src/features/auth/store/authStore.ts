@@ -9,13 +9,22 @@ interface AuthState {
   isLoading: boolean;
   initializing: boolean;
   initialized: boolean;
+  hasTeam: boolean;
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  checkTeam: () => Promise<void>;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function normalizeUserRole(user: User): User {
+  if (!user.role) {
+    return { ...user, role: "participant" };
+  }
+  return user;
+}
 
 export const useAuthStore = create<AuthState>()(
   devtools(
@@ -24,6 +33,7 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       initializing: true,
       initialized: false,
+      hasTeam: false,
 
       fetchMe: async () => {
         if (get().initialized && get().user) return;
@@ -31,7 +41,9 @@ export const useAuthStore = create<AuthState>()(
         const attemptFetch = async (attempt: number): Promise<void> => {
           try {
             const { data } = await api.get<User>("/auth/me");
-            set({ user: data, initializing: false, initialized: true });
+            const normalizedUser = normalizeUserRole(data);
+            set({ user: normalizedUser, initializing: false, initialized: true });
+            await get().checkTeam();
           } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
               const status = err.response?.status;
@@ -57,13 +69,30 @@ export const useAuthStore = create<AuthState>()(
         await attemptFetch(0);
       },
 
+      checkTeam: async () => {
+        const user = get().user;
+        if (!user) {
+          set({ hasTeam: false });
+          return;
+        }
+
+        try {
+          const { data: teams } = await api.get(`/users_team/${user.id}`);
+          set({ hasTeam: Array.isArray(teams) && teams.length > 0 });
+        } catch {
+          set({ hasTeam: false });
+        }
+      },
+
       refreshSession: async () => {
         try {
           await api.post("/auth/refresh");
           const { data } = await api.get<User>("/auth/me");
-          set({ user: data });
+          const normalizedUser = normalizeUserRole(data);
+          set({ user: normalizedUser });
+          await get().checkTeam();
         } catch {
-          set({ user: null });
+          set({ user: null, hasTeam: false });
         }
       },
 
@@ -72,8 +101,10 @@ export const useAuthStore = create<AuthState>()(
         try {
           await api.post("/auth/login", { email, password });
           const { data } = await api.get<User>("/auth/me");
-          set({ user: data, isLoading: false, initialized: true });
-          return data;
+          const normalizedUser = normalizeUserRole(data);
+          set({ user: normalizedUser, isLoading: false, initialized: true });
+          await get().checkTeam();
+          return normalizedUser;
         } catch (error) {
           set({ isLoading: false });
           throw error;
@@ -88,7 +119,7 @@ export const useAuthStore = create<AuthState>()(
           console.error("Logout API error:", err);
         } finally {
           queryClient.clear();
-          set({ user: null, isLoading: false, initialized: false });
+          set({ user: null, isLoading: false, initialized: false, hasTeam: false });
         }
       },
     }),

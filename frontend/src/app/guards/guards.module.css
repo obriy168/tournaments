@@ -1,0 +1,41 @@
+.loadingFallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #ffffff;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  font-family: "Inter", sans-serif;
+}
+
+.bar {
+  width: 120px;
+  height: 3px;
+  background: #eeeeee;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  width: 100%;
+  background: #000000;
+  border-radius: 3px;
+  animation: loadBar 1s ease-in-out infinite;
+}
+
+@keyframes loadBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

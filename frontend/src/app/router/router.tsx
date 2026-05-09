@@ -1,0 +1,193 @@
+import { lazy, Suspense, Component, type ReactNode, useEffect } from "react";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { RequireAuth, PublicOnly, RoleGuard, RoleRedirect } from "@/app/guards/guards";
+import PublicLayout from "@/layouts/public/PublicLayout";
+import AuthLayout from "@/layouts/authorization/AuthorizationLayout";
+import AppLayout from "@/layouts/app/AppLayout";
+import SplashScreen from "@/components/SplashScreen/SplashScreen";
+import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
+import styles from "./Router.module.css";
+
+class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+  constructor(props: { children: ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error("Route error:", error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className={styles.errorBoundary}>
+          <h2>Something went wrong loading this page.</h2>
+          <button onClick={() => window.location.reload()} className={styles.reloadBtn}>
+            Reload page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+function ErrorBoundaryWrapper({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  return (
+    <RouteErrorBoundary key={location.pathname}>
+      {children}
+    </RouteErrorBoundary>
+  );
+}
+
+function ScrollToTopWrapper() {
+  return (
+    <>
+      <ScrollToTop />
+      <Outlet />
+    </>
+  );
+}
+
+function SessionGuard() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const handler = () => navigate("/login", { replace: true });
+    window.addEventListener("skyline:session-expired", handler);
+    return () => window.removeEventListener("skyline:session-expired", handler);
+  }, [navigate]);
+  return <Outlet />;
+}
+
+function PageLoader() {
+  return (
+    <div className={styles.pageLoader}>
+      <div className={styles.loaderBar}>
+        <div className={styles.loaderProgress} />
+      </div>
+    </div>
+  );
+}
+
+const MainPage = lazy(() => import("@/pages/main-page/MainPage"));
+const LogInPage = lazy(() => import("@/pages/login/LogInPage"));
+const SignUpPage = lazy(() => import("@/pages/sign-up/SignUpPage"));
+const ProfilePage = lazy(() => import("@/pages/profile/ProfilePage"));
+const PrivacyPage = lazy(() => import("@/pages/legal/privacy/PrivacyCookiePage"));
+const TermsPage = lazy(() => import("@/pages/legal/terms/TermsPage"));
+const AdminDashboard = lazy(() => import("@/pages/dashboard/admin/AdminDashboard"));
+const AdminTournaments = lazy(() => import("@/pages/dashboard/admin/AdminTournaments"));
+const AdminTeams = lazy(() => import("@/pages/dashboard/admin/AdminTeams"));
+const AdminJury = lazy(() => import("@/pages/dashboard/admin/AdminJury"));
+const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
+const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignments"));
+const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
+const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/dashboard/ParticipantDashboard"));
+const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/MyTeam/ParticipantMyTeam"));
+const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/ParticipantSubmissions"));
+const JoinTournamentPage = lazy(() => import("@/pages/dashboard/participant/JoinTournaments/JoinTournamentPage"));
+const TournamentRegistrationPage = lazy(() => import("@/pages/dashboard/participant/TournamentRegistration/TournamentRegistrationPage"));
+const CreateTeamStep1 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep1"));
+const CreateTeamStep2 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep2"));
+const CreateTeamStep3 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep3"));
+const CreateTeamSuccess = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamSuccess"));
+
+const wrap = (node: ReactNode) => (
+  <ErrorBoundaryWrapper>
+    <Suspense fallback={<PageLoader />}>{node}</Suspense>
+  </ErrorBoundaryWrapper>
+);
+
+const router = createBrowserRouter([
+  {
+    element: <ScrollToTopWrapper />,
+    children: [
+      {
+        element: <SessionGuard />,
+        children: [
+          {
+            element: <PublicLayout />,
+            children: [
+              { path: "/", element: wrap(<MainPage />) },
+              { path: "/privacy", element: wrap(<PrivacyPage />) },
+              { path: "/terms", element: wrap(<TermsPage />) },
+            ],
+          },
+          {
+            element: <PublicOnly />,
+            children: [
+              {
+                element: <AuthLayout />,
+                children: [
+                  { path: "/login", element: wrap(<LogInPage />) },
+                  { path: "/signup", element: wrap(<SignUpPage />) },
+                ],
+              },
+            ],
+          },
+          {
+            element: <RequireAuth />,
+            children: [
+              {
+                element: <AppLayout />,
+                children: [
+                  { path: "/app", element: <RoleRedirect /> },
+                  { path: "/app/profile", element: wrap(<ProfilePage />) },
+                  {
+                    element: <RoleGuard allowed={["admin"]} />,
+                    children: [
+                      { path: "/app/admin", element: wrap(<AdminDashboard />) },
+                      { path: "/app/admin/tournaments", element: wrap(<AdminTournaments />) },
+                      { path: "/app/admin/teams", element: wrap(<AdminTeams />) },
+                      { path: "/app/admin/jury", element: wrap(<AdminJury />) },
+                      { path: "/app/admin/*", element: <Navigate to="/app/admin" replace /> },
+                    ],
+                  },
+                  {
+                    element: <RoleGuard allowed={["jury"]} />,
+                    children: [
+                      { path: "/app/jury", element: wrap(<JuryDashboard />) },
+                      { path: "/app/jury/assignments", element: wrap(<JuryAssignments />) },
+                      { path: "/app/jury/evaluation", element: wrap(<JuryEvaluation />) },
+                      { path: "/app/jury/*", element: <Navigate to="/app/jury" replace /> },
+                    ],
+                  },
+                  {
+                    element: <RoleGuard allowed={["participant", "captain"]} />,
+                    children: [
+                      { path: "/app/participant", element: wrap(<ParticipantDashboard />) },
+                      { path: "/app/participant/team/create/step1", element: wrap(<CreateTeamStep1 />) },
+                      { path: "/app/participant/team/create/step2", element: wrap(<CreateTeamStep2 />) },
+                      { path: "/app/participant/team/create/step3", element: wrap(<CreateTeamStep3 />) },
+                      { path: "/app/participant/team/create/success", element: wrap(<CreateTeamSuccess />) },
+                      { path: "/app/participant/team", element: wrap(<ParticipantMyTeam />) },
+                      { path: "/app/participant/tournaments", element: wrap(<TournamentRegistrationPage />) },
+                      { path: "/app/participant/submissions", element: wrap(<ParticipantSubmissions />) },
+                      { path: "/app/participant/join", element: wrap(<JoinTournamentPage />) },
+                      { path: "/app/participant/*", element: <Navigate to="/app/participant" replace /> },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+          { path: "*", element: <Navigate to="/" replace /> },
+        ],
+      },
+    ],
+  },
+]);
+
+export default function AppRouter() {
+  const { initializing } = useAuth();
+  return (
+    <>
+      <SplashScreen visible={initializing} />
+      <RouterProvider router={router} />
+    </>
+  );
+}

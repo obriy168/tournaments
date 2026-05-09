@@ -12,6 +12,9 @@ const registerSchema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  accepted_terms: z.boolean().refine((val) => val === true, {
+    message: "You must accept the Terms of Use and Privacy Policy",
+  }),
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -27,6 +30,9 @@ export default function SignUpPage() {
     setError,
   } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      accepted_terms: false,
+    },
   });
 
   const onSubmit = async (data: RegisterForm) => {
@@ -38,8 +44,9 @@ export default function SignUpPage() {
     }
 
     try {
-      await login(data.email, data.password);
-      navigate("/app", { replace: true });
+      const user = await login(data.email, data.password);
+      const rolePath = user.role === "captain" ? "participant" : user.role;
+      navigate(`/app/${rolePath}`, { replace: true });
     } catch {
       setError("root", {
         message: "Account created, but automatic login failed. Please log in manually.",
@@ -53,7 +60,7 @@ export default function SignUpPage() {
         <h1 className={styles.auth__title}>Create an account</h1>
 
         {errors.root && (
-          <p role="alert" style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}>
+          <p role="alert" className={styles.rootError}>
             {errors.root.message}
           </p>
         )}
@@ -74,7 +81,7 @@ export default function SignUpPage() {
                 {...register("first_name")}
               />
               {errors.first_name && (
-                <span id="first_name-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+                <span id="first_name-error" role="alert" className={styles.fieldError}>
                   {errors.first_name.message}
                 </span>
               )}
@@ -92,7 +99,7 @@ export default function SignUpPage() {
                 {...register("last_name")}
               />
               {errors.last_name && (
-                <span id="last_name-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+                <span id="last_name-error" role="alert" className={styles.fieldError}>
                   {errors.last_name.message}
                 </span>
               )}
@@ -112,7 +119,7 @@ export default function SignUpPage() {
               {...register("email")}
             />
             {errors.email && (
-              <span id="email-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+              <span id="email-error" role="alert" className={styles.fieldError}>
                 {errors.email.message}
               </span>
             )}
@@ -131,8 +138,37 @@ export default function SignUpPage() {
               {...register("password")}
             />
             {errors.password && (
-              <span id="password-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+              <span id="password-error" role="alert" className={styles.fieldError}>
                 {errors.password.message}
+              </span>
+            )}
+          </div>
+
+          <div className={styles.auth__field}>
+            <label
+              className={`${styles.checkboxLabel} ${errors.accepted_terms ? styles.checkboxLabelError : ""}`}
+            >
+              <input
+                type="checkbox"
+                disabled={isSubmitting}
+                aria-invalid={!!errors.accepted_terms}
+                aria-describedby={errors.accepted_terms ? "terms-error" : undefined}
+                {...register("accepted_terms")}
+              />
+              <span>
+                I agree to the{" "}
+                <Link to="/terms" target="_blank" className={styles.auth__link}>
+                  Terms of Use
+                </Link>{" "}
+                and{" "}
+                <Link to="/privacy" target="_blank" className={styles.auth__link}>
+                  Privacy and Cookie Policy
+                </Link>
+              </span>
+            </label>
+            {errors.accepted_terms && (
+              <span id="terms-error" role="alert" className={styles.fieldError}>
+                {errors.accepted_terms.message}
               </span>
             )}
           </div>

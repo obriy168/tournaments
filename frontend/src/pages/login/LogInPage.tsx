@@ -51,7 +51,7 @@ export default function LogInPage() {
         <h1 className={styles.auth__title}>Welcome back</h1>
 
         {errors.root && (
-          <p role="alert" style={{ color: "#dc2626", textAlign: "center", marginBottom: 16 }}>
+          <p role="alert" className={styles.rootError}>
             {errors.root.message}
           </p>
         )}
@@ -71,7 +71,7 @@ export default function LogInPage() {
               {...register("email")}
             />
             {errors.email && (
-              <span id="email-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+              <span id="email-error" role="alert" className={styles.fieldError}>
                 {errors.email.message}
               </span>
             )}
@@ -90,7 +90,7 @@ export default function LogInPage() {
               {...register("password")}
             />
             {errors.password && (
-              <span id="password-error" role="alert" style={{ color: "#dc2626", fontSize: 13, marginTop: 4, display: "block" }}>
+              <span id="password-error" role="alert" className={styles.fieldError}>
                 {errors.password.message}
               </span>
             )}
