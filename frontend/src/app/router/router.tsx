@@ -90,7 +90,7 @@ const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/da
 const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/MyTeam/ParticipantMyTeam"));
 const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/ParticipantSubmissions"));
 const JoinTournamentPage = lazy(() => import("@/pages/dashboard/participant/JoinTournaments/JoinTournamentPage"));
-const TournamentRegistrationPage = lazy(() => import("@/pages/dashboard/participant/TournamentRegistration/TournamentRegistrationPage"));
+const TournamentPage = lazy(() => import("@/pages/dashboard/participant/Tournament/TournamentPage"));
 const CreateTeamStep1 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep1"));
 const CreateTeamStep2 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep2"));
 const CreateTeamStep3 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep3"));
@@ -165,7 +165,7 @@ const router = createBrowserRouter([
                       { path: "/app/participant/team/create/step3", element: wrap(<CreateTeamStep3 />) },
                       { path: "/app/participant/team/create/success", element: wrap(<CreateTeamSuccess />) },
                       { path: "/app/participant/team", element: wrap(<ParticipantMyTeam />) },
-                      { path: "/app/participant/tournaments", element: wrap(<TournamentRegistrationPage />) },
+                      { path: "/app/participant/tournaments", element: wrap(<TournamentPage />) },
                       { path: "/app/participant/submissions", element: wrap(<ParticipantSubmissions />) },
                       { path: "/app/participant/join", element: wrap(<JoinTournamentPage />) },
                       { path: "/app/participant/*", element: <Navigate to="/app/participant" replace /> },
