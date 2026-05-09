@@ -1,8 +1,8 @@
 """fix-datetime-columns
 
-Revision ID: 8449cddc7588
-Revises: 9a7c4bd7f774
-Create Date: 2026-05-08 09:31:01.651707
+Revision ID: 1f6b3a8ea470
+Revises: c9ded10dd837
+Create Date: 2026-05-09 22:07:53.540549
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '8449cddc7588'
-down_revision: Union[str, Sequence[str], None] = '9a7c4bd7f774'
+revision: str = '1f6b3a8ea470'
+down_revision: Union[str, Sequence[str], None] = 'c9ded10dd837'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
