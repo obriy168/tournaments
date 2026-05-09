@@ -13,6 +13,7 @@ import {
   addUserToTeam,
   getUserTeamLink,
   getAllUsers,
+  getMyTeams,
   type Team,
   type User,
 } from "@/services/api";
@@ -20,7 +21,6 @@ import { myTeamsKeys } from "@/features/teams/hooks/useMyTeams";
 import styles from "./ParticipantMyTeam.module.css";
 
 function TeamCard({ team, user }: { team: Team; user: User }) {
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { data: isLead } = useIsTeamLead(team.id);
   const { data: members, isLoading: membersLoading } = useTeamMembers(team.id);
@@ -54,8 +54,22 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       );
       if (!found) throw new Error("User not found. Ask them to sign up first.");
       if (found.id === user.id) throw new Error("You are already in the team.");
+
       const alreadyInTeam = members?.some((m) => m.user_id === found.id);
       if (alreadyInTeam) throw new Error("User is already in the team.");
+
+      let userTeams: Team[] = [];
+      try {
+        userTeams = await getMyTeams(found.id);
+      } catch {
+        userTeams = [];
+      }
+      if (userTeams.length > 0) {
+        throw new Error(
+          `${found.first_name} ${found.last_name} is already a member of another team.`
+        );
+      }
+
       await addUserToTeam(team.id, found.id);
       return found;
     },
@@ -86,7 +100,8 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
   });
 
   const captainMut = useMutation({
-    mutationFn: (memberUserId: number) => changeTeamLeader(team.id, memberUserId),
+    mutationFn: (memberUserId: number) =>
+      changeTeamLeader(team.id, memberUserId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team-members", team.id] });
       queryClient.invalidateQueries({ queryKey: ["is-team-lead", team.id] });
@@ -94,7 +109,8 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
   });
 
   const handleSave = () => {
-    if (!form.name.trim() || !form.city.trim() || !form.organization.trim()) return;
+    if (!form.name.trim() || !form.city.trim() || !form.organization.trim())
+      return;
     updateMut.mutate(form);
   };
 
@@ -138,7 +154,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               <input
                 className={styles.input}
                 value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, name: e.target.value }))
+                }
               />
             </div>
             <div className={styles.field}>
@@ -146,7 +164,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               <input
                 className={styles.input}
                 value={form.city}
-                onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, city: e.target.value }))
+                }
               />
             </div>
             <div className={styles.field}>
@@ -154,7 +174,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               <input
                 className={styles.input}
                 value={form.organization}
-                onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, organization: e.target.value }))
+                }
               />
             </div>
           </div>
@@ -200,14 +222,17 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 <li key={member.user_id} className={styles.memberItem}>
                   <div className={styles.memberLeft}>
                     <div className={styles.memberAvatar}>
-                      {(member.first_name?.[0] || "") + (member.last_name?.[0] || "")}
+                      {(member.first_name?.[0] || "") +
+                        (member.last_name?.[0] || "")}
                     </div>
                     <div className={styles.memberInfo}>
                       <div className={styles.memberNameRow}>
                         <span className={styles.memberName}>
                           {member.first_name} {member.last_name}
                         </span>
-                        {member.is_lead && <span className={styles.badgeLeadSmall}>Captain</span>}
+                        {member.is_lead && (
+                          <span className={styles.badgeLeadSmall}>Captain</span>
+                        )}
                         {isMe && <span className={styles.badgeYou}>You</span>}
                       </div>
                       <span className={styles.memberEmail}>{member.email}</span>
@@ -269,7 +294,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
             </button>
           </form>
           {inviteError && <p className={styles.errorText}>{inviteError}</p>}
-          {inviteSuccess && <p className={styles.successText}>{inviteSuccess}</p>}
+          {inviteSuccess && (
+            <p className={styles.successText}>{inviteSuccess}</p>
+          )}
         </div>
       )}
 
@@ -300,24 +327,12 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
         ) : (
           <>
             {isCaptain ? (
-              <>
-                <button
-                  className={`${styles.btn} ${styles.btnSecondary}`}
-                  onClick={() => setIsEditing(true)}
-                >
-                  Edit Team
-                </button>
-                {!team.tournament_id && (
-                  <button
-                    className={`${styles.btn} ${styles.btnPrimary}`}
-                    onClick={() =>
-                      navigate(`/app/participant/tournaments?team=${team.id}`)
-                    }
-                  >
-                    Register for Tournament
-                  </button>
-                )}
-              </>
+              <button
+                className={`${styles.btn} ${styles.btnSecondary}`}
+                onClick={() => setIsEditing(true)}
+              >
+                Edit Team
+              </button>
             ) : (
               <button
                 className={`${styles.btn} ${styles.btnDanger}`}
