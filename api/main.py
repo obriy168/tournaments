@@ -13,7 +13,7 @@ from routes.submissions import submissions_router
 from routes.tasks_assignment import task_assignment_router
 from routes.evaluations import evaluation_router
 
-app = FastAPI()
+app = FastAPI(swagger_ui_parameters={"operationsSorter": "method"})
     
 app.add_middleware(
     CORSMiddleware,
