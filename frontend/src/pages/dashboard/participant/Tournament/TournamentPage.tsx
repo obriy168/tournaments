@@ -2,7 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
-import { getTournament, getTasks, type Task } from "@/services/api";
+import {
+  getTournament,
+  getTasks,
+  getRequirements,
+  type Task,
+} from "@/services/api";
 import styles from "./TournamentPage.module.css";
 
 function formatDate(d: string) {
@@ -19,11 +24,50 @@ function getDaysLeft(end: string) {
   );
 }
 
+function TaskCard({ task }: { task: Task }) {
+  const { data: requirements } = useQuery({
+    queryKey: ["requirements", task.id],
+    queryFn: () => getRequirements(task.id),
+    enabled: !!task.id,
+  });
+
+  return (
+    <div className={styles.taskCard}>
+      <div className={styles.taskHeader}>
+        <h4 className={styles.taskName}>{task.name}</h4>
+        <span
+          className={`${styles.taskStatus} ${
+            styles[`taskStatus${task.status}`]
+          }`}
+        >
+          {task.status}
+        </span>
+      </div>
+      <p className={styles.taskDesc}>{task.description}</p>
+      {requirements && requirements.length > 0 && (
+        <div className={styles.taskRequirements}>
+          <span className={styles.taskRequirementsLabel}>Requirements:</span>
+          <ul className={styles.taskRequirementsList}>
+            {requirements.map((r) => (
+              <li key={r.id}>
+                {r.description} ({r.max_score} pts)
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <div className={styles.taskMeta}>
+        <span>Starts: {formatDate(task.start_date)}</span>
+        <span>Ends: {formatDate(task.end_date)}</span>
+      </div>
+    </div>
+  );
+}
+
 export default function TournamentRegistrationPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: teams, isLoading: teamsLoading } = useMyTeams();
-
   const team = teams?.[0] ?? null;
   const registeredTournamentId = team?.tournament_id ?? null;
 
@@ -45,10 +89,14 @@ export default function TournamentRegistrationPage() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Tournaments</h1>
-            <p className={styles.subtitle}>Loading tournament information…</p>
+            <p className={styles.subtitle}>
+              Loading tournament information…
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <p className={styles.loadingText}>Loading…</p>
@@ -62,16 +110,22 @@ export default function TournamentRegistrationPage() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Tournaments</h1>
-            <p className={styles.subtitle}>You need a team to register for tournaments.</p>
+            <p className={styles.subtitle}>
+              You need a team to register for tournaments.
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <div className={styles.emptyState}>
           <p>You need to create a team first.</p>
           <button
-            onClick={() => navigate("/app/participant/team/create/step1")}
+            onClick={() =>
+              navigate("/app/participant/team/create/step1")
+            }
             className={`${styles.button} ${styles.buttonSecondary}`}
           >
             Create Team
@@ -87,16 +141,21 @@ export default function TournamentRegistrationPage() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Tournaments</h1>
-            <p className={styles.subtitle}>Select a tournament to register your team.</p>
+            <p className={styles.subtitle}>
+              Select a tournament to register your team.
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <div className={styles.emptyState}>
           <p>Your team is not registered for any tournament.</p>
           <p className={styles.emptySubtext}>
-            This should not happen — tournament is selected during team creation.
+            This should not happen — tournament is selected during team
+            creation.
           </p>
         </div>
       </div>
@@ -107,16 +166,21 @@ export default function TournamentRegistrationPage() {
     tournament.status === "Registration"
       ? getDaysLeft(tournament.registration_end_date)
       : null;
+  const hasActiveTask = tasks?.some((t) => t.status === "Active");
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>My Tournament</h1>
-          <p className={styles.subtitle}>View your tournament details and tasks.</p>
+          <p className={styles.subtitle}>
+            View your tournament details and tasks.
+          </p>
         </div>
         <div className={styles.user}>
-          <span className={styles.userName}>{user?.first_name || "User"}</span>
+          <span className={styles.userName}>
+            {user?.first_name || "User"}
+          </span>
         </div>
       </header>
 
@@ -157,7 +221,9 @@ export default function TournamentRegistrationPage() {
             ) : null}
             {regDaysLeft !== null && regDaysLeft > 0 ? (
               <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>Registration ends in</span>
+                <span className={styles.infoLabel}>
+                  Registration ends in
+                </span>
                 <span
                   className={`${styles.infoValue} ${
                     regDaysLeft <= 3 ? styles.urgent : ""
@@ -170,6 +236,17 @@ export default function TournamentRegistrationPage() {
           </div>
         </div>
 
+        {hasActiveTask && (
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => navigate("/app/participant/submissions")}
+              className={`${styles.button} ${styles.buttonSecondary}`}
+            >
+              Go to Submissions →
+            </button>
+          </div>
+        )}
+
         <div className={styles.section}>
           <h3 className={styles.sectionTitle}>Tasks</h3>
           {tasksLoading ? (
@@ -181,23 +258,7 @@ export default function TournamentRegistrationPage() {
           ) : (
             <div className={styles.tasksList}>
               {tasks.map((task: Task) => (
-                <div key={task.id} className={styles.taskCard}>
-                  <div className={styles.taskHeader}>
-                    <h4 className={styles.taskName}>{task.name}</h4>
-                    <span
-                      className={`${styles.taskStatus} ${
-                        styles[`taskStatus${task.status}`]
-                      }`}
-                    >
-                      {task.status}
-                    </span>
-                  </div>
-                  <p className={styles.taskDesc}>{task.description}</p>
-                  <div className={styles.taskMeta}>
-                    <span>Starts: {formatDate(task.start_date)}</span>
-                    <span>Ends: {formatDate(task.end_date)}</span>
-                  </div>
-                </div>
+                <TaskCard key={task.id} task={task} />
               ))}
             </div>
           )}

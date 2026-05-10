@@ -441,3 +441,18 @@
   gap: 16px;
   flex-wrap: wrap;
 }
+
+.urgent {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.tableStatusClosed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.tableStatusEvaluated {
+  background: #e0e7ff;
+  color: #3730a3;
+}

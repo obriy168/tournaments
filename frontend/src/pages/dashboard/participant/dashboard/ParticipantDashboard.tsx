@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
@@ -13,8 +13,35 @@ import {
   getTournament,
   getTasks,
   getSubmissionsByTask,
+  getRequirements,
 } from "@/services/api";
 import styles from "./ParticipantDashboard.module.css";
+
+function useCountdown(targetDate: string) {
+  const [timeLeft, setTimeLeft] = useState("");
+  const [isUrgent, setIsUrgent] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      const diff = new Date(targetDate).getTime() - Date.now();
+      if (diff <= 0) {
+        setTimeLeft("Deadline passed");
+        setIsUrgent(true);
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      setTimeLeft(`${days}d ${hours}h ${minutes}m`);
+      setIsUrgent(diff < 1000 * 60 * 60 * 24);
+    };
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, [targetDate]);
+
+  return { timeLeft, isUrgent };
+}
 
 export default function ParticipantDashboard() {
   const { user } = useAuth();
@@ -50,6 +77,14 @@ export default function ParticipantDashboard() {
     })),
   });
 
+  const requirementQueries = useQueries({
+    queries: (tasks || []).map((task) => ({
+      queryKey: ["requirements", task.id],
+      queryFn: () => getRequirements(task.id),
+      enabled: !!task.id,
+    })),
+  });
+
   const allSubmissions = useMemo(() => {
     return submissionQueries
       .flatMap((q) => q.data || [])
@@ -60,19 +95,23 @@ export default function ParticipantDashboard() {
   }, [submissionQueries]);
 
   const submissionsLoading = submissionQueries.some((q) => q.isLoading);
+  const requirementsLoading = requirementQueries.some((q) => q.isLoading);
 
   const currentTask = useMemo(() => {
     if (!tasks || tasks.length === 0) return null;
     return tasks.find((t) => t.status === "Active") || tasks[0];
   }, [tasks]);
 
-  const mustHaveList = useMemo(() => {
-    if (!currentTask?.specifications) return [];
-    return currentTask.specifications
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }, [currentTask]);
+  const currentTaskRequirements = useMemo(() => {
+    if (!currentTask) return [];
+    const idx = tasks?.findIndex((t) => t.id === currentTask.id) ?? -1;
+    if (idx === -1) return [];
+    return requirementQueries[idx]?.data || [];
+  }, [currentTask, tasks, requirementQueries]);
+
+  const countdown = useCountdown(
+    currentTask?.end_date || new Date().toISOString()
+  );
 
   const handleAcceptInvite = async (teamId: number) => {
     if (!user) return;
@@ -88,7 +127,10 @@ export default function ParticipantDashboard() {
             i.email.toLowerCase() === user.email.toLowerCase()
           )
       );
-      localStorage.setItem("pending_team_invites", JSON.stringify(filtered));
+      localStorage.setItem(
+        "pending_team_invites",
+        JSON.stringify(filtered)
+      );
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["pending-invites"] }),
@@ -213,7 +255,9 @@ export default function ParticipantDashboard() {
               {invites.map((invite) => (
                 <div key={invite.teamId} className={styles.inviteCard}>
                   <div className={styles.inviteInfo}>
-                    <h3 className={styles.inviteTeamName}>{invite.teamName}</h3>
+                    <h3 className={styles.inviteTeamName}>
+                      {invite.teamName}
+                    </h3>
                     <p className={styles.inviteMeta}>
                       Invited on{" "}
                       {new Date(invite.invitedAt).toLocaleDateString()}
@@ -249,11 +293,17 @@ export default function ParticipantDashboard() {
               {tasksLoading ? "..." : currentTask?.name || "No tasks"}
             </p>
             <p className={styles.statCardLabel}>
-              {currentTask
-                ? `Deadline: ${new Date(
-                    currentTask.end_date
-                  ).toLocaleDateString()}`
-                : "—"}
+              {currentTask ? (
+                countdown.isUrgent ? (
+                  <span className={styles.urgent}>
+                    Ends in: {countdown.timeLeft}
+                  </span>
+                ) : (
+                  `Ends in: ${countdown.timeLeft}`
+                )
+              ) : (
+                "—"
+              )}
             </p>
           </div>
           <div className={styles.statCard}>
@@ -282,29 +332,45 @@ export default function ParticipantDashboard() {
                   {currentTask.status}
                 </span>
               </div>
-              <p className={styles.taskCardDesc}>{currentTask.description}</p>
-              {mustHaveList.length > 0 && (
+              <p className={styles.taskCardDesc}>
+                {currentTask.description}
+              </p>
+              {requirementsLoading ? (
+                <p className={styles.loadingText}>Loading requirements…</p>
+              ) : currentTaskRequirements.length > 0 ? (
                 <div className={styles.taskCardRequirements}>
-                  <h4 className={styles.taskCardSubtitle}>Must Have:</h4>
+                  <h4 className={styles.taskCardSubtitle}>
+                    Must Have ({currentTaskRequirements.length} criteria):
+                  </h4>
                   <ul className={styles.taskCardList}>
-                    {mustHaveList.map((item, idx) => (
-                      <li key={idx} className={styles.taskCardItem}>
-                        {item}
+                    {currentTaskRequirements.map((req) => (
+                      <li key={req.id} className={styles.taskCardItem}>
+                        {req.description}{" "}
+                        <span
+                          style={{ color: "#888", fontSize: 13 }}
+                        >
+                          (max {req.max_score} pts)
+                        </span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              )}
+              ) : null}
               <div className={styles.taskCardDeadline}>
-                <span className={styles.taskCardDeadlineLabel}>Deadline:</span>
+                <span className={styles.taskCardDeadlineLabel}>
+                  Deadline:
+                </span>
                 <span className={styles.taskCardDeadlineDate}>
-                  {new Date(currentTask.end_date).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                  {new Date(currentTask.end_date).toLocaleDateString(
+                    "en-US",
+                    {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    }
+                  )}
                 </span>
               </div>
               <button
@@ -337,21 +403,35 @@ export default function ParticipantDashboard() {
                 <tbody>
                   {allSubmissions.slice(0, 5).map((sub) => {
                     const task = tasks?.find((t) => t.id === sub.task_id);
+                    const taskStatus = task?.status || "Draft";
+                    let statusLabel = "Pending";
+                    let statusClass = styles.tableStatusPending;
+                    if (taskStatus === "Evaluated") {
+                      statusLabel = "Evaluated";
+                      statusClass = styles.tableStatusEvaluated;
+                    } else if (taskStatus === "SubmissionClosed") {
+                      statusLabel = "Closed";
+                      statusClass = styles.tableStatusClosed;
+                    }
                     return (
                       <tr key={sub.id}>
-                        <td>{task?.name || `Task #${sub.task_id}`}</td>
+                        <td>
+                          {task?.name || `Task #${sub.task_id}`}
+                        </td>
                         <td>
                           {new Date(sub.created_on).toLocaleDateString()}
                         </td>
                         <td>
                           <span
-                            className={`${styles.tableStatus} ${styles.tableStatusPending}`}
+                            className={`${styles.tableStatus} ${statusClass}`}
                           >
                             <span className={styles.tableStatusDot} />
-                            Pending
+                            {statusLabel}
                           </span>
                         </td>
-                        <td>—</td>
+                        <td>
+                          {taskStatus === "Evaluated" ? "TBD" : "—"}
+                        </td>
                       </tr>
                     );
                   })}

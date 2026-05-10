@@ -16,20 +16,44 @@ import {
   createSubmission,
   updateSubmission,
   deleteSubmission,
+  getRequirements,
   type Submission,
   type Task,
 } from "@/services/api";
 import styles from "./ParticipantSubmissions.module.css";
 
 const submissionSchema = z.object({
-  github_url: z.string().min(1, "GitHub URL is required").url("Invalid URL"),
-  video_url: z.string().min(1, "Video URL is required").url("Invalid URL"),
+  github_url: z
+    .string()
+    .min(1, "GitHub URL is required")
+    .url("Invalid URL")
+    .refine(
+      (val) =>
+        val.includes("github.com") ||
+        val.includes("gitlab.com") ||
+        val.includes("bitbucket.org"),
+      { message: "Must be a GitHub, GitLab or Bitbucket URL" }
+    ),
+  video_url: z
+    .string()
+    .min(1, "Video URL is required")
+    .url("Invalid URL")
+    .refine(
+      (val) =>
+        val.includes("youtube.com") ||
+        val.includes("youtu.be") ||
+        val.includes("drive.google.com"),
+      { message: "Must be a YouTube or Google Drive URL" }
+    ),
   live_demo_url: z
     .string()
     .url("Invalid URL")
     .optional()
     .or(z.literal("")),
-  description: z.string().optional(),
+  description: z
+    .string()
+    .max(1000, "Description must be under 1000 characters")
+    .optional(),
 });
 
 type SubmissionForm = z.infer<typeof submissionSchema>;
@@ -61,6 +85,12 @@ function TaskSubmissionCard({
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(!existingSubmission);
   const [rootError, setRootError] = useState<string | null>(null);
+
+  const { data: requirements, isLoading: reqLoading } = useQuery({
+    queryKey: ["requirements", task.id],
+    queryFn: () => getRequirements(task.id),
+    enabled: !!task.id,
+  });
 
   const {
     register,
@@ -117,7 +147,8 @@ function TaskSubmissionCard({
       setIsEditing(false);
       setRootError(null);
     },
-    onError: () => setRootError("Failed to update submission. Please try again."),
+    onError: () =>
+      setRootError("Failed to update submission. Please try again."),
   });
 
   const deleteMut = useMutation({
@@ -155,7 +186,11 @@ function TaskSubmissionCard({
         </div>
         <span
           className={`${styles.taskStatusBadge} ${
-            active ? styles.statusActive : closed ? styles.statusClosed : styles.statusDraft
+            active
+              ? styles.statusActive
+              : closed
+              ? styles.statusClosed
+              : styles.statusDraft
           }`}
         >
           {active ? "Active" : closed ? "Closed" : task.status}
@@ -166,6 +201,25 @@ function TaskSubmissionCard({
         <span>Starts: {formatDate(task.start_date)}</span>
         <span>Ends: {formatDate(task.end_date)}</span>
       </div>
+
+      {reqLoading ? (
+        <p className={styles.loadingText}>Loading requirements…</p>
+      ) : requirements && requirements.length > 0 ? (
+        <div className={styles.requirementsBlock}>
+          <h4 className={styles.submissionTitle}>Requirements</h4>
+          <ul className={styles.requirementsList}>
+            {requirements.map((r) => (
+              <li key={r.id} className={styles.requirementItem}>
+                <span className={styles.requirementDot}>•</span>
+                {r.description}{" "}
+                <span className={styles.requirementScore}>
+                  ({r.max_score} pts)
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {existingSubmission && !isEditing ? (
         <div className={styles.submissionView}>
@@ -226,7 +280,9 @@ function TaskSubmissionCard({
               className={`${styles.btn} ${styles.btnDanger}`}
               onClick={() => {
                 if (
-                  window.confirm("Are you sure you want to delete this submission?")
+                  window.confirm(
+                    "Are you sure you want to delete this submission?"
+                  )
                 ) {
                   deleteMut.mutate();
                 }
@@ -300,6 +356,11 @@ function TaskSubmissionCard({
               className={`${styles.input} ${styles.textarea}`}
               {...register("description")}
             />
+            {errors.description && (
+              <span className={styles.fieldError}>
+                {errors.description.message}
+              </span>
+            )}
           </div>
 
           <div className={styles.actions}>
@@ -318,7 +379,9 @@ function TaskSubmissionCard({
             <button
               type="submit"
               className={`${styles.btn} ${styles.btnPrimary}`}
-              disabled={isSubmitting || createMut.isPending || updateMut.isPending}
+              disabled={
+                isSubmitting || createMut.isPending || updateMut.isPending
+              }
             >
               {existingSubmission
                 ? updateMut.isPending
@@ -391,10 +454,14 @@ export default function ParticipantSubmissions() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Submissions</h1>
-            <p className={styles.subtitle}>Create a team to access submissions.</p>
+            <p className={styles.subtitle}>
+              Create a team to access submissions.
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <div className={styles.emptyState}>
@@ -413,10 +480,14 @@ export default function ParticipantSubmissions() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Submissions</h1>
-            <p className={styles.subtitle}>Submit your solutions for tournament tasks.</p>
+            <p className={styles.subtitle}>
+              Submit your solutions for tournament tasks.
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <div className={styles.emptyState}>
@@ -436,7 +507,9 @@ export default function ParticipantSubmissions() {
           </p>
         </div>
         <div className={styles.user}>
-          <span className={styles.userName}>{user?.first_name || "User"}</span>
+          <span className={styles.userName}>
+            {user?.first_name || "User"}
+          </span>
         </div>
       </header>
 

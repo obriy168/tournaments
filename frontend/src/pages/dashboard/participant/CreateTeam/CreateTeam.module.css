@@ -539,6 +539,15 @@
   margin: 0;
 }
 
+.tournamentMeta {
+  font-size: 13px;
+  color: #666;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
 @keyframes pulse {
   0%, 100% {
     opacity: 1;

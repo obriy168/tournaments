@@ -27,7 +27,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
   const { data: members, isLoading: membersLoading } = useTeamMembers(team.id);
   const leaveTeam = useLeaveTeam();
 
-  const { data: tournament, isLoading: tournamentLoading } = useQuery({
+  const { data: tournament } = useQuery({
     queryKey: ["tournament", team.tournament_id],
     queryFn: () => getTournament(team.tournament_id!),
     enabled: !!team.tournament_id,
@@ -59,11 +59,22 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       const found = allUsers.find(
         (u) => u.email.toLowerCase() === email.toLowerCase().trim()
       );
-      if (!found) throw new Error("User not found. Ask them to sign up first.");
+      if (!found)
+        throw new Error("User not found. Ask them to sign up first.");
       if (found.id === user.id) throw new Error("You are already in the team.");
 
       const alreadyInTeam = members?.some((m) => m.user_id === found.id);
       if (alreadyInTeam) throw new Error("User is already in the team.");
+
+      const currentSize = members?.length || 1;
+      if (
+        tournament?.max_user_count &&
+        currentSize >= tournament.max_user_count
+      ) {
+        throw new Error(
+          `Team is full. Maximum ${tournament.max_user_count} members allowed.`
+        );
+      }
 
       let userTeams: Team[] = [];
       try {
@@ -81,7 +92,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       return found;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-members", team.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["team-members", team.id],
+      });
       setInviteEmail("");
       setInviteError(null);
       setInviteSuccess("Member invited successfully.");
@@ -89,9 +102,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
     },
     onError: (err: unknown) => {
       setInviteSuccess(null);
-      const message =
-        err instanceof Error ? err.message : "Failed to invite member.";
-      setInviteError(message);
+      setInviteError(
+        err instanceof Error ? err.message : "Failed to invite member."
+      );
     },
   });
 
@@ -102,7 +115,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       await removeUserFromTeam(link.id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-members", team.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["team-members", team.id],
+      });
     },
   });
 
@@ -110,13 +125,21 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
     mutationFn: (memberUserId: number) =>
       changeTeamLeader(team.id, memberUserId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["team-members", team.id] });
-      queryClient.invalidateQueries({ queryKey: ["is-team-lead", team.id] });
+      queryClient.invalidateQueries({
+        queryKey: ["team-members", team.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["is-team-lead", team.id],
+      });
     },
   });
 
   const handleSave = () => {
-    if (!form.name.trim() || !form.city.trim() || !form.organization.trim())
+    if (
+      !form.name.trim() ||
+      !form.city.trim() ||
+      !form.organization.trim()
+    )
       return;
     updateMut.mutate(form);
   };
@@ -129,7 +152,8 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
   };
 
   const handleLeave = async () => {
-    if (!window.confirm("Are you sure you want to leave this team?")) return;
+    if (!window.confirm("Are you sure you want to leave this team?"))
+      return;
     try {
       await leaveTeam.mutateAsync(team.id);
     } catch {
@@ -150,6 +174,10 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
             is_lead: true,
           },
         ];
+
+  const memberCount = displayMembers.length;
+  const maxMembers = tournament?.max_user_count;
+  const minMembers = tournament?.min_user_count;
 
   return (
     <div className={styles.card}>
@@ -182,7 +210,10 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 className={styles.input}
                 value={form.organization}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, organization: e.target.value }))
+                  setForm((f) => ({
+                    ...f,
+                    organization: e.target.value,
+                  }))
                 }
               />
             </div>
@@ -191,7 +222,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
           <div>
             <div className={styles.cardTitleRow}>
               <h2 className={styles.teamName}>{team.name}</h2>
-              {isCaptain && <span className={styles.badgeLead}>Captain</span>}
+              {isCaptain && (
+                <span className={styles.badgeLead}>Captain</span>
+              )}
             </div>
             <div className={styles.metaGrid}>
               <div className={styles.metaItem}>
@@ -200,22 +233,38 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.metaLabel}>Organization</span>
-                <span className={styles.metaValue}>{team.organization}</span>
+                <span className={styles.metaValue}>
+                  {team.organization}
+                </span>
               </div>
               <div className={styles.metaItem}>
                 <span className={styles.metaLabel}>Tournament</span>
                 <span className={styles.metaValue}>
                   {team.tournament_id ? (
-                    tournamentLoading ? (
-                      <span className={styles.loadingInline}>Loading…</span>
-                    ) : tournament ? (
-                      <span className={styles.registered}>{tournament.name}</span>
+                    tournament ? (
+                      <span className={styles.registered}>
+                        {tournament.name}
+                      </span>
                     ) : (
                       <span className={styles.registered}>Registered</span>
                     )
                   ) : (
-                    <span className={styles.notRegistered}>Not registered</span>
+                    <span className={styles.notRegistered}>
+                      Not registered
+                    </span>
                   )}
+                </span>
+              </div>
+              <div className={styles.metaItem}>
+                <span className={styles.metaLabel}>Members</span>
+                <span className={styles.metaValue}>
+                  {memberCount}
+                  {maxMembers ? ` / ${maxMembers}` : ""}{" "}
+                  {minMembers && memberCount < minMembers ? (
+                    <span className={styles.urgent}>
+                      (min {minMembers})
+                    </span>
+                  ) : null}
                 </span>
               </div>
             </div>
@@ -244,18 +293,26 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                           {member.first_name} {member.last_name}
                         </span>
                         {member.is_lead && (
-                          <span className={styles.badgeLeadSmall}>Captain</span>
+                          <span className={styles.badgeLeadSmall}>
+                            Captain
+                          </span>
                         )}
-                        {isMe && <span className={styles.badgeYou}>You</span>}
+                        {isMe && (
+                          <span className={styles.badgeYou}>You</span>
+                        )}
                       </div>
-                      <span className={styles.memberEmail}>{member.email}</span>
+                      <span className={styles.memberEmail}>
+                        {member.email}
+                      </span>
                     </div>
                   </div>
                   {isCaptain && !isMe && (
                     <div className={styles.memberActions}>
                       <button
                         className={`${styles.btn} ${styles.btnSmall}`}
-                        onClick={() => captainMut.mutate(member.user_id)}
+                        onClick={() =>
+                          captainMut.mutate(member.user_id)
+                        }
                         disabled={captainMut.isPending}
                         title="Make captain"
                       >
@@ -301,15 +358,24 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
             <button
               type="submit"
               className={`${styles.btn} ${styles.btnPrimary}`}
-              disabled={inviteMut.isPending || !inviteEmail.trim()}
+              disabled={
+                inviteMut.isPending || !inviteEmail.trim()
+              }
             >
               {inviteMut.isPending ? "Inviting…" : "Invite"}
             </button>
           </form>
-          {inviteError && <p className={styles.errorText}>{inviteError}</p>}
+          {inviteError && (
+            <p className={styles.errorText}>{inviteError}</p>
+          )}
           {inviteSuccess && (
             <p className={styles.successText}>{inviteSuccess}</p>
           )}
+          {maxMembers ? (
+            <p className={styles.hintText}>
+              Maximum {maxMembers} members allowed.
+            </p>
+          ) : null}
         </div>
       )}
 
@@ -373,10 +439,14 @@ export default function ParticipantMyTeam() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>My Team</h1>
-            <p className={styles.subtitle}>Loading your team information…</p>
+            <p className={styles.subtitle}>
+              Loading your team information…
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <p className={styles.loadingText}>Loading…</p>
@@ -390,10 +460,14 @@ export default function ParticipantMyTeam() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title}>My Team</h1>
-            <p className={styles.subtitle}>You are not part of any team yet.</p>
+            <p className={styles.subtitle}>
+              You are not part of any team yet.
+            </p>
           </div>
           <div className={styles.user}>
-            <span className={styles.userName}>{user?.first_name || "User"}</span>
+            <span className={styles.userName}>
+              {user?.first_name || "User"}
+            </span>
           </div>
         </header>
         <div className={styles.emptyCard}>
@@ -402,7 +476,9 @@ export default function ParticipantMyTeam() {
             Create a team to participate in tournaments!
           </p>
           <button
-            onClick={() => navigate("/app/participant/team/create/step1")}
+            onClick={() =>
+              navigate("/app/participant/team/create/step1")
+            }
             className={`${styles.btn} ${styles.btnPrimary}`}
           >
             Create Team
@@ -416,11 +492,17 @@ export default function ParticipantMyTeam() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>{teams.length > 1 ? "My Teams" : "My Team"}</h1>
-          <p className={styles.subtitle}>Manage your team and members.</p>
+          <h1 className={styles.title}>
+            {teams.length > 1 ? "My Teams" : "My Team"}
+          </h1>
+          <p className={styles.subtitle}>
+            Manage your team and members.
+          </p>
         </div>
         <div className={styles.user}>
-          <span className={styles.userName}>{user?.first_name || "User"}</span>
+          <span className={styles.userName}>
+            {user?.first_name || "User"}
+          </span>
         </div>
       </header>
       <div className={styles.teamsList}>

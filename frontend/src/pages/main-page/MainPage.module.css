@@ -117,3 +117,79 @@
   background: black;
   color: white;
 }
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  padding: 8px 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.filterBtn:hover {
+  border-color: #999;
+}
+
+.filterBtnActive {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+}
+
+.searchInput {
+  padding: 10px 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  min-width: 240px;
+  transition: 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.showMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
+
+.showMoreBtn {
+  padding: 12px 28px;
+  border: 2px solid black;
+  border-radius: 24px;
+  background: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.showMoreBtn:hover {
+  background: black;
+  color: white;
+  transform: translateY(-2px);
+}
