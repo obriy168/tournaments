@@ -5,7 +5,7 @@ import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
 import { useIsTeamLead } from "@/features/teams/hooks/useUserRole";
 import { useTeamMembers } from "@/features/teams/hooks/useTeamMembers";
 import { useLeaveTeam } from "@/features/teams/hooks/useLeaveTeam";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   updateTeam,
   removeUserFromTeam,
@@ -14,6 +14,7 @@ import {
   getUserTeamLink,
   getAllUsers,
   getMyTeams,
+  getTournament,
   type Team,
   type User,
 } from "@/services/api";
@@ -25,6 +26,12 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
   const { data: isLead } = useIsTeamLead(team.id);
   const { data: members, isLoading: membersLoading } = useTeamMembers(team.id);
   const leaveTeam = useLeaveTeam();
+
+  const { data: tournament, isLoading: tournamentLoading } = useQuery({
+    queryKey: ["tournament", team.tournament_id],
+    queryFn: () => getTournament(team.tournament_id!),
+    enabled: !!team.tournament_id,
+  });
 
   const isCaptain = isLead || user.role === "captain";
 
@@ -199,7 +206,13 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 <span className={styles.metaLabel}>Tournament</span>
                 <span className={styles.metaValue}>
                   {team.tournament_id ? (
-                    <span className={styles.registered}>Registered</span>
+                    tournamentLoading ? (
+                      <span className={styles.loadingInline}>Loading…</span>
+                    ) : tournament ? (
+                      <span className={styles.registered}>{tournament.name}</span>
+                    ) : (
+                      <span className={styles.registered}>Registered</span>
+                    )
                   ) : (
                     <span className={styles.notRegistered}>Not registered</span>
                   )}
@@ -235,7 +248,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                         )}
                         {isMe && <span className={styles.badgeYou}>You</span>}
                       </div>
-                      <span className={styles.memberEmail}>{member.email}</span>
+                      <span className={styles.memberEmail}>
+                        {member.email}
+                      </span>
                     </div>
                   </div>
                   {isCaptain && !isMe && (
@@ -369,7 +384,9 @@ export default function ParticipantMyTeam() {
         <h1 className={styles.title}>My Team</h1>
         <div className={styles.emptyCard}>
           <h2 className={styles.emptyTitle}>No team yet</h2>
-          <p className={styles.emptyText}>You are not part of any team yet.</p>
+          <p className={styles.emptyText}>
+            You are not part of any team yet.
+          </p>
           <button
             onClick={() => navigate("/app/participant/team/create/step1")}
             className={`${styles.btn} ${styles.btnPrimary}`}
@@ -383,7 +400,9 @@ export default function ParticipantMyTeam() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>{teams.length > 1 ? "My Teams" : "My Team"}</h1>
+      <h1 className={styles.title}>
+        {teams.length > 1 ? "My Teams" : "My Team"}
+      </h1>
       <div className={styles.teamsList}>
         {teams.map((team) => (
           <TeamCard key={team.id} team={team} user={user!} />

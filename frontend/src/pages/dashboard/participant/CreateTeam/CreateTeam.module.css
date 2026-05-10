@@ -103,7 +103,7 @@
 .formRow {
   display: flex;
   gap: 16px;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .formRow .field {
@@ -174,7 +174,8 @@
   transition: 0.2s;
   white-space: nowrap;
   height: fit-content;
-  margin-bottom: 1px;
+  margin-top: 26px;
+  flex-shrink: 0;
 }
 
 .addBtn:hover {
@@ -468,6 +469,74 @@
 .urgent {
   color: #dc2626;
   font-weight: 600;
+}
+
+.captainCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #fafafa;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+
+.captainAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.captainInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.captainLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.captainName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.captainEmail {
+  font-size: 13px;
+  color: #666;
+}
+
+.fieldHalf {
+  flex: 1;
+  min-width: 0;
+}
+
+.divider {
+  height: 1px;
+  background: #eee;
+  margin: 8px 0;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
 }
 
 @keyframes pulse {
