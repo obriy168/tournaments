@@ -54,3 +54,13 @@ class UserTeamService:
 
     async def delete_user_in_team(self, user_team_id: int):
         return await self.user_team_repository.delete(user_team_id)
+    
+    async def delete_user_from_team(self, user_id: int, team_id: int) -> bool:
+        user_team = await self.user_team_repository.get_by_user_and_team(user_id, team_id)
+        if not user_team:
+            return False
+        
+        if user_team.is_lead:
+            return False 
+
+        return await self.user_team_repository.delete_entity(user_team)
