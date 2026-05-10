@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from services.user_team_service import UserTeamService
+from routes.models.user_team_response import UserTeamResponse
 from typing import Annotated
 
 user_team_router = APIRouter(prefix="/users_team", tags=["users_team"])
@@ -12,7 +13,7 @@ async def get_teams_by_user_id(user_id: int, user_team_service: Annotated[UserTe
 async def get_leader(team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     return await user_team_service.get_leader(team_id)
 
-@user_team_router.get("/{team_id}/members")
+@user_team_router.get("/{team_id}/members", response_model=list[UserTeamResponse])
 async def get_users_by_team_id(team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     return await user_team_service.get_users_by_team_id(team_id)
 
@@ -32,7 +33,7 @@ async def change_leader(team_id: int, user_id: int, user_team_service: Annotated
     return await user_team_service.change_leader(team_id, user_id)
 
 @user_team_router.delete("/{user_team_id}")
-async def delete_user_from_team(user_team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
+async def delete_user_from_team_by_user_team_id(user_team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
     is_deleted = await user_team_service.delete_user_in_team(user_team_id)
     if not is_deleted:
         raise HTTPException(status_code=404, detail="User not found")
