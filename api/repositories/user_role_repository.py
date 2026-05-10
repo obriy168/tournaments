@@ -20,3 +20,8 @@ class UserRoleRepository(BaseRepository[UserRole]):
         query = select(UserRole).where(UserRole.role == role_name, UserRole.tournament_id == tournament_id)
         result = await self.db.execute(query)
         return result.scalars().all()
+    
+    async def get_all_userroles(self, user_id: int):
+        query = select(UserRole).where(UserRole.user_id == user_id)
+        result = await self.db.execute(query)
+        return result.scalars().all()

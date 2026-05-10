@@ -2,6 +2,7 @@ from sqlmodel import SQLModel, Field, Relationship, DateTime
 from datetime import datetime, timezone
 from typing import Optional
 from enum import Enum
+from enums.role_enum import RoleEnum
 
 def utcnow():
     return datetime.now(timezone.utc)
@@ -17,12 +18,6 @@ class TaskStatus(str, Enum):
     ACTIVE = "Active"
     SUBMISSION_CLOSED = "SubmissionClosed"
     EVALUATED = "Evaluated"
-
-class RoleEnum(str, Enum):
-    ADMIN = "Admin"
-    ORGANIZER = "Organizer"
-    JURY = "Jury"
-    PARTICIPANT = "Participant"
 
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
