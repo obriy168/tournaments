@@ -71,6 +71,11 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
         // { to: "/app/admin/teams", label: "Teams", end: false },     // заглушка
         // { to: "/app/admin/jury", label: "Jury", end: false },       // заглушка
       ];
+      case "organizer":
+      return [
+        { to: "/app/organizer", label: "Dashboard", end: true },
+        { to: "/app/admin/tournaments", label: "Tournaments", end: false },
+      ];
     case "jury":
       return [
         { to: "/app/jury", label: "Dashboard", end: true },
@@ -82,7 +87,7 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
         return [
           { to: "/app/participant", label: "Dashboard", end: true },
           { to: "/app/participant/team", label: "My Team", end: false },
-          { to: "/app/participant/tournaments", label: "Tournament", end: false },
+          { to: "/app/participant/tournament", label: "Tournament", end: false },
           { to: "/app/participant/submissions", label: "Submissions", end: false },
         ];
       }
@@ -93,7 +98,7 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
       return [
         { to: "/app/participant", label: "Dashboard", end: true },
         { to: "/app/participant/team", label: "My Team", end: false },
-        { to: "/app/participant/tournaments", label: "Tournament", end: false },
+        { to: "/app/participant/tournament", label: "Tournament", end: false },
         { to: "/app/participant/submissions", label: "Submissions", end: false },
       ];
     default:
