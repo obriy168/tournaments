@@ -21,3 +21,6 @@ class UserRoleService:
     
     async def get_users_by_role_name(self, role_name: str, tournament_id: int):
         return await self.user_role_repository.get_users_by_role_name(role_name, tournament_id)
+    
+    async def get_all_userroles(self, user_id: int):
+        return await self.user_role_repository.get_all_userroles(user_id)

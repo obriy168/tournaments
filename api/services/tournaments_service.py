@@ -56,3 +56,6 @@ class TournamentsService:
 
     async def delete_tournament(self, tournament_id: int) -> bool:
         return await self.tournament_repository.delete(tournament_id)
+    
+    async def get_organizers(self, tournament_id: int):
+        return await self.tournament_repository.get_organizers_by_tournament_id(tournament_id)
