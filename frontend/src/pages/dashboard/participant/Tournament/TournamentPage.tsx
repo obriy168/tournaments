@@ -43,7 +43,13 @@ export default function TournamentRegistrationPage() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Tournaments</h1>
+          <div>
+            <h1 className={styles.title}>Tournaments</h1>
+            <p className={styles.subtitle}>Loading tournament information…</p>
+          </div>
+          <div className={styles.user}>
+            <span className={styles.userName}>{user?.first_name || "User"}</span>
+          </div>
         </header>
         <p className={styles.loadingText}>Loading…</p>
       </div>
@@ -54,7 +60,13 @@ export default function TournamentRegistrationPage() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Tournaments</h1>
+          <div>
+            <h1 className={styles.title}>Tournaments</h1>
+            <p className={styles.subtitle}>You need a team to register for tournaments.</p>
+          </div>
+          <div className={styles.user}>
+            <span className={styles.userName}>{user?.first_name || "User"}</span>
+          </div>
         </header>
         <div className={styles.emptyState}>
           <p>You need to create a team first.</p>
@@ -73,7 +85,10 @@ export default function TournamentRegistrationPage() {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
-          <h1 className={styles.title}>Tournaments</h1>
+          <div>
+            <h1 className={styles.title}>Tournaments</h1>
+            <p className={styles.subtitle}>Select a tournament to register your team.</p>
+          </div>
           <div className={styles.user}>
             <span className={styles.userName}>{user?.first_name || "User"}</span>
           </div>
@@ -96,7 +111,10 @@ export default function TournamentRegistrationPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <h1 className={styles.title}>My Tournament</h1>
+        <div>
+          <h1 className={styles.title}>My Tournament</h1>
+          <p className={styles.subtitle}>View your tournament details and tasks.</p>
+        </div>
         <div className={styles.user}>
           <span className={styles.userName}>{user?.first_name || "User"}</span>
         </div>

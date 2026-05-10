@@ -248,9 +248,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                         )}
                         {isMe && <span className={styles.badgeYou}>You</span>}
                       </div>
-                      <span className={styles.memberEmail}>
-                        {member.email}
-                      </span>
+                      <span className={styles.memberEmail}>{member.email}</span>
                     </div>
                   </div>
                   {isCaptain && !isMe && (
@@ -372,7 +370,15 @@ export default function ParticipantMyTeam() {
   if (teamsLoading) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>My Team</h1>
+        <header className={styles.header}>
+          <div>
+            <h1 className={styles.title}>My Team</h1>
+            <p className={styles.subtitle}>Loading your team information…</p>
+          </div>
+          <div className={styles.user}>
+            <span className={styles.userName}>{user?.first_name || "User"}</span>
+          </div>
+        </header>
         <p className={styles.loadingText}>Loading…</p>
       </div>
     );
@@ -381,11 +387,19 @@ export default function ParticipantMyTeam() {
   if (!teams || teams.length === 0) {
     return (
       <div className={styles.container}>
-        <h1 className={styles.title}>My Team</h1>
+        <header className={styles.header}>
+          <div>
+            <h1 className={styles.title}>My Team</h1>
+            <p className={styles.subtitle}>You are not part of any team yet.</p>
+          </div>
+          <div className={styles.user}>
+            <span className={styles.userName}>{user?.first_name || "User"}</span>
+          </div>
+        </header>
         <div className={styles.emptyCard}>
           <h2 className={styles.emptyTitle}>No team yet</h2>
           <p className={styles.emptyText}>
-            You are not part of any team yet.
+            Create a team to participate in tournaments!
           </p>
           <button
             onClick={() => navigate("/app/participant/team/create/step1")}
@@ -400,9 +414,15 @@ export default function ParticipantMyTeam() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>
-        {teams.length > 1 ? "My Teams" : "My Team"}
-      </h1>
+      <header className={styles.header}>
+        <div>
+          <h1 className={styles.title}>{teams.length > 1 ? "My Teams" : "My Team"}</h1>
+          <p className={styles.subtitle}>Manage your team and members.</p>
+        </div>
+        <div className={styles.user}>
+          <span className={styles.userName}>{user?.first_name || "User"}</span>
+        </div>
+      </header>
       <div className={styles.teamsList}>
         {teams.map((team) => (
           <TeamCard key={team.id} team={team} user={user!} />

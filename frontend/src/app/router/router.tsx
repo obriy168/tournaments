@@ -88,7 +88,7 @@ const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignment
 const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
 const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/dashboard/ParticipantDashboard"));
 const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/MyTeam/ParticipantMyTeam"));
-const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/ParticipantSubmissions"));
+const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/submissions/ParticipantSubmissions"));
 const TournamentPage = lazy(() => import("@/pages/dashboard/participant/Tournament/TournamentPage"));
 const CreateTeamStep1 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep1"));
 const CreateTeamStep2 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep2"));
