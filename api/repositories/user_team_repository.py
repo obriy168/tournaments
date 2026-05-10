@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import UserTeam, Team
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from repositories.base_repository import BaseRepository
 
 class UserTeamRepository(BaseRepository[UserTeam]):
@@ -34,3 +34,13 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         query = select(UserTeam).where(UserTeam.is_lead == True, UserTeam.team_id == team_id, UserTeam.user_id == user_id)
         result = await self.db.execute(query)
         return result.scalars().first() is not None
+    
+    async def get_by_user_and_team(self, user_id: int, team_id: int):
+        query = select(self.model).where(self.model.team_id == team_id, self.model.user_id == user_id)
+        result = await self.db.execute(query)
+        return result.scalars().first()
+
+    async def delete_entity(self, user_team: UserTeam) -> bool:
+        await self.db.delete(user_team)
+        await self.db.commit()
+        return True

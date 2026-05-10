@@ -37,3 +37,10 @@ async def delete_user_from_team(user_team_id: int, user_team_service: Annotated[
     if not is_deleted:
         raise HTTPException(status_code=404, detail="User not found")
     return {"detail": "User deleted successfully from team"}
+
+@user_team_router.delete("/{user_id}/{team_id}")
+async def delete_user_from_team(user_id: int, team_id: int, user_team_service: Annotated[UserTeamService, Depends(UserTeamService)]):
+    is_deleted = await user_team_service.delete_user_from_team(user_id, team_id)
+    if not is_deleted:
+        raise HTTPException(status_code=404, detail="User not found in team or user is leader")
+    return {"detail": "User deleted successfully from team"}
