@@ -13,7 +13,6 @@ interface AuthState {
   login: (email: string, password: string) => Promise<User>;
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
-  refreshSession: () => Promise<void>;
   checkTeam: () => Promise<void>;
 }
 
@@ -81,18 +80,6 @@ export const useAuthStore = create<AuthState>()(
           set({ hasTeam: Array.isArray(teams) && teams.length > 0 });
         } catch {
           set({ hasTeam: false });
-        }
-      },
-
-      refreshSession: async () => {
-        try {
-          await api.post("/auth/refresh");
-          const { data } = await api.get<User>("/auth/me");
-          const normalizedUser = normalizeUserRole(data);
-          set({ user: normalizedUser });
-          await get().checkTeam();
-        } catch {
-          set({ user: null, hasTeam: false });
         }
       },
 

@@ -8,13 +8,12 @@ import { useLeaveTeam } from "@/features/teams/hooks/useLeaveTeam";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   updateTeam,
-  removeUserFromTeam,
   changeTeamLeader,
   addUserToTeam,
-  getUserTeamLink,
   getAllUsers,
   getMyTeams,
   getTournament,
+  removeUserFromTeamByIds,
   type Team,
   type User,
 } from "@/services/api";
@@ -110,9 +109,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
 
   const removeMut = useMutation({
     mutationFn: async (memberUserId: number) => {
-      const link = await getUserTeamLink(team.id, memberUserId);
-      if (!link) throw new Error("Membership not found.");
-      await removeUserFromTeam(link.id);
+      await removeUserFromTeamByIds(memberUserId, team.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

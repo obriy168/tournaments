@@ -9,12 +9,6 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-declare module "axios" {
-  interface AxiosRequestConfig {
-    _retry?: boolean;
-  }
-}
-
 function getPathname(url: string | undefined): string {
   if (!url) return "";
   try {
@@ -25,43 +19,14 @@ function getPathname(url: string | undefined): string {
   }
 }
 
-function getCsrfToken(): string | null {
-  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-api.interceptors.request.use((config) => {
-  const method = config.method?.toLowerCase();
-  if (method && method !== "get" && method !== "head") {
-    const token = getCsrfToken();
-    if (token) {
-      config.headers["X-CSRF-Token"] = token;
-    }
-  }
-  return config;
-});
-
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
-
-const processQueue = (error: unknown | null) => {
-  failedQueue.forEach((prom) => (error ? prom.reject(error) : prom.resolve()));
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (error.response?.status === 401) {
       const pathname = getPathname(originalRequest.url);
-
       if (
         pathname === "/auth/me" ||
         pathname === "/auth/login" ||
@@ -69,35 +34,8 @@ api.interceptors.response.use(
       ) {
         return Promise.reject(error);
       }
-
-      if (pathname === "/auth/refresh") {
-        processQueue(error);
-        isRefreshing = false;
-        window.dispatchEvent(new CustomEvent("skyline:session-expired"));
-        return Promise.reject(error);
-      }
-
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          await api.post("/auth/refresh");
-          processQueue(null);
-          isRefreshing = false;
-          return api(originalRequest);
-        } catch (refreshError) {
-          processQueue(refreshError);
-          isRefreshing = false;
-          window.dispatchEvent(new CustomEvent("skyline:session-expired"));
-          return Promise.reject(refreshError);
-        }
-      }
-
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: () => resolve(api(originalRequest)),
-          reject,
-        });
-      });
+      window.dispatchEvent(new CustomEvent("skyline:session-expired"));
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
@@ -289,13 +227,8 @@ export async function removeUserFromTeam(userTeamId: number): Promise<void> {
   await api.delete(`/users_team/${userTeamId}`);
 }
 
-export async function getUserTeamLink(teamId: number, userId: number): Promise<{ id: number } | null> {
-  try {
-    const { data } = await api.get(`/users_team/link/${teamId}/${userId}`);
-    return data;
-  } catch {
-    return null;
-  }
+export async function removeUserFromTeamByIds(userId: number, teamId: number): Promise<void> {
+  await api.delete(`/users_team/${userId}/${teamId}`);
 }
 
 export async function isUserLeader(teamId: number, userId: number): Promise<boolean> {
@@ -319,7 +252,7 @@ export async function getTask(id: number): Promise<Task> {
 }
 
 export async function updateTask(id: number, taskData: Partial<Task>): Promise<Task> {
-  const { data } = await api.put<Task>(`/tasks/${id}`, taskData);
+  const { data } = await api.put<Task>(`/tasks/?task_id=${id}`, taskData);
   return data;
 }
 
@@ -419,6 +352,21 @@ export async function registerTeamForTournament(teamId: number, tournamentId: nu
 }
 
 export async function getTeamMembers(teamId: number): Promise<TeamMemberFull[]> {
-  const { data } = await api.get(`/teams/${teamId}/members`);
-  return data;
+  const { data: links } = await api.get<Array<{ id: number; user_id: number; team_id: number; is_lead: boolean }>>(`/users_team/${teamId}/members`);
+  if (!links || links.length === 0) return [];
+
+  const { data: users } = await api.get<User[]>("/users/");
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  return links.map((link) => {
+    const user = userMap.get(link.user_id);
+    return {
+      user_team_id: link.id,
+      user_id: link.user_id,
+      first_name: user?.first_name ?? "",
+      last_name: user?.last_name ?? "",
+      email: user?.email ?? "",
+      is_lead: link.is_lead,
+    };
+  });
 }
