@@ -25,8 +25,15 @@ class UserTeamService:
         return await self.user_team_repository.get_leader_by_team(team_id)
     
     async def get_users_by_team_id(self, team_id):
-        users = await self.user_team_repository.get_users_by_team_id(team_id)
-        return sorted(users, key = lambda user: user.is_lead, reverse=True)
+        members = await self.user_team_repository.get_users_by_team_id(team_id)
+
+        result = []
+        for user, is_lead in members:
+            user_data = user.model_dump()
+            user_data['is_lead'] = is_lead 
+            result.append(user_data)
+
+        return result
     
     async def change_leader(self, team_id: int, user_id: int):
         db_leader = await self.user_team_repository.get_leader_by_team(team_id)

@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import UserTeam, Team
+from database.schemas.schema import UserTeam, Team, User
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select, delete
@@ -16,9 +16,9 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         return result.scalars().all()
 
     async def get_users_by_team_id(self, team_id):
-        query = select(UserTeam).where(UserTeam.team_id == team_id)
+        query = select(User, UserTeam.is_lead).join(UserTeam, User.id == UserTeam.user_id).where(UserTeam.team_id == team_id).order_by(UserTeam.is_lead.desc())
         result = await self.db.execute(query)
-        return result.scalars().all()
+        return result.all()
 
     async def get_link(self, team_id: int, user_id: int):
         query = select(UserTeam).where(UserTeam.user_id == user_id, UserTeam.team_id == team_id)
@@ -36,7 +36,7 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         return result.scalars().first() is not None
     
     async def get_by_user_and_team(self, user_id: int, team_id: int):
-        query = select(self.model).where(self.model.team_id == team_id, self.model.user_id == user_id)
+        query = select(UserTeam).where(UserTeam.team_id == team_id, UserTeam.user_id == user_id)
         result = await self.db.execute(query)
         return result.scalars().first()
 
