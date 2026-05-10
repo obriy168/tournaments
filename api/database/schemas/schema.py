@@ -1,28 +1,12 @@
 from sqlmodel import SQLModel, Field, Relationship, DateTime
 from datetime import datetime, timezone
 from typing import Optional
-from enum import Enum
+from enums.role_enum import RoleEnum
+from enums.tournament_status_enum import TournamentStatus
+from enums.task_status_enum import TaskStatus
 
 def utcnow():
     return datetime.now(timezone.utc)
-
-class TournamentStatus(str, Enum):
-    DRAFT = "Draft"
-    REGISTRATION = "Registration"
-    RUNNING = "Running"
-    FINISHED = "Finished"
-
-class TaskStatus(str, Enum):
-    DRAFT = "Draft"
-    ACTIVE = "Active"
-    SUBMISSION_CLOSED = "SubmissionClosed"
-    EVALUATED = "Evaluated"
-
-class RoleEnum(str, Enum):
-    ADMIN = "Admin"
-    ORGANIZER = "Organizer"
-    JURY = "Jury"
-    PARTICIPANT = "Participant"
 
 class User(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
