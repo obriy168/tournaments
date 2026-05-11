@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -6,9 +6,8 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
 import {
   useQuery,
-  useQueries,
-  useMutation,
   useQueryClient,
+  useMutation,
 } from "@tanstack/react-query";
 import {
   getTasks,
@@ -58,11 +57,6 @@ const submissionSchema = z.object({
 
 type SubmissionForm = z.infer<typeof submissionSchema>;
 
-function isTaskActive(task: Task) {
-  if (task.status !== "Active") return false;
-  return new Date() <= new Date(task.end_date);
-}
-
 function formatDate(d: string) {
   return new Date(d).toLocaleDateString("en-US", {
     month: "short",
@@ -77,13 +71,15 @@ function TaskSubmissionCard({
   task,
   teamId,
   existingSubmission,
+  onSubmissionChange,
 }: {
   task: Task;
   teamId: number;
   existingSubmission: Submission | undefined;
+  onSubmissionChange: () => void;
 }) {
   const queryClient = useQueryClient();
-  const [isEditing, setIsEditing] = useState(!existingSubmission);
+  const [isEditing, setIsEditing] = useState(!existingSubmission?.id);
   const [rootError, setRootError] = useState<string | null>(null);
 
   const { data: requirements, isLoading: reqLoading } = useQuery({
@@ -115,67 +111,87 @@ function TaskSubmissionCard({
         team_id: teamId,
         task_id: task.id,
         created_on: new Date().toISOString(),
-        github_url: data.github_url,
-        video_url: data.video_url,
-        live_demo_url: data.live_demo_url || undefined,
-        description: data.description || undefined,
+        github_url: data.github_url.trim(),
+        video_url: data.video_url.trim(),
+        live_demo_url: data.live_demo_url?.trim() || undefined,
+        description: data.description?.trim() || undefined,
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["submissions", task.id, teamId],
+        queryKey: ["submissions", task.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["submissions-by-task", task.id],
+      });
+      onSubmissionChange();
       setIsEditing(false);
       setRootError(null);
     },
-    onError: () => setRootError("Failed to submit. Please try again."),
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : "Failed to submit. Please try again.";
+      setRootError(message);
+    },
   });
 
   const updateMut = useMutation({
     mutationFn: (data: SubmissionForm) => {
-      if (!existingSubmission) throw new Error("No submission to update");
+      if (!existingSubmission?.id) throw new Error("No submission to update");
       return updateSubmission(existingSubmission.id, {
-        github_url: data.github_url,
-        video_url: data.video_url,
-        live_demo_url: data.live_demo_url || undefined,
-        description: data.description || undefined,
+        team_id: teamId,
+        task_id: task.id,
+        created_on: existingSubmission.created_on,
+        github_url: data.github_url.trim(),
+        video_url: data.video_url.trim(),
+        live_demo_url: data.live_demo_url?.trim() || undefined,
+        description: data.description?.trim() || undefined,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["submissions", task.id, teamId],
+        queryKey: ["submissions", task.id],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["submissions-by-task", task.id],
+      });
+      onSubmissionChange();
       setIsEditing(false);
       setRootError(null);
     },
-    onError: () =>
-      setRootError("Failed to update submission. Please try again."),
+    onError: (err: unknown) => {
+      const message = err instanceof Error ? err.message : "Failed to update submission. Please try again.";
+      setRootError(message);
+    },
   });
 
   const deleteMut = useMutation({
     mutationFn: () => {
-      if (!existingSubmission) throw new Error("No submission to delete");
+      if (!existingSubmission?.id) throw new Error("No submission to delete");
       return deleteSubmission(existingSubmission.id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["submissions", task.id, teamId],
+        queryKey: ["submissions", task.id],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["submissions-by-task", task.id],
       });
       reset();
       setIsEditing(true);
+      onSubmissionChange();
     },
+    onError: () => setRootError("Failed to delete submission."),
   });
 
   const onSubmit = (data: SubmissionForm) => {
     setRootError(null);
-    if (existingSubmission) {
+    if (existingSubmission?.id) {
       updateMut.mutate(data);
     } else {
       createMut.mutate(data);
     }
   };
 
-  const active = isTaskActive(task);
-  const closed = new Date() > new Date(task.end_date);
+  const active = task.status === "Active";
 
   return (
     <div className={styles.taskCard}>
@@ -186,14 +202,14 @@ function TaskSubmissionCard({
         </div>
         <span
           className={`${styles.taskStatusBadge} ${
-            active
+            task.status === "Active"
               ? styles.statusActive
-              : closed
+              : task.status === "SubmissionClosed" || task.status === "Evaluated"
               ? styles.statusClosed
               : styles.statusDraft
           }`}
         >
-          {active ? "Active" : closed ? "Closed" : task.status}
+          {task.status === "Active" ? "Active" : task.status === "SubmissionClosed" ? "Closed" : task.status}
         </span>
       </div>
 
@@ -221,7 +237,7 @@ function TaskSubmissionCard({
         </div>
       ) : null}
 
-      {existingSubmission && !isEditing ? (
+      {existingSubmission?.id && !isEditing ? (
         <div className={styles.submissionView}>
           <h4 className={styles.submissionTitle}>Your Submission</h4>
           <div className={styles.submissionField}>
@@ -364,7 +380,7 @@ function TaskSubmissionCard({
           </div>
 
           <div className={styles.actions}>
-            {existingSubmission && (
+            {existingSubmission?.id && (
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnSecondary}`}
@@ -383,7 +399,7 @@ function TaskSubmissionCard({
                 isSubmitting || createMut.isPending || updateMut.isPending
               }
             >
-              {existingSubmission
+              {existingSubmission?.id
                 ? updateMut.isPending
                   ? "Updating…"
                   : "Update Submission"
@@ -396,8 +412,8 @@ function TaskSubmissionCard({
       ) : (
         <div className={styles.closedNotice}>
           <p>
-            {closed
-              ? "The deadline has passed. Submissions are closed."
+            {task.status === "SubmissionClosed" || task.status === "Evaluated"
+              ? "Submissions are closed."
               : "This task is not yet active."}
           </p>
         </div>
@@ -410,34 +426,53 @@ export default function ParticipantSubmissions() {
   const { user } = useAuth();
   const { data: teams, isLoading: teamsLoading } = useMyTeams();
   const team = teams?.[0] ?? null;
+  const teamId = team?.id;
+
+  const queryClient = useQueryClient();
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const {
     data: tasks,
     isLoading: tasksLoading,
-    error,
+    error: tasksError,
   } = useQuery({
     queryKey: ["tasks", team?.tournament_id],
     queryFn: () => getTasks(team!.tournament_id!),
     enabled: !!team?.tournament_id,
   });
 
-  const submissionQueries = useQueries({
-    queries: (tasks || []).map((task) => ({
-      queryKey: ["submissions", task.id, team?.id],
-      queryFn: async () => {
+  const {
+    data: allSubmissions,
+    isLoading: submissionsLoading,
+  } = useQuery({
+    queryKey: ["submissions-by-task", tasks?.map(t => t.id), teamId, refreshKey],
+    queryFn: async () => {
+      if (!tasks || tasks.length === 0 || !teamId) return [];
+      const results: Array<{ taskId: number; submission: Submission | undefined }> = [];
+      for (const task of tasks) {
         const all = await getSubmissionsByTask(task.id);
-        return all.find((s) => s.team_id === team?.id);
-      },
-      enabled: !!team?.id && !!tasks,
-    })),
+        const submission = all.find((s) => s.team_id === teamId);
+        results.push({ taskId: task.id, submission });
+      }
+      return results;
+    },
+    enabled: !!teamId && !!tasks && tasks.length > 0,
   });
 
-  const submissionsByTask = new Map<number, Submission | undefined>();
-  tasks?.forEach((task, i) => {
-    submissionsByTask.set(task.id, submissionQueries[i]?.data);
-  });
+  const submissionsMap = useMemo(() => {
+    const map = new Map<number, Submission>();
+    allSubmissions?.forEach(({ taskId, submission }) => {
+      if (submission) map.set(taskId, submission);
+    });
+    return map;
+  }, [allSubmissions]);
 
-  if (teamsLoading || tasksLoading) {
+  const handleSubmissionChange = () => {
+    setRefreshKey(k => k + 1);
+    queryClient.invalidateQueries({ queryKey: ["submissions-by-task"] });
+  };
+
+  if (teamsLoading || tasksLoading || submissionsLoading) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -474,7 +509,7 @@ export default function ParticipantSubmissions() {
     );
   }
 
-  if (error) {
+  if (tasksError) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -527,7 +562,8 @@ export default function ParticipantSubmissions() {
                 key={task.id}
                 task={task}
                 teamId={team.id}
-                existingSubmission={submissionsByTask.get(task.id)}
+                existingSubmission={submissionsMap.get(task.id)}
+                onSubmissionChange={handleSubmissionChange}
               />
             ))}
           </div>
