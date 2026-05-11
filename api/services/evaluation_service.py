@@ -35,3 +35,9 @@ class EvaluationService:
         new_evaluation = evaluation.model_dump(exclude_unset=True, exclude={"id"})
         db_evaluation.sqlmodel_update(new_evaluation)
         return await self.evaluation_repository.save(db_evaluation)
+    
+    async def check_evaluation_ownership(self, evaluation_id: int, user_id: int) -> bool:
+        evaluation = await self.evaluation_repository.get_by_id(evaluation_id)
+        if not evaluation:
+            return False
+        return evaluation.user_id == user_id

@@ -18,6 +18,9 @@ class UserTeamService:
 
         return await self.user_team_repository.save(new_user)
     
+    async def get_user_team_by_id(self, user_team_id: int):
+        return await self.user_team_repository.get_by_id(user_team_id)
+
     async def get_teams_by_user_id(self, user_id):
         return await self.user_team_repository.get_teams_by_user_id(user_id)
     

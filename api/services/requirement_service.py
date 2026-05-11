@@ -21,3 +21,9 @@ class RequirementService:
 
     async def delete_requirements(self, ids: list[int]) -> bool:
         return await self.requirement_repository.delete_requirements(ids)
+    
+    async def get_tournament_id_by_group_id(self, requirement_group_id: int) -> int:
+        return await self.requirement_repository.get_tournament_id_by_group_id(requirement_group_id)
+    
+    async def get_tournament_id_by_requirement_id(self, requirement_id: int):
+        return await self.requirement_repository.get_tournament_id_by_requirement_id(requirement_id)
