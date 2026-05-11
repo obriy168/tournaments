@@ -48,6 +48,7 @@ export interface User {
   first_name: string;
   last_name: string;
   role: "admin" | "jury" | "participant" | "captain" | "organizer";
+  roles?: Array<{ role: string; tournament_id?: number | null }>;
 }
 
 export interface Tournament {
@@ -263,7 +264,7 @@ export async function getTask(id: number): Promise<Task> {
 }
 
 export async function updateTask(id: number, taskData: Partial<Task>): Promise<Task> {
-  const { data } = await api.put<Task>(`/tasks/${id}`, taskData);
+  const { data } = await api.put<Task>(`/tasks/?task_id=${id}`, taskData);
   return data;
 }
 

@@ -13,10 +13,6 @@
   transform: translateY(-100%);
 }
 
-.header:not(.headerHidden) {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-}
-
 .container {
   display: flex;
   justify-content: space-between;
@@ -30,11 +26,6 @@
   font-weight: 700;
   font-size: 25px;
   letter-spacing: -1px;
-  transition: transform 0.2s ease;
-}
-
-.logo:hover {
-  transform: scale(1.02);
 }
 
 .nav {

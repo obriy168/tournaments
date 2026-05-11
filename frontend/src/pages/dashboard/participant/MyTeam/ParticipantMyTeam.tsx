@@ -32,7 +32,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
     enabled: !!team.tournament_id,
   });
 
-  const isCaptain = isLead || user.role === "captain";
+  const isCaptain = isLead === true;
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({

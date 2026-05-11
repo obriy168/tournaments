@@ -18,9 +18,41 @@ interface AuthState {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function normalizeUserRole(user: User): User {
-  if (!user.role) return { ...user, role: "participant" };
-  return user;
+interface BackendUserRole {
+  role: string;
+  tournament_id?: number | null;
+}
+
+interface BackendUserResponse {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  roles: BackendUserRole[];
+}
+
+function extractRoleFromResponse(data: BackendUserResponse): string {
+  if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
+    const globalRole = data.roles.find((r) => !r.tournament_id);
+    if (globalRole) return globalRole.role.toLowerCase();
+    return data.roles[0].role.toLowerCase();
+  }
+  if ("role" in data && typeof (data as Record<string, unknown>).role === "string") {
+    return ((data as Record<string, unknown>).role as string).toLowerCase();
+  }
+  return "participant";
+}
+
+function normalizeUserRole(user: BackendUserResponse): User {
+  const role = extractRoleFromResponse(user);
+  return {
+    id: user.id,
+    email: user.email,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    role: role as User["role"],
+    roles: user.roles,
+  };
 }
 
 const AUTH_FLAG = "skyline_auth";
@@ -44,7 +76,7 @@ export const useAuthStore = create<AuthState>()(
 
         const attemptFetch = async (attempt: number): Promise<void> => {
           try {
-            const { data } = await api.get<User>("/auth/me");
+            const { data } = await api.get<BackendUserResponse>("/auth/me");
             const normalizedUser = normalizeUserRole(data);
             
             set({ user: normalizedUser, initializing: false, initialized: true });
@@ -83,7 +115,7 @@ export const useAuthStore = create<AuthState>()(
           return;
         }
         try {
-          const { data: teams } = await api.get(`/users_team/${user.id}`);
+          const { data: teams } = await api.get<unknown[]>(`/users_team/${user.id}`);
           set({ hasTeam: Array.isArray(teams) && teams.length > 0 });
         } catch {
           set({ hasTeam: false });
@@ -94,7 +126,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true });
         try {
           await api.post("/auth/login", { email, password });
-          const { data } = await api.get<User>("/auth/me");
+          const { data } = await api.get<BackendUserResponse>("/auth/me");
           const normalizedUser = normalizeUserRole(data);
           localStorage.setItem(AUTH_FLAG, "1");
           set({ user: normalizedUser, isLoading: false, initialized: true });
