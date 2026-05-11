@@ -330,3 +330,56 @@
   background-color: black;
   transform: translateY(-2px);
 }
+
+@media (max-width: 768px) {
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .registeredCard {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .registeredTitle {
+    font-size: 20px;
+  }
+
+  .registeredHeader {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .statusBadge {
+    align-self: flex-start;
+  }
+
+  .infoGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .taskCard {
+    padding: 16px;
+  }
+
+  .taskName {
+    font-size: 16px;
+  }
+
+  .button {
+    min-width: 0;
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 14px;
+    border-radius: 16px;
+  }
+
+  .emptyState {
+    padding: 40px 20px;
+  }
+}

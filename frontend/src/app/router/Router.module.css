@@ -44,3 +44,17 @@
     transform: translateX(100%);
   }
 }
+
+@media (max-width: 768px) {
+  .errorBoundary {
+    padding: 24px;
+  }
+
+  .errorBoundary h2 {
+    font-size: 20px;
+  }
+
+  .pageLoader {
+    height: 50vh;
+  }
+}

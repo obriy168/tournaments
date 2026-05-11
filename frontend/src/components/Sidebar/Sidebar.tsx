@@ -39,6 +39,23 @@ export default function Sidebar() {
             {link.label}
           </NavLink>
         ))}
+        <NavLink
+          to="/app/profile"
+          className={({ isActive }) =>
+            `${styles.link} ${styles.mobileOnly} ${
+              isActive ? styles.linkCurrent : ""
+            }`
+          }
+        >
+          Profile
+        </NavLink>
+        <button
+          onClick={logout}
+          className={`${styles.link} ${styles.mobileOnly} ${styles.linkDanger}`}
+          type="button"
+        >
+          Log out
+        </button>
       </nav>
 
       <div className={styles.footer}>
@@ -71,7 +88,7 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
         // { to: "/app/admin/teams", label: "Teams", end: false },     // заглушка
         // { to: "/app/admin/jury", label: "Jury", end: false },       // заглушка
       ];
-      case "organizer":
+    case "organizer":
       return [
         { to: "/app/organizer", label: "Dashboard", end: true },
         { to: "/app/admin/tournaments", label: "Tournaments", end: false },

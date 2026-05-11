@@ -456,3 +456,90 @@
   background: #e0e7ff;
   color: #3730a3;
 }
+
+@media (max-width: 768px) {
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .subtitle {
+    font-size: 14px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .statCard {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .statCardValue {
+    font-size: 18px;
+  }
+
+  .taskCard {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .taskCardTitle {
+    font-size: 18px;
+  }
+
+  .taskCardStatus {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .inviteCard {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .inviteTeamName {
+    font-size: 16px;
+  }
+
+  .tableWrapper {
+    padding: 16px;
+    border-radius: 16px;
+    overflow-x: auto;
+  }
+
+  .table {
+    font-size: 13px;
+    min-width: 500px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+  }
+
+  .emptyState {
+    padding: 40px 20px;
+    min-height: 240px;
+  }
+
+  .emptyTitle {
+    font-size: 22px;
+  }
+
+  .emptyText {
+    font-size: 14px;
+  }
+
+  .button {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+}
