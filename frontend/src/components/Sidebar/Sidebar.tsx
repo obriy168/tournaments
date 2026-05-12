@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/hooks/useLogout";
+import TournamentSwitcher from "@/components/TournamentSwitcher/TournamentSwitcher";
 import type { UserRole } from "@/features/auth/context/authContextValue";
 import styles from "./Sidebar.module.css";
 
@@ -11,12 +12,16 @@ interface LinkItem {
 }
 
 export default function Sidebar() {
-  const { user, hasTeam } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const hasTeam = useAuthStore((s) => s.hasTeam);
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const initializing = useAuthStore((s) => s.initializing);
   const logout = useLogout();
 
-  const links = user ? getLinksByRole(user.role, hasTeam) : [];
+  if (initializing || !user) return null;
 
-  if (!user) return null;
+  const effectiveRole = (activeRole || user.role || "participant") as UserRole;
+  const links = getLinksByRole(effectiveRole, hasTeam);
 
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
@@ -57,6 +62,8 @@ export default function Sidebar() {
           Log out
         </button>
       </nav>
+
+      <TournamentSwitcher />
 
       <div className={styles.footer}>
         <NavLink
@@ -108,9 +115,7 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
           { to: "/app/participant/submissions", label: "Submissions", end: false },
         ];
       }
-      return [
-        { to: "/app/participant", label: "Dashboard", end: true },
-      ];
+      return [{ to: "/app/participant", label: "Dashboard", end: true }];
     case "captain":
       return [
         { to: "/app/participant", label: "Dashboard", end: true },
