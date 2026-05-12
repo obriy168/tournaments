@@ -1,19 +1,24 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, type ReactNode, useRef } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { AuthContext } from "./authContextValue";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const store = useAuthStore();
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    store.fetchMe();
-  }, [store.fetchMe]);
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      store.fetchMe();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         const state = useAuthStore.getState();
-        if (state.user) {
+        if (state.user && !state.initializing) {
           state.fetchMe();
         }
       }

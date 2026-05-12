@@ -1,29 +1,27 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import styles from "./TournamentSwitcher.module.css";
 
+interface TournamentOption {
+  id: number;
+  name: string;
+  role: string;
+  key: string;
+}
+
+function normalizeRole(role: string): string {
+  return role.toLowerCase().trim();
+}
+
 export default function TournamentSwitcher() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
+  const activeRole = useAuthStore((s) => s.activeRole);
   const setActiveTournament = useAuthStore((s) => s.setActiveTournament);
   const { data: tournaments, isLoading } = useTournaments();
-
-  const roles = user?.roles;
-  let options: { id: number; name: string; role: string }[] = [];
-  if (roles && tournaments) {
-    options = roles
-      .filter((r): r is { role: string; tournament_id: number } => !!r.tournament_id)
-      .map((r) => {
-        const t = tournaments.find((tour) => tour.id === r.tournament_id);
-        return {
-          id: r.tournament_id,
-          name: t?.name || `Tournament #${r.tournament_id}`,
-          role: r.role,
-        };
-      });
-  }
 
   if (isLoading) {
     return (
@@ -33,18 +31,42 @@ export default function TournamentSwitcher() {
     );
   }
 
+  const options: TournamentOption[] = [];
+  if (user?.roles && tournaments) {
+    for (const r of user.roles) {
+      if (!r.tournament_id) continue;
+      const t = tournaments.find((tour) => tour.id === r.tournament_id);
+      options.push({
+        id: r.tournament_id,
+        name: t?.name || `Tournament #${r.tournament_id}`,
+        role: r.role,
+        key: `${r.tournament_id}-${normalizeRole(r.role)}`,
+      });
+    }
+  }
+
   if (options.length <= 1) return null;
 
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newId = Number(e.target.value);
-    const roleEntry = user?.roles?.find((r) => r.tournament_id === newId);
-    const newRole = roleEntry ? roleEntry.role.toLowerCase() : user?.role || "participant";
+  const currentValue = activeTournamentId && activeRole
+    ? `${activeTournamentId}-${activeRole}`
+    : options[0]?.key || "";
 
-    setActiveTournament(newId);
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedKey = e.target.value;
+    const selectedOption = options.find((o) => o.key === selectedKey);
+    if (!selectedOption) return;
+
+    const newId = selectedOption.id;
+    const newRole = normalizeRole(selectedOption.role);
+
+    setActiveTournament(newId, newRole);
 
     const path = newRole === "captain" ? "participant" : newRole;
-    navigate(`/app/${path}`, { replace: true });
-    window.location.reload();
+    const targetPath = `/app/${path}`;
+
+    if (location.pathname !== targetPath && !location.pathname.startsWith(targetPath)) {
+      navigate(targetPath, { replace: true });
+    }
   };
 
   return (
@@ -52,11 +74,11 @@ export default function TournamentSwitcher() {
       <label className={styles.label}>Active Tournament</label>
       <select
         className={styles.select}
-        value={activeTournamentId ?? ""}
+        value={currentValue}
         onChange={handleChange}
       >
         {options.map((opt) => (
-          <option key={opt.id} value={opt.id}>
+          <option key={opt.key} value={opt.key}>
             {opt.name} ({opt.role})
           </option>
         ))}

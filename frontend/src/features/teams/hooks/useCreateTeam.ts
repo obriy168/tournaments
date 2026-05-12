@@ -37,7 +37,7 @@ export function useCreateTeam() {
     mutationFn: async (data: CreateTeamPayload) => {
       if (!user) throw new Error("Not authenticated");
 
-      const { verifiedMembers, pendingMembers, captain_phone, captain_contact, ...teamData } = data;
+      const { verifiedMembers, pendingMembers, ...teamData } = data;
 
       if (!teamData.tournament_id) {
         throw new Error("Tournament is required");

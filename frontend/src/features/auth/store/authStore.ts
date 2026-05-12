@@ -29,45 +29,69 @@ interface AuthState {
   logout: () => Promise<void>;
   fetchMe: () => Promise<void>;
   checkTeam: () => Promise<void>;
-  setActiveTournament: (tournamentId: number) => void;
+  setActiveTournament: (tournamentId: number, explicitRole?: string) => void;
   _setInternal: (patch: Partial<AuthState>) => void;
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const AUTH_FLAG = "skyline_auth";
+const ACTIVE_TOURNAMENT_KEY = "skyline_active_tournament";
+const ACTIVE_ROLE_KEY = "skyline_active_role";
+
+function normalizeRole(role: string): string {
+  return role.toLowerCase().trim();
+}
+
 function extractGlobalRole(data: BackendUserResponse): string {
-  if (data.roles && Array.isArray(data.roles) && data.roles.length > 0) {
-    const globalRole = data.roles.find((r) => !r.tournament_id);
-    if (globalRole) return globalRole.role.toLowerCase();
-    return data.roles[0].role.toLowerCase();
+  if (!data.roles || !Array.isArray(data.roles) || data.roles.length === 0) {
+    return "participant";
   }
-  return "participant";
+  const globalRole = data.roles.find((r) => !r.tournament_id);
+  if (globalRole) return normalizeRole(globalRole.role);
+  return normalizeRole(data.roles[0].role);
+}
+
+function getTournamentRoles(
+  data: BackendUserResponse,
+  tournamentId: number
+): string[] {
+  return (data.roles || [])
+    .filter((r) => r.tournament_id === tournamentId)
+    .map((r) => normalizeRole(r.role));
 }
 
 function resolveActiveState(data: BackendUserResponse): {
   activeId: number | null;
   activeRole: string | null;
 } {
-  const userTournaments = (data.roles || [])
-    .filter((r): r is BackendUserRole & { tournament_id: number } => !!r.tournament_id)
-    .map((r) => ({ tournamentId: r.tournament_id, role: r.role.toLowerCase() }));
+  const tournamentRoles = (data.roles || []).filter(
+    (r): r is BackendUserRole & { tournament_id: number } => !!r.tournament_id
+  );
 
-  const saved = localStorage.getItem("skyline_active_tournament");
+  const savedTournamentId = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
+  const savedRole = localStorage.getItem(ACTIVE_ROLE_KEY);
+
   let activeId: number | null = null;
   let activeRole: string | null = null;
 
-  if (saved) {
-    const savedId = Number(saved);
-    const found = userTournaments.find((t) => t.tournamentId === savedId);
-    if (found) {
-      activeId = found.tournamentId;
-      activeRole = found.role;
+  if (savedTournamentId) {
+    const savedId = Number(savedTournamentId);
+    const rolesForSavedTournament = getTournamentRoles(data, savedId);
+
+    if (rolesForSavedTournament.length > 0) {
+      activeId = savedId;
+      if (savedRole && rolesForSavedTournament.includes(normalizeRole(savedRole))) {
+        activeRole = normalizeRole(savedRole);
+      } else {
+        activeRole = rolesForSavedTournament[0];
+      }
     }
   }
 
-  if (!activeId && userTournaments.length > 0) {
-    activeId = userTournaments[0].tournamentId;
-    activeRole = userTournaments[0].role;
+  if (!activeId && tournamentRoles.length > 0) {
+    activeId = tournamentRoles[0].tournament_id;
+    activeRole = normalizeRole(tournamentRoles[0].role);
   }
 
   if (!activeRole) {
@@ -88,8 +112,6 @@ function normalizeUser(user: BackendUserResponse): User {
   };
 }
 
-const AUTH_FLAG = "skyline_auth";
-
 export const useAuthStore = create<AuthState>()(
   devtools(
     (set, get) => ({
@@ -105,7 +127,7 @@ export const useAuthStore = create<AuthState>()(
 
       fetchMe: async () => {
         const state = get();
-        if (state.initialized && state.user && state.activeRole) {
+        if (state.initialized && state.user) {
           return;
         }
 
@@ -116,6 +138,7 @@ export const useAuthStore = create<AuthState>()(
             initialized: true,
             activeTournamentId: null,
             activeRole: null,
+            hasTeam: false,
           });
           return;
         }
@@ -139,13 +162,15 @@ export const useAuthStore = create<AuthState>()(
               const status = err.response?.status;
               if (status === 401 || status === 403) {
                 localStorage.removeItem(AUTH_FLAG);
-                localStorage.removeItem("skyline_active_tournament");
+                localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+                localStorage.removeItem(ACTIVE_ROLE_KEY);
                 set({
                   user: null,
                   initializing: false,
                   initialized: true,
                   activeTournamentId: null,
                   activeRole: null,
+                  hasTeam: false,
                 });
                 return;
               }
@@ -158,13 +183,15 @@ export const useAuthStore = create<AuthState>()(
               }
             }
             localStorage.removeItem(AUTH_FLAG);
-            localStorage.removeItem("skyline_active_tournament");
+            localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+            localStorage.removeItem(ACTIVE_ROLE_KEY);
             set({
               user: null,
               initializing: false,
               initialized: true,
               activeTournamentId: null,
               activeRole: null,
+              hasTeam: false,
             });
           }
         };
@@ -219,7 +246,8 @@ export const useAuthStore = create<AuthState>()(
         } finally {
           queryClient.clear();
           localStorage.removeItem(AUTH_FLAG);
-          localStorage.removeItem("skyline_active_tournament");
+          localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+          localStorage.removeItem(ACTIVE_ROLE_KEY);
           set({
             user: null,
             isLoading: false,
@@ -231,16 +259,24 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      setActiveTournament: (tournamentId: number) => {
+      setActiveTournament: (tournamentId: number, explicitRole?: string) => {
         const state = get();
-        const roleEntry = state.user?.roles?.find(
-          (r) => r.tournament_id === tournamentId
+        const tournamentRoles = getTournamentRoles(
+          { roles: state.user?.roles || [] } as BackendUserResponse,
+          tournamentId
         );
-        const newRole = roleEntry
-          ? roleEntry.role.toLowerCase()
-          : state.user?.role || "participant";
 
-        localStorage.setItem("skyline_active_tournament", String(tournamentId));
+        let newRole: string;
+        if (explicitRole && tournamentRoles.includes(normalizeRole(explicitRole))) {
+          newRole = normalizeRole(explicitRole);
+        } else if (tournamentRoles.length > 0) {
+          newRole = tournamentRoles[0];
+        } else {
+          newRole = state.user?.role || "participant";
+        }
+
+        localStorage.setItem(ACTIVE_TOURNAMENT_KEY, String(tournamentId));
+        localStorage.setItem(ACTIVE_ROLE_KEY, newRole);
         set({ activeTournamentId: tournamentId, activeRole: newRole });
         queryClient.clear();
       },

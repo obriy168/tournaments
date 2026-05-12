@@ -42,6 +42,18 @@ api.interceptors.response.use(
   }
 );
 
+export interface CreateTournamentData {
+  name: string;
+  description: string;
+  start_date: string;
+  registration_start_date: string;
+  registration_end_date: string;
+  max_teams: number;
+  min_user_count: number;
+  max_user_count: number;
+  status?: Tournament["status"];
+}
+
 export interface User {
   id: number;
   email: string;
@@ -185,7 +197,7 @@ export async function updateTournament(id: number, data: Partial<Tournament>): P
 }
 
 export async function updateTournamentStatus(id: number, status: Tournament["status"]): Promise<Tournament> {
-  const { data: res } = await api.patch<Tournament>(`/tournaments/${id}/status`, { status });
+  const { data: res } = await api.patch<Tournament>(`/tournaments/${id}/status?status=${status}`);
   return res;
 }
 
@@ -379,5 +391,15 @@ export async function getAllUsers(): Promise<User[]> {
 
 export async function registerTeamForTournament(teamId: number, tournamentId: number): Promise<Team> {
   const { data } = await api.patch<Team>(`/teams/${teamId}/tournament`, { tournament_id: tournamentId });
+  return data;
+}
+
+export async function getUsers(): Promise<User[]> {
+  const { data } = await api.get<User[]>("/users/");
+  return data;
+}
+
+export async function getTeams(): Promise<Team[]> {
+  const { data } = await api.get<Team[]>("/teams/");
   return data;
 }
