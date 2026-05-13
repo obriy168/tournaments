@@ -16,6 +16,7 @@ class User(SQLModel, table=True):
     password: str = Field(nullable=False)
     user_teams: list["UserTeam"] = Relationship(back_populates="user", cascade_delete=True)
     user_roles: list["UserRole"] = Relationship(back_populates="user", cascade_delete=True)
+    assignments: list["TaskAssignment"] = Relationship(back_populates="evaluator", cascade_delete=True)
     
 class Team(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -57,7 +58,6 @@ class UserRole(SQLModel, table=True):
     role: RoleEnum = Field(nullable=False)
     user: "User" = Relationship(back_populates="user_roles")
     tournament: "Tournament" = Relationship(back_populates="user_roles")
-    assignments: list["TaskAssignment"] = Relationship(back_populates="evaluator", cascade_delete=True)
     
 class Task(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
@@ -103,10 +103,10 @@ class Submission(SQLModel, table=True):
 
 class TaskAssignment(SQLModel, table=True):
     id: int = Field(default=None, primary_key=True)
-    evaluator_id: int = Field(foreign_key="userrole.id", ondelete="CASCADE")
+    evaluator_id: int = Field(foreign_key="user.id", ondelete="CASCADE")
     submission_id: int = Field(foreign_key="submission.id", ondelete="CASCADE")
     is_completed: bool = Field(default=False)
-    evaluator: "UserRole" = Relationship(back_populates="assignments")
+    evaluator: "User" = Relationship(back_populates="assignments")
     submission: "Submission" = Relationship(back_populates="assignments")
     evaluations: list["Evaluation"] = Relationship(back_populates="assignment", cascade_delete=True)
 

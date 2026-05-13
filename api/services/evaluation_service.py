@@ -17,7 +17,8 @@ class EvaluationService:
         return await self.evaluation_repository.get_evaluations_by_task_id(task_id)
 
     async def create_evaluation(self, evaluation: EvaluationModel) -> Evaluation:
-        requirement_max_score = (await self.requirement_repository.get_by_id(evaluation.requirement_id)).max_score
+        requirement = await self.requirement_repository.get_by_id(evaluation.requirement_id)
+        requirement_max_score = requirement.max_score
 
         if evaluation.scores > requirement_max_score:
             return None
