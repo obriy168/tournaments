@@ -17,7 +17,8 @@ class EvaluationService:
         return await self.evaluation_repository.get_evaluations_by_task_id(task_id)
 
     async def create_evaluation(self, evaluation: EvaluationModel) -> Evaluation:
-        requirement_max_score = (await self.requirement_repository.get_by_id(evaluation.requirement_id)).max_score
+        requirement = await self.requirement_repository.get_by_id(evaluation.requirement_id)
+        requirement_max_score = requirement.max_score
 
         if evaluation.scores > requirement_max_score:
             return None
@@ -35,3 +36,9 @@ class EvaluationService:
         new_evaluation = evaluation.model_dump(exclude_unset=True, exclude={"id"})
         db_evaluation.sqlmodel_update(new_evaluation)
         return await self.evaluation_repository.save(db_evaluation)
+    
+    async def check_evaluation_ownership(self, evaluation_id: int, user_id: int) -> bool:
+        evaluation = await self.evaluation_repository.get_by_id(evaluation_id)
+        if not evaluation:
+            return False
+        return evaluation.user_id == user_id

@@ -59,3 +59,6 @@ class TournamentsService:
     
     async def get_organizers(self, tournament_id: int):
         return await self.tournament_repository.get_organizers_by_tournament_id(tournament_id)
+
+    async def get_tournament_id_by_team(self, team_id: int):
+        return await self.tournament_repository.get_tournament_id_by_team_id(team_id)

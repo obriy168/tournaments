@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import RequirementGroup
+from database.schemas.schema import RequirementGroup, Task
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select
@@ -15,5 +15,9 @@ class RequirementGroupRepository(BaseRepository[RequirementGroup]):
         result = await self.db.execute(query)
         return result.scalars().all()
 
-
-
+    async def get_tournament_id_by_task_id(self, task_id: int) -> int:
+        query = select(Task).where(Task.id == task_id)
+        result = await self.db.execute(query)
+        task = result.scalar_one_or_none()
+        
+        return task.tournament_id if task else None

@@ -8,8 +8,8 @@ class SubmissionService:
     def __init__(self, submission_repository: Annotated[SubmissionRepository, Depends(SubmissionRepository)]):
         self.submission_repository = submission_repository
 
-    async def get_submission_by_id(self, submission_id: int):
-        return await self.submission_repository.get_by_id(submission_id)
+    async def get_submission_by_id_custom(self, submission_id: int):
+        return await self.submission_repository.get_submission_by_id(submission_id)
     
     async def get_submissions_by_task_id(self, task_id: int):
         return await self.submission_repository.get_submissions_by_task_id(task_id)
@@ -35,3 +35,9 @@ class SubmissionService:
     
     async def delete_submission(self, submission_id: int) -> bool:
         return await self.submission_repository.delete(submission_id)
+    
+    async def check_user_in_team(self, user_id: int, team_id: int) -> bool:
+        return await self.submission_repository.check_user_in_team(user_id, team_id)
+    
+    async def get_tournament_id_by_team(self, team_id: int):
+        return await self.submission_repository.get_tournament_id_by_team(team_id)

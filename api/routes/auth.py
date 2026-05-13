@@ -23,7 +23,7 @@ async def login(model: LoginModel, user_service: Annotated[UserService, Depends(
     
     user_roles = await user_role_service.get_all_userroles(user.id)
 
-    ur = [UserRoleModel(role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
+    ur = [UserRoleModel(user_id=user.id, role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
     
     user_session = UserSession(user_id=user.id, email=user.email, 
                                 roles=ur)
