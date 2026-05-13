@@ -9,12 +9,6 @@ export const api = axios.create({
   timeout: 30000,
 });
 
-declare module "axios" {
-  interface AxiosRequestConfig {
-    _retry?: boolean;
-  }
-}
-
 function getPathname(url: string | undefined): string {
   if (!url) return "";
   try {
@@ -25,43 +19,14 @@ function getPathname(url: string | undefined): string {
   }
 }
 
-function getCsrfToken(): string | null {
-  const match = document.cookie.match(/(?:^|; )csrf_token=([^;]*)/);
-  return match ? decodeURIComponent(match[1]) : null;
-}
-
-api.interceptors.request.use((config) => {
-  const method = config.method?.toLowerCase();
-  if (method && method !== "get" && method !== "head") {
-    const token = getCsrfToken();
-    if (token) {
-      config.headers["X-CSRF-Token"] = token;
-    }
-  }
-  return config;
-});
-
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: unknown) => void;
-  reject: (reason?: unknown) => void;
-}> = [];
-
-const processQueue = (error: unknown | null) => {
-  failedQueue.forEach((prom) => (error ? prom.reject(error) : prom.resolve()));
-  failedQueue = [];
-};
-
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
     if (!originalRequest) return Promise.reject(error);
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+    if (error.response?.status === 401) {
       const pathname = getPathname(originalRequest.url);
-
       if (
         pathname === "/auth/me" ||
         pathname === "/auth/login" ||
@@ -69,35 +34,8 @@ api.interceptors.response.use(
       ) {
         return Promise.reject(error);
       }
-
-      if (pathname === "/auth/refresh") {
-        processQueue(error);
-        isRefreshing = false;
-        window.dispatchEvent(new CustomEvent("skyline:session-expired"));
-        return Promise.reject(error);
-      }
-
-      if (!isRefreshing) {
-        isRefreshing = true;
-        try {
-          await api.post("/auth/refresh");
-          processQueue(null);
-          isRefreshing = false;
-          return api(originalRequest);
-        } catch (refreshError) {
-          processQueue(refreshError);
-          isRefreshing = false;
-          window.dispatchEvent(new CustomEvent("skyline:session-expired"));
-          return Promise.reject(refreshError);
-        }
-      }
-
-      return new Promise((resolve, reject) => {
-        failedQueue.push({
-          resolve: () => resolve(api(originalRequest)),
-          reject,
-        });
-      });
+      window.dispatchEvent(new CustomEvent("skyline:session-expired"));
+      return Promise.reject(error);
     }
 
     return Promise.reject(error);
@@ -109,7 +47,7 @@ export interface User {
   email: string;
   first_name: string;
   last_name: string;
-  role: "admin" | "jury" | "participant" | "captain";
+  role: "admin" | "jury" | "participant" | "captain" | "organizer";
 }
 
 export interface Tournament {
@@ -192,9 +130,9 @@ export interface JuryAssignment {
 
 export interface Evaluation {
   id: number;
-  submission_id: number;
-  jury_id: number;
-  score: number;
+  assignment_id: number;
+  requirement_id: number;
+  scores: number;
   comment?: string;
 }
 
@@ -214,13 +152,11 @@ export interface TeamMemberFull {
   is_lead: boolean;
 }
 
-// Auth
 export async function registerUser(data: RegisterData): Promise<{ id: number }> {
   const { data: res } = await api.post("/auth/register", data);
   return res;
 }
 
-// Tournaments
 export async function getTournaments(): Promise<Tournament[]> {
   const { data } = await api.get<Tournament[]>("/tournaments/");
   return data;
@@ -250,7 +186,6 @@ export async function deleteTournament(id: number): Promise<void> {
   await api.delete(`/tournaments/${id}`);
 }
 
-// Teams
 export async function createTeam(data: CreateTeamData): Promise<Team> {
   const { data: res } = await api.post<Team>("/teams/", data);
   return res;
@@ -292,13 +227,8 @@ export async function removeUserFromTeam(userTeamId: number): Promise<void> {
   await api.delete(`/users_team/${userTeamId}`);
 }
 
-export async function getUserTeamLink(teamId: number, userId: number): Promise<{ id: number } | null> {
-  try {
-    const { data } = await api.get(`/users_team/link/${teamId}/${userId}`);
-    return data;
-  } catch {
-    return null;
-  }
+export async function removeUserFromTeamByIds(userId: number, teamId: number): Promise<void> {
+  await api.delete(`/users_team/${userId}/${teamId}`);
 }
 
 export async function isUserLeader(teamId: number, userId: number): Promise<boolean> {
@@ -306,7 +236,6 @@ export async function isUserLeader(teamId: number, userId: number): Promise<bool
   return data;
 }
 
-// Tasks
 export async function getTasks(tournamentId: number): Promise<Task[]> {
   const { data } = await api.get<Task[]>(`/tasks/tournament/${tournamentId}`);
   return data;
@@ -323,7 +252,7 @@ export async function getTask(id: number): Promise<Task> {
 }
 
 export async function updateTask(id: number, taskData: Partial<Task>): Promise<Task> {
-  const { data } = await api.put<Task>(`/tasks/${id}`, taskData);
+  const { data } = await api.put<Task>(`/tasks/?task_id=${id}`, taskData);
   return data;
 }
 
@@ -336,7 +265,6 @@ export async function deleteTask(id: number): Promise<void> {
   await api.delete(`/tasks/${id}`);
 }
 
-// Submissions
 export async function createSubmission(submissionData: Partial<Submission>): Promise<Submission> {
   const { data } = await api.post<Submission>("/submissions/", submissionData);
   return data;
@@ -361,7 +289,6 @@ export async function getSubmissionsByTask(taskId: number): Promise<Submission[]
   return data;
 }
 
-// Evaluations
 export async function createEvaluation(evaluation: { assignment_id: number; requirement_id: number; scores: number; comment?: string }): Promise<Evaluation> {
   const { data } = await api.post<Evaluation>("/evaluations/", evaluation);
   return data;
@@ -377,7 +304,6 @@ export async function updateEvaluation(id: number, evaluation: Partial<Evaluatio
   return data;
 }
 
-// Requirements
 export async function getRequirements(taskId: number): Promise<Requirement[]> {
   const { data } = await api.get<Requirement[]>(`/requirements/task/${taskId}`);
   return data;
@@ -392,7 +318,6 @@ export async function deleteRequirements(ids: number[]): Promise<void> {
   await api.delete("/requirements/", { params: { ids } });
 }
 
-// Jury
 export async function getJuryAssignments(evaluatorId: number): Promise<JuryAssignment[]> {
   const { data } = await api.get<JuryAssignment[]>(`/task_assignment/evaluator/${evaluatorId}`);
   return data;
@@ -402,7 +327,6 @@ export async function autoAssignJury(taskId: number, minJury: number): Promise<v
   await api.post(`/task_assignment/auto-assign/${taskId}/${minJury}`);
 }
 
-// User roles
 export async function getUserRole(userId: number, tournamentId: number): Promise<{ role: string }> {
   const { data } = await api.get(`/user_role/${userId}/${tournamentId}`);
   return data;
@@ -417,20 +341,32 @@ export async function getUsersByRole(roleName: string, tournamentId: number): Pr
   return data;
 }
 
-// Users
 export async function getAllUsers(): Promise<User[]> {
   const { data } = await api.get<User[]>("/users/");
   return data;
 }
 
-// Tournament registration
 export async function registerTeamForTournament(teamId: number, tournamentId: number): Promise<Team> {
   const { data } = await api.patch<Team>(`/teams/${teamId}/tournament`, { tournament_id: tournamentId });
   return data;
 }
 
-// Team members
 export async function getTeamMembers(teamId: number): Promise<TeamMemberFull[]> {
-  const { data } = await api.get(`/teams/${teamId}/members`);
-  return data;
+  const { data: links } = await api.get<Array<{ id: number; user_id: number; team_id: number; is_lead: boolean }>>(`/users_team/${teamId}/members`);
+  if (!links || links.length === 0) return [];
+
+  const { data: users } = await api.get<User[]>("/users/");
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  return links.map((link) => {
+    const user = userMap.get(link.user_id);
+    return {
+      user_team_id: link.id,
+      user_id: link.user_id,
+      first_name: user?.first_name ?? "",
+      last_name: user?.last_name ?? "",
+      email: user?.email ?? "",
+      is_lead: link.is_lead,
+    };
+  });
 }

@@ -1,4 +1,3 @@
-// src/components/Header/Header.tsx
 import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import styles from "./Header.module.css";

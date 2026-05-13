@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Response
+from services import user_role_service
 from services.errors.user_existed import UserExistedException
 from services.models.user_model import UserModel
 from services.user_service import UserService
@@ -7,7 +8,8 @@ from typing import Annotated
 from routes.models.login_model import LoginModel
 from routes.models.login_response import LoginResponse
 from util.auth import validate_session
-from routes.models.user_session import UserSession, UserSessionRole
+from routes.models.user_session import UserSession
+from routes.models.user_role_model import UserRoleModel
 
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
@@ -21,7 +23,7 @@ async def login(model: LoginModel, user_service: Annotated[UserService, Depends(
     
     user_roles = await user_role_service.get_all_userroles(user.id)
 
-    ur = [UserSessionRole(user_id=user.id, role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
+    ur = [UserRoleModel(user_id=user.id, role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
     
     user_session = UserSession(user_id=user.id, email=user.email, 
                                 roles=ur)
@@ -32,6 +34,7 @@ async def login(model: LoginModel, user_service: Annotated[UserService, Depends(
 
 @auth_router.get("/me")
 async def get_current_user(user_service: Annotated[UserService, Depends(UserService)],
+                           user_role_service: Annotated[UserRoleService, Depends(UserRoleService)],
                            user_session: Annotated[UserSession, Depends(validate_session)]):
     if user_session is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -42,6 +45,11 @@ async def get_current_user(user_service: Annotated[UserService, Depends(UserServ
     
     data = user.model_dump(exclude={"password"})
     user_data = LoginResponse(**data)
+
+    user_roles = await user_role_service.get_all_userroles(user.id)
+
+    ur = [UserRoleModel(role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
+    user_data.roles = ur
     
     return user_data
 

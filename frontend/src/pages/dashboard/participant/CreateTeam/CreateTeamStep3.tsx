@@ -1,33 +1,99 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useCreateTeam } from "@/features/teams/hooks/useCreateTeam";
+import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
+import type { Tournament } from "@/services/api";
 import styles from "./CreateTeam.module.css";
+
+function formatDate(d: string) {
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
 export default function CreateTeamStep3() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const createTeam = useCreateTeam();
-  const [phone, setPhone] = useState("");
-  const [username, setUsername] = useState("");
+  const { data: allTournaments, isLoading, error } = useTournaments();
+
+  const [selectedTournamentId, setSelectedTournamentId] = useState<
+    number | null
+  >(null);
+  const [validationError, setValidationError] = useState<string | null>(
+    null
+  );
+
+  const tournaments = useMemo(() => {
+    if (!allTournaments) return [];
+    const now = new Date();
+    return allTournaments
+      .filter((t) => {
+        if (t.status !== "Registration") return false;
+        return now <= new Date(t.registration_end_date);
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.registration_end_date).getTime() -
+          new Date(b.registration_end_date).getTime()
+      );
+  }, [allTournaments]);
+
+  const selectedTournament = useMemo(
+    () => tournaments.find((t) => t.id === selectedTournamentId),
+    [tournaments, selectedTournamentId]
+  );
 
   const onSubmit = async () => {
-    const step1Data = JSON.parse(sessionStorage.getItem("createTeam_step1") || "{}");
+    if (!selectedTournamentId) {
+      setValidationError(
+        "Please select a tournament to register your team."
+      );
+      return;
+    }
+
+    const step1Data = JSON.parse(
+      sessionStorage.getItem("createTeam_step1") || "{}"
+    );
     const verifiedMembers = JSON.parse(
       sessionStorage.getItem("createTeam_verifiedMembers") || "[]"
     );
     const pendingMembers = JSON.parse(
       sessionStorage.getItem("createTeam_pendingMembers") || "[]"
     );
+    const totalMembers = 1 + verifiedMembers.length + pendingMembers.length;
 
     if (!step1Data.name) {
       navigate("/app/participant/team/create/step1");
       return;
     }
 
+    if (
+      selectedTournament?.min_user_count &&
+      totalMembers < selectedTournament.min_user_count
+    ) {
+      setValidationError(
+        `This tournament requires at least ${selectedTournament.min_user_count} team members (including you).`
+      );
+      return;
+    }
+    if (
+      selectedTournament?.max_user_count &&
+      totalMembers > selectedTournament.max_user_count
+    ) {
+      setValidationError(
+        `This tournament allows at most ${selectedTournament.max_user_count} team members (including you).`
+      );
+      return;
+    }
+
     try {
       await createTeam.mutateAsync({
         ...step1Data,
+        tournament_id: selectedTournamentId,
         verifiedMembers,
         pendingMembers,
       });
@@ -47,7 +113,9 @@ export default function CreateTeamStep3() {
       <header className={styles.header}>
         <h1 className={styles.title}>Team creation</h1>
         <div className={styles.user}>
-          <span className={styles.userName}>{user?.first_name || "User"}</span>
+          <span className={styles.userName}>
+            {user?.first_name || "User"}
+          </span>
         </div>
       </header>
 
@@ -55,36 +123,63 @@ export default function CreateTeamStep3() {
         <div className={styles.registration}>
           <div className={styles.registrationContent}>
             <div className={styles.registrationHeader}>
-              <h2 className={styles.registrationTitle}>Step 3: Contact Info</h2>
+              <h2 className={styles.registrationTitle}>
+                Step 3: Select Tournament
+              </h2>
               <p className={styles.registrationSubtitle}>
-                Provide communication details for the team captain.
-                You will register for tournaments after team creation.
+                Choose a tournament to register your team for. Only
+                tournaments with open registration are shown.
               </p>
             </div>
 
-            <div className={styles.registrationForm}>
-              <div className={styles.field}>
-                <label className={styles.label}>Captain Phone Number *</label>
-                <input
-                  type="tel"
-                  placeholder="+1 (555) 123-4567"
-                  className={styles.input}
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
+            {isLoading ? (
+              <p className={styles.loadingText}>Loading tournaments…</p>
+            ) : error ? (
+              <p className={styles.errorText}>
+                Failed to load tournaments.
+              </p>
+            ) : tournaments.length === 0 ? (
+              <div className={styles.emptyStateSmall}>
+                <p className={styles.emptyText}>
+                  No tournaments with open registration at the moment.
+                </p>
+                <p className={styles.emptySubtext}>
+                  Check back later or contact the organizer.
+                </p>
               </div>
+            ) : (
+              <div className={styles.tournamentList}>
+                {tournaments.map((t) => (
+                  <TournamentOption
+                    key={t.id}
+                    tournament={t}
+                    selected={selectedTournamentId === t.id}
+                    onSelect={() => {
+                      setSelectedTournamentId(t.id);
+                      setValidationError(null);
+                    }}
+                  />
+                ))}
+              </div>
+            )}
 
-              <div className={styles.field}>
-                <label className={styles.label}>Telegram/Discord username *</label>
-                <input
-                  type="text"
-                  placeholder="@username"
-                  className={styles.input}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
+            {selectedTournament && (
+              <div className={styles.tournamentMeta}>
+                <span>
+                  Team size: {selectedTournament.min_user_count}-
+                  {selectedTournament.max_user_count} members
+                </span>
               </div>
-            </div>
+            )}
+
+            {validationError && (
+              <p
+                className={styles.fieldError}
+                style={{ marginTop: 12 }}
+              >
+                {validationError}
+              </p>
+            )}
 
             {createTeam.isError && (
               <p className={styles.errorText}>
@@ -96,7 +191,9 @@ export default function CreateTeamStep3() {
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnSecondary}`}
-                onClick={() => navigate("/app/participant/team/create/step2")}
+                onClick={() =>
+                  navigate("/app/participant/team/create/step2")
+                }
               >
                 ← Previous
               </button>
@@ -104,14 +201,69 @@ export default function CreateTeamStep3() {
                 type="button"
                 className={`${styles.btn} ${styles.btnPrimary}`}
                 onClick={onSubmit}
-                disabled={createTeam.isPending}
+                disabled={
+                  createTeam.isPending || tournaments.length === 0
+                }
               >
-                {createTeam.isPending ? "Creating..." : "Create Team"}
+                {createTeam.isPending
+                  ? "Creating…"
+                  : "Create & Register Team"}
               </button>
             </div>
           </div>
         </div>
       </div>
     </div>
+  );
+}
+
+function TournamentOption({
+  tournament,
+  selected,
+  onSelect,
+}: {
+  tournament: Tournament;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  const daysLeft = useMemo(() => {
+    const end = new Date(tournament.registration_end_date);
+    const now = new Date();
+    return Math.ceil(
+      (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+    );
+  }, [tournament.registration_end_date]);
+
+  return (
+    <button
+      type="button"
+      className={`${styles.tournamentOption} ${
+        selected ? styles.tournamentOptionSelected : ""
+      }`}
+      onClick={onSelect}
+    >
+      <div className={styles.tournamentOptionHeader}>
+        <span className={styles.tournamentOptionName}>
+          {tournament.name}
+        </span>
+        <span
+          className={`${styles.tournamentOptionStatus} ${styles.statusOpen}`}
+        >
+          <span className={styles.dot} />
+          Registration open
+        </span>
+      </div>
+      <p className={styles.tournamentOptionDesc}>
+        {tournament.description}
+      </p>
+      <div className={styles.tournamentOptionMeta}>
+        <span>Closes: {formatDate(tournament.registration_end_date)}</span>
+        <span className={daysLeft <= 3 ? styles.urgent : ""}>
+          {daysLeft > 0
+            ? `${daysLeft} day(s) left`
+            : "Closing today"}
+        </span>
+      </div>
+    </button>
   );
 }

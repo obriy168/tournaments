@@ -1,0 +1,384 @@
+.container {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 40px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 8px 0 0 0;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loadingText {
+  color: #888;
+  font-size: 16px;
+}
+
+.tasksList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.taskCard {
+  background-color: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.taskHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.taskName {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.taskDesc {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+  margin: 8px 0 0 0;
+}
+
+.taskStatusBadge {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusActive {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.statusClosed {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusDraft {
+  background: #f5f5f5;
+  color: #888;
+}
+
+.taskMeta {
+  display: flex;
+  gap: 24px;
+  font-size: 13px;
+  color: #666;
+  padding: 16px 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  flex-wrap: wrap;
+}
+
+.submissionView {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.submissionTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+  margin: 0;
+}
+
+.submissionField {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.submissionLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.submissionLink {
+  font-size: 15px;
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  word-break: break-all;
+}
+
+.submissionLink:hover {
+  color: #333;
+}
+
+.submissionText {
+  font-size: 15px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.submissionActions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.input {
+  width: 100%;
+  padding: 14px 20px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  font-size: 15px;
+  font-family: "Inter", sans-serif;
+  transition: 0.2s;
+  background-color: #fafafa;
+  color: #000;
+  line-height: 1.4;
+}
+
+.input::placeholder {
+  color: #999;
+}
+
+.input:focus {
+  outline: none;
+  border-color: black;
+  background-color: white;
+}
+
+.textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.inputError {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.fieldError {
+  color: #dc2626;
+  font-size: 13px;
+}
+
+.rootError {
+  color: #dc2626;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.closedNotice {
+  background: #f5f5f5;
+  border: 1px dashed #ccc;
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.closedNotice p {
+  color: #666;
+  font-size: 15px;
+  margin: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+  text-decoration: none;
+  border: 2px solid transparent;
+  font-family: inherit;
+}
+
+.btnPrimary {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  border-color: #000000;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btnSecondary {
+  background: #ffffff;
+  color: rgb(0, 0, 0);
+  border-color: #000000;
+}
+
+.btnSecondary:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btnDanger {
+  background: #ffffff;
+  color: #dc2626;
+  border-color: #dc2626;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #dc2626;
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.emptyState {
+  background: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.emptyTitle {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0 0 12px 0;
+}
+
+.emptyText {
+  font-size: 16px;
+  color: #666;
+  margin: 0;
+}
+
+.errorText {
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.requirementsBlock {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.requirementsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.requirementItem {
+  font-size: 14px;
+  color: #555;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.requirementDot {
+  color: #000;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.requirementScore {
+  color: #888;
+  font-size: 13px;
+  white-space: nowrap;
+}

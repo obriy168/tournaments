@@ -22,14 +22,30 @@ export interface TeamMember {
   isLead: boolean;
 }
 
+function getInitialMembers(): TeamMember[] {
+  const verified = JSON.parse(
+    sessionStorage.getItem("createTeam_verifiedMembers") || "[]"
+  ) as TeamMember[];
+  const pending = JSON.parse(
+    sessionStorage.getItem("createTeam_pendingMembers") || "[]"
+  ) as TeamMember[];
+  return [...verified, ...pending];
+}
+
+function getNextId(members: TeamMember[]): number {
+  return members.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+}
+
 export default function CreateTeamStep2() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [members, setMembers] = useState<TeamMember[]>([]);
+
+  const initialMembers = getInitialMembers();
+  const [members, setMembers] = useState<TeamMember[]>(initialMembers);
   const [error, setError] = useState<string | null>(null);
   const [lookupEmail, setLookupEmail] = useState<string | null>(null);
   const [pendingData, setPendingData] = useState<MemberData | null>(null);
-  const idCounter = useRef(1);
+  const idCounter = useRef(getNextId(initialMembers));
   const processedEmail = useRef<string | null>(null);
 
   const {
@@ -44,6 +60,19 @@ export default function CreateTeamStep2() {
   const { data: foundUser, isLoading: isLookingUp } = useUserLookup(
     lookupEmail || ""
   );
+
+  useEffect(() => {
+    const verified = members.filter((m) => m.userId);
+    const pending = members.filter((m) => !m.userId);
+    sessionStorage.setItem(
+      "createTeam_verifiedMembers",
+      JSON.stringify(verified)
+    );
+    sessionStorage.setItem(
+      "createTeam_pendingMembers",
+      JSON.stringify(pending)
+    );
+  }, [members]);
 
   useEffect(() => {
     if (
@@ -113,27 +142,17 @@ export default function CreateTeamStep2() {
   }, []);
 
   const onNext = useCallback(() => {
-    const verifiedMembers = members.filter((m) => m.userId);
-    const pendingMembers = members.filter((m) => !m.userId);
-
-    sessionStorage.setItem(
-      "createTeam_verifiedMembers",
-      JSON.stringify(verifiedMembers)
-    );
-    sessionStorage.setItem(
-      "createTeam_pendingMembers",
-      JSON.stringify(pendingMembers)
-    );
-
     navigate("/app/participant/team/create/step3");
-  }, [members, navigate]);
+  }, [navigate]);
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <h1 className={styles.title}>Team creation</h1>
         <div className={styles.user}>
-          <span className={styles.userName}>{user?.first_name || "User"}</span>
+          <span className={styles.userName}>
+            {user?.first_name || "User"}
+          </span>
         </div>
       </header>
 
@@ -141,26 +160,36 @@ export default function CreateTeamStep2() {
         <div className={styles.registration}>
           <div className={styles.registrationContent}>
             <div className={styles.registrationHeader}>
-              <h2 className={styles.registrationTitle}>Step 2: Team Members</h2>
+              <h2 className={styles.registrationTitle}>
+                Step 2: Team Members
+              </h2>
               <p className={styles.registrationSubtitle}>
-                Add registered team members by email. They must have an account to join automatically.
+                Add registered team members by email. They must have an
+                account to join automatically.
               </p>
             </div>
 
             <div className={styles.formInline}>
               <p className={styles.sectionTitle}>Add a Member</p>
 
-              <form className={styles.formRow} onSubmit={handleAddMember}>
+              <form
+                className={styles.formRow}
+                onSubmit={handleAddMember}
+              >
                 <div className={styles.field}>
                   <label className={styles.label}>Full Name *</label>
                   <input
                     type="text"
                     placeholder="Jane Doe"
-                    className={`${styles.input} ${errors.fullName ? styles.inputError : ""}`}
+                    className={`${styles.input} ${
+                      errors.fullName ? styles.inputError : ""
+                    }`}
                     {...register("fullName")}
                   />
                   {errors.fullName && (
-                    <span className={styles.fieldError}>{errors.fullName.message}</span>
+                    <span className={styles.fieldError}>
+                      {errors.fullName.message}
+                    </span>
                   )}
                 </div>
 
@@ -169,21 +198,32 @@ export default function CreateTeamStep2() {
                   <input
                     type="email"
                     placeholder="jane@example.com"
-                    className={`${styles.input} ${errors.email ? styles.inputError : ""}`}
+                    className={`${styles.input} ${
+                      errors.email ? styles.inputError : ""
+                    }`}
                     {...register("email")}
                   />
                   {errors.email && (
-                    <span className={styles.fieldError}>{errors.email.message}</span>
+                    <span className={styles.fieldError}>
+                      {errors.email.message}
+                    </span>
                   )}
                 </div>
 
-                <button type="submit" className={styles.addBtn} disabled={isLookingUp}>
+                <button
+                  type="submit"
+                  className={styles.addBtn}
+                  disabled={isLookingUp}
+                >
                   {isLookingUp ? "..." : "+ Add"}
                 </button>
               </form>
 
               {error && (
-                <p className={styles.fieldError} style={{ marginTop: 8 }}>
+                <p
+                  className={styles.fieldError}
+                  style={{ marginTop: 8 }}
+                >
                   {error}
                 </p>
               )}
@@ -194,7 +234,8 @@ export default function CreateTeamStep2() {
 
               <div className={styles.member}>
                 <div className={styles.memberAvatar}>
-                  {(user?.first_name?.[0] || "U") + (user?.last_name?.[0] || "")}
+                  {(user?.first_name?.[0] || "U") +
+                    (user?.last_name?.[0] || "")}
                 </div>
                 <div className={styles.memberInfo}>
                   <div className={styles.memberHeader}>
@@ -210,22 +251,41 @@ export default function CreateTeamStep2() {
               {members.map((member) => (
                 <div key={member.id} className={styles.member}>
                   <div className={styles.memberAvatar}>
-                    {member.fullName.split(" ").map((n) => n[0]).join("")}
+                    {member.fullName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </div>
                   <div className={styles.memberInfo}>
                     <div className={styles.memberHeader}>
-                      <span className={styles.memberName}>{member.fullName}</span>
+                      <span className={styles.memberName}>
+                        {member.fullName}
+                      </span>
                       {member.userId ? (
-                        <span className={styles.memberRole} style={{ background: "#dcfce7", color: "#166534" }}>
+                        <span
+                          className={styles.memberRole}
+                          style={{
+                            background: "#dcfce7",
+                            color: "#166534",
+                          }}
+                        >
                           Auto-join
                         </span>
                       ) : (
-                        <span className={styles.memberRole} style={{ background: "#fee2e2", color: "#991b1b" }}>
+                        <span
+                          className={styles.memberRole}
+                          style={{
+                            background: "#fee2e2",
+                            color: "#991b1b",
+                          }}
+                        >
                           Pending signup
                         </span>
                       )}
                     </div>
-                    <span className={styles.memberEmail}>{member.email}</span>
+                    <span className={styles.memberEmail}>
+                      {member.email}
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -233,7 +293,14 @@ export default function CreateTeamStep2() {
                     onClick={() => onRemoveMember(member.id)}
                     aria-label={`Remove ${member.fullName}`}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
                       <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                     </svg>
                   </button>
@@ -245,7 +312,9 @@ export default function CreateTeamStep2() {
               <button
                 type="button"
                 className={`${styles.btn} ${styles.btnSecondary}`}
-                onClick={() => navigate("/app/participant/team/create/step1")}
+                onClick={() =>
+                  navigate("/app/participant/team/create/step1")
+                }
               >
                 ← Previous
               </button>

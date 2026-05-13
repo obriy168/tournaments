@@ -103,7 +103,7 @@
 .formRow {
   display: flex;
   gap: 16px;
-  align-items: flex-end;
+  align-items: flex-start;
 }
 
 .formRow .field {
@@ -174,7 +174,8 @@
   transition: 0.2s;
   white-space: nowrap;
   height: fit-content;
-  margin-bottom: 1px;
+  margin-top: 26px;
+  flex-shrink: 0;
 }
 
 .addBtn:hover {
@@ -356,4 +357,202 @@
   color: #dc2626;
   font-size: 14px;
   text-align: center;
+}
+
+.loadingText {
+  color: #888;
+  font-size: 16px;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.emptyStateSmall {
+  background: #fafafa;
+  border: 1px dashed #ccc;
+  border-radius: 16px;
+  padding: 32px;
+  text-align: center;
+}
+
+.emptyText {
+  color: #666;
+  font-size: 15px;
+  margin: 0;
+}
+
+.tournamentList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.tournamentOption {
+  width: 100%;
+  text-align: left;
+  background: #ffffff;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.tournamentOption:hover {
+  border-color: #999;
+}
+
+.tournamentOptionSelected {
+  border-color: #000000;
+  background: #fafafa;
+}
+
+.tournamentOptionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.tournamentOptionName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.tournamentOptionStatus {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.statusOpen {
+  color: #15803d;
+}
+
+.tournamentOptionDesc {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.5;
+  margin: 0 0 12px 0;
+}
+
+.tournamentOptionMeta {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: #666;
+  flex-wrap: wrap;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.emptySubtext {
+  color: #888;
+  font-size: 14px;
+  margin: 8px 0 0 0;
+}
+
+.urgent {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.captainCard {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: #fafafa;
+  border: 2px solid #eee;
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+
+.captainAvatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.captainInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.captainLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.captainName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #000;
+}
+
+.captainEmail {
+  font-size: 13px;
+  color: #666;
+}
+
+.fieldHalf {
+  flex: 1;
+  min-width: 0;
+}
+
+.divider {
+  height: 1px;
+  background: #eee;
+  margin: 8px 0;
+}
+
+.sectionLabel {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.tournamentMeta {
+  font-size: 13px;
+  color: #666;
+  padding: 8px 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }

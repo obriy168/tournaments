@@ -1,5 +1,10 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTeam, addUserToTeam, changeTeamLeader } from "@/services/api";
+import {
+  createTeam,
+  addUserToTeam,
+  changeTeamLeader,
+  getMyTeams,
+} from "@/services/api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { myTeamsKeys } from "./useMyTeams";
@@ -16,7 +21,7 @@ interface CreateTeamPayload {
   name: string;
   city: string;
   organization: string;
-  tournament_id?: number;
+  tournament_id: number;
   verifiedMembers?: TeamMember[];
   pendingMembers?: TeamMember[];
 }
@@ -32,11 +37,17 @@ export function useCreateTeam() {
 
       const { verifiedMembers, pendingMembers, ...teamData } = data;
 
+      if (!teamData.tournament_id) {
+        throw new Error("Tournament is required");
+      }
+
       const team = await createTeam({
-        ...teamData,
-        tournament_id: 0,
+        name: teamData.name,
+        city: teamData.city,
+        organization: teamData.organization,
+        tournament_id: teamData.tournament_id,
       });
-      
+
       await addUserToTeam(team.id, user.id);
       await changeTeamLeader(team.id, user.id);
 
@@ -44,19 +55,33 @@ export function useCreateTeam() {
         await Promise.all(
           verifiedMembers
             .filter((member) => member.userId && member.userId !== user.id)
-            .map((member) => 
-              addUserToTeam(team.id, member.userId!).catch((err) => {
+            .map(async (member) => {
+              try {
+                const userTeams = await getMyTeams(member.userId!);
+                if (userTeams.length > 0) {
+                  console.warn(
+                    `User ${member.email} is already in another team, skipping.`
+                  );
+                  return;
+                }
+                await addUserToTeam(team.id, member.userId!);
+              } catch (err) {
                 console.error(`Failed to add user ${member.email}:`, err);
-              })
-            )
+              }
+            })
         );
       }
 
       if (pendingMembers && pendingMembers.length > 0) {
         const allInvites = JSON.parse(
           localStorage.getItem("pending_team_invites") || "[]"
-        ) as Array<{ email: string; teamId: number; teamName: string; invitedAt: string }>;
-        
+        ) as Array<{
+          email: string;
+          teamId: number;
+          teamName: string;
+          invitedAt: string;
+        }>;
+
         for (const member of pendingMembers) {
           allInvites.push({
             email: member.email,
@@ -65,7 +90,10 @@ export function useCreateTeam() {
             invitedAt: new Date().toISOString(),
           });
         }
-        localStorage.setItem("pending_team_invites", JSON.stringify(allInvites));
+        localStorage.setItem(
+          "pending_team_invites",
+          JSON.stringify(allInvites)
+        );
       }
 
       return team;
