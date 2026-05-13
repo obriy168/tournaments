@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from services.task_service import TaskService
 from typing import Annotated
 from services.models.task_model import TaskModel
-from util.role_required import TaskAccess
+from util.access.task_access import TaskAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

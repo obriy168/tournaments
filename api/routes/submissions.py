@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
-from services.submission_service import SubmissionService 
-from services.tournaments_service import TournamentsService
+from services.submission_service import SubmissionService
 from typing import Annotated
 from services.models.submission_model import SubmissionModel
 from enums.role_enum import RoleEnum
-from util.role_required import RoleRequired, SubmissionAccess
-from util.auth import validate_session
+from util.access.role_required import RoleRequired
+from util.access.submission_access import SubmissionAccess
 from routes.models.user_session import UserSession
 
 submissions_router = APIRouter(prefix="/submissions", tags=["submissions"])

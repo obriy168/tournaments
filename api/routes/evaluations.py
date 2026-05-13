@@ -3,7 +3,7 @@ from typing import Annotated
 from services.evaluation_service import EvaluationService
 from services.task_assigment_service import TaskAssignmentService
 from services.models.evaluation_model import EvaluationModel
-from util.role_required import EvaluationAccess
+from util.access.evaluation_access import EvaluationAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

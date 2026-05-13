@@ -4,7 +4,8 @@ from routes.models.user_session import UserSession
 from services.models.tournament_model import TournamentModel
 from services.tournaments_service import TournamentsService
 from typing import Annotated
-from util.role_required import RoleRequired, TournamentAccess
+from util.access.role_required import RoleRequired
+from util.access.tournament_access import TournamentAccess
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
     

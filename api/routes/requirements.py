@@ -4,7 +4,8 @@ from services.requirement_group_service import RequirementGroupService
 from services.task_service import TaskService
 from typing import Annotated
 from services.models.requirement_model import RequirementModel
-from util.role_required import TournamentAccess, RequirementAccess
+from util.access.tournament_access import TournamentAccess
+from util.access.requirement_access import RequirementAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

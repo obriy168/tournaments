@@ -4,7 +4,7 @@ from services.user_service import UserService
 from typing import Annotated
 from services.models.user_model import UserModel
 from enums.role_enum import RoleEnum
-from util.role_required import RoleRequired
+from util.access.role_required import RoleRequired
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

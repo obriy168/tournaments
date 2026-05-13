@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from services.user_team_service import UserTeamService
 from typing import Annotated
-from util.role_required import TeamAccess
+from util.access.team_access import TeamAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

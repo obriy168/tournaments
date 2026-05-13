@@ -3,7 +3,8 @@ from services.task_assigment_service import TaskAssignmentService
 from services.submission_service import SubmissionService
 from services.models.task_assigment_model import TaskAssigmentModel
 from typing import Annotated
-from util.role_required import AssignmentAccess, TaskAccess
+from util.access.assignment_access import AssignmentAccess
+from util.access.task_access import TaskAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 

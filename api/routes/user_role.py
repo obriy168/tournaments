@@ -3,7 +3,7 @@ from services.models.user_role_model import UserRoleModel
 from services.user_role_service import UserRoleService
 from services.tournaments_service import TournamentsService
 from typing import Annotated
-from util.role_required import TournamentAccess
+from util.access.tournament_access import TournamentAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 
