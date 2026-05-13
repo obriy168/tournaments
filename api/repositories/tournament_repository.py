@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Tournament, UserRole
+from database.schemas.schema import Team, Tournament, UserRole
 from typing import Annotated
 from fastapi import Depends
 from repositories.base_repository import BaseRepository
@@ -17,3 +17,8 @@ class TournamentRepository(BaseRepository[Tournament]):
         result = await self.db.execute(query)
         organizers = result.scalars().all()
         return organizers
+
+    async def get_tournament_id_by_team_id(self, team_id: int):
+        query = select(Team.tournament_id).where(Team.id == team_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()

@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Requirement, RequirementGroup
+from database.schemas.schema import Requirement, RequirementGroup, Task
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select, delete
@@ -24,3 +24,17 @@ class RequirementRepository(BaseRepository[Requirement]):
         await self.db.execute(query)
         await self.db.commit()
         return True
+    
+    async def get_tournament_id_by_group_id(self, requirement_group_id: int) -> int:
+        query = select(Task.tournament_id).join(RequirementGroup).where(RequirementGroup.id == requirement_group_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+    
+    async def get_tournament_id_by_requirement_id(self, requirement_id: int):
+        query = (
+            select(Task.tournament_id).join(RequirementGroup, RequirementGroup.task_id == Task.id)
+            .join(Requirement, Requirement.requirement_group_id == RequirementGroup.id)
+            .where(Requirement.id == requirement_id)
+            )
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()

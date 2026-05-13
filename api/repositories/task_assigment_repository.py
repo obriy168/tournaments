@@ -18,6 +18,10 @@ class TaskAssignmentRepository(BaseRepository[TaskAssignment]):
     async def save_all_tasks(self, task_assignments: list[TaskAssignment]) -> list[TaskAssignment]:
         self.db.add_all(task_assignments)
         await self.db.commit()
+
+        for task in task_assignments:
+            await self.db.refresh(task)
+
         return task_assignments
 
     async def delete_assignments_by_task_id(self, task_id: int):

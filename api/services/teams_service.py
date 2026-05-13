@@ -8,7 +8,7 @@ class TeamsService:
     def __init__(self, team_repository: Annotated[TeamRepository, Depends(TeamRepository)]):
         self.team_repository = team_repository
 
-    async def get_team_by_id(self, team_id: int) -> list[Team]:
+    async def get_team_by_id(self, team_id: int) -> Team:
         return await self.team_repository.get_by_id(team_id)
 
     async def get_all_teams(self):
