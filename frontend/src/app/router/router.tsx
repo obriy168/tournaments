@@ -83,6 +83,8 @@ const AdminDashboard = lazy(() => import("@/pages/dashboard/admin/dashboard/Admi
 const AdminTournaments = lazy(() => import("@/pages/dashboard/admin/tournaments/AdminTournaments"));
 const AdminTeams = lazy(() => import("@/pages/dashboard/admin/teams/AdminTeams"));
 const AdminJury = lazy(() => import("@/pages/dashboard/admin/jury/AdminJury"));
+const AdminTasks = lazy(() => import("@/pages/dashboard/admin/tasks/AdminTasks"));
+const AdminRounds = lazy(() => import("@/pages/dashboard/admin/rounds/AdminRounds"));
 const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
 const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignments"));
 const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
@@ -142,7 +144,9 @@ const router = createBrowserRouter([
                       { path: "/app/admin", element: wrap(<AdminDashboard />) },
                       { path: "/app/admin/tournaments", element: wrap(<AdminTournaments />) },
                       { path: "/app/admin/teams", element: wrap(<AdminTeams />) },
+                      { path: "/app/admin/rounds", element: wrap(<AdminRounds />) },
                       { path: "/app/admin/jury", element: wrap(<AdminJury />) },
+                      { path: "/app/admin/tasks", element: wrap(<AdminTasks />) },
                       { path: "/app/admin/*", element: <Navigate to="/app/admin" replace /> },
                     ],
                   },

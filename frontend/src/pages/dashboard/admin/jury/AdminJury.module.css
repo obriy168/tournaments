@@ -53,14 +53,38 @@
 }
 
 .section {
-  margin-bottom: 32px;
+  margin-bottom: 40px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
 
 .sectionTitle {
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  margin: 0 0 16px 0;
+  margin: 0;
+}
+
+.searchInput {
+  padding: 8px 14px;
+  border: 2px solid #eee;
+  border-radius: 10px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  min-width: 220px;
+  transition: 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #000;
 }
 
 .loading,
@@ -135,6 +159,7 @@
   cursor: pointer;
   transition: 0.2s;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .addBtn:hover:not(:disabled) {
@@ -147,9 +172,55 @@
   cursor: not-allowed;
 }
 
+.actionBtn {
+  padding: 8px 16px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.actionBtn:hover:not(:disabled) {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+}
+
+.actionBtnDanger {
+  color: #dc2626;
+  border-color: #fee2e2;
+}
+
+.actionBtnDanger:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+}
+
+.actionBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
   .title {
     font-size: 24px;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .searchInput {
+    min-width: 0;
+    width: 100%;
   }
 
   .card {
@@ -164,5 +235,11 @@
 
   .name {
     font-size: 14px;
+  }
+
+  .addBtn,
+  .actionBtn {
+    padding: 6px 14px;
+    font-size: 12px;
   }
 }

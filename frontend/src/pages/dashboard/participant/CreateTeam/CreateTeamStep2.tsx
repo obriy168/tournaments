@@ -175,6 +175,7 @@ export default function CreateTeamStep2() {
               <form
                 className={styles.formRow}
                 onSubmit={handleAddMember}
+                autoComplete="off"
               >
                 <div className={styles.field}>
                   <label className={styles.label}>Full Name *</label>
@@ -185,6 +186,7 @@ export default function CreateTeamStep2() {
                       errors.fullName ? styles.inputError : ""
                     }`}
                     {...register("fullName")}
+                    autoComplete="off"
                   />
                   {errors.fullName && (
                     <span className={styles.fieldError}>
@@ -202,6 +204,7 @@ export default function CreateTeamStep2() {
                       errors.email ? styles.inputError : ""
                     }`}
                     {...register("email")}
+                    autoComplete="off"
                   />
                   {errors.email && (
                     <span className={styles.fieldError}>

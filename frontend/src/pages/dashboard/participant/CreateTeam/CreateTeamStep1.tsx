@@ -88,6 +88,7 @@ export default function CreateTeamStep1() {
             <form
               className={styles.registrationForm}
               onSubmit={handleSubmit(onSubmit)}
+              autoComplete="off"
             >
               <div className={styles.field}>
                 <label className={styles.label}>Team Name *</label>
@@ -98,6 +99,7 @@ export default function CreateTeamStep1() {
                     errors.name ? styles.inputError : ""
                   }`}
                   {...register("name")}
+                  autoComplete="off"
                 />
                 {errors.name && (
                   <span className={styles.fieldError}>
@@ -116,6 +118,7 @@ export default function CreateTeamStep1() {
                       errors.city ? styles.inputError : ""
                     }`}
                     {...register("city")}
+                    autoComplete="off"
                   />
                   {errors.city && (
                     <span className={styles.fieldError}>
@@ -135,6 +138,7 @@ export default function CreateTeamStep1() {
                       errors.organization ? styles.inputError : ""
                     }`}
                     {...register("organization")}
+                    autoComplete="off"
                   />
                   {errors.organization && (
                     <span className={styles.fieldError}>
@@ -158,6 +162,7 @@ export default function CreateTeamStep1() {
                       errors.captain_phone ? styles.inputError : ""
                     }`}
                     {...register("captain_phone")}
+                    autoComplete="off"
                   />
                   {errors.captain_phone && (
                     <span className={styles.fieldError}>
@@ -177,6 +182,7 @@ export default function CreateTeamStep1() {
                       errors.captain_contact ? styles.inputError : ""
                     }`}
                     {...register("captain_contact")}
+                    autoComplete="off"
                   />
                   {errors.captain_contact && (
                     <span className={styles.fieldError}>

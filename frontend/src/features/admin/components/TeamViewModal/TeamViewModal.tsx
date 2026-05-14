@@ -99,7 +99,7 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
   const isLoading = teamLoading || membersLoading;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>
@@ -125,6 +125,7 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                         className={styles.input}
                         value={form.name}
                         onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                        autoComplete="off"
                       />
                     </div>
                     <div className={styles.field}>
@@ -133,6 +134,7 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                         className={styles.input}
                         value={form.city}
                         onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                        autoComplete="off"
                       />
                     </div>
                     <div className={styles.field}>
@@ -141,6 +143,7 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                         className={styles.input}
                         value={form.organization}
                         onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
+                        autoComplete="off"
                       />
                     </div>
                   </div>

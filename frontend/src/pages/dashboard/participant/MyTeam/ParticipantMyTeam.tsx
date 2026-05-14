@@ -194,6 +194,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
+                autoComplete="off"
               />
             </div>
             <div className={styles.field}>
@@ -204,6 +205,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, city: e.target.value }))
                 }
+                autoComplete="off"
               />
             </div>
             <div className={styles.field}>
@@ -217,6 +219,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                     organization: e.target.value,
                   }))
                 }
+                autoComplete="off"
               />
             </div>
           </div>
@@ -356,6 +359,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               disabled={inviteMut.isPending}
+              autoComplete="off"
             />
             <button
               type="submit"

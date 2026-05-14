@@ -281,7 +281,7 @@ export async function updateTask(id: number, taskData: Partial<Task>): Promise<T
 }
 
 export async function updateTaskStatus(id: number, status: Task["status"]): Promise<Task> {
-  const { data } = await api.patch<Task>(`/tasks/${id}/status`, { status });
+  const { data } = await api.patch<Task>(`/tasks/${id}/status?status=${encodeURIComponent(status)}`);
   return data;
 }
 

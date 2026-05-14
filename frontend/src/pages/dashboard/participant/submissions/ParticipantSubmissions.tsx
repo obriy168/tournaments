@@ -310,7 +310,7 @@ function TaskSubmissionCard({
           </div>
         </div>
       ) : active ? (
-        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+        <form className={styles.form} onSubmit={handleSubmit(onSubmit)} autoComplete="off">
           {rootError && <p className={styles.rootError}>{rootError}</p>}
 
           <div className={styles.field}>
@@ -322,6 +322,7 @@ function TaskSubmissionCard({
                 errors.github_url ? styles.inputError : ""
               }`}
               {...register("github_url")}
+              autoComplete="off"
             />
             {errors.github_url && (
               <span className={styles.fieldError}>
@@ -339,6 +340,7 @@ function TaskSubmissionCard({
                 errors.video_url ? styles.inputError : ""
               }`}
               {...register("video_url")}
+              autoComplete="off"
             />
             {errors.video_url && (
               <span className={styles.fieldError}>
@@ -356,6 +358,7 @@ function TaskSubmissionCard({
                 errors.live_demo_url ? styles.inputError : ""
               }`}
               {...register("live_demo_url")}
+              autoComplete="off"
             />
             {errors.live_demo_url && (
               <span className={styles.fieldError}>

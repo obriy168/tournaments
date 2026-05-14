@@ -117,7 +117,7 @@ export default function TournamentFormModal({ tournament, onClose }: Props) {
   const isPending = createMutation.isPending || updateMutation.isPending || isSubmitting;
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h2 className={styles.title}>
@@ -128,7 +128,7 @@ export default function TournamentFormModal({ tournament, onClose }: Props) {
           </button>
         </div>
 
-        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+        <form className={styles.form} onSubmit={handleSubmit(onSubmit)} autoComplete="off">
           {errors.root && <p className={styles.rootError}>{errors.root.message}</p>}
 
           <div className={styles.field}>
