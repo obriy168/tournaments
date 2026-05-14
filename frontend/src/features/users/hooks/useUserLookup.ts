@@ -1,16 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAllUsers, type User } from "@/services/api";
+import { getUserByEmail, type User } from "@/services/api";
 
 export function useUserLookup(email: string) {
-  return useQuery({
+  return useQuery<User | null, Error>({
     queryKey: ["user-lookup", email],
-    queryFn: async () => {
-      const users = await getAllUsers();
-      const found = users.find(
-        (u: User) => u.email.toLowerCase() === email.toLowerCase()
-      );
-      return found || null;
-    },
+    queryFn: () => getUserByEmail(email),
     enabled: !!email && email.includes("@"),
     staleTime: 1000 * 60 * 2,
   });

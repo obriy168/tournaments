@@ -83,7 +83,7 @@ export default function CreateTeamStep2() {
     ) {
       processedEmail.current = lookupEmail;
 
-      if (foundUser && pendingData) {
+      if (foundUser !== null && pendingData) {
         const newMember: TeamMember = {
           id: idCounter.current++,
           fullName: `${foundUser.first_name} ${foundUser.last_name}`,

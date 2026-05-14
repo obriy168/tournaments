@@ -403,3 +403,8 @@ export async function getTeams(): Promise<Team[]> {
   const { data } = await api.get<Team[]>("/teams/");
   return data;
 }
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const { data } = await api.get<User>(`/users/email/`, { params: { email } });
+  return data;
+}
