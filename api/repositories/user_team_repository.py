@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import UserTeam, Team, User
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy import select, delete
+from sqlalchemy import select, insert
 from repositories.base_repository import BaseRepository
 
 class UserTeamRepository(BaseRepository[UserTeam]):
@@ -44,3 +44,8 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         await self.db.delete(user_team)
         await self.db.commit()
         return True
+    
+    async def bulk_save_users_team(self, users_team: list[dict]):
+        query = insert(UserTeam).values(users_team)
+        await self.db.execute(query)
+        return 

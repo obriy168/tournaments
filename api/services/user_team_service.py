@@ -18,6 +18,9 @@ class UserTeamService:
 
         return await self.user_team_repository.save(new_user)
     
+    async def bulk_save_users_team(self, users_team: list[dict]):
+        return await self.user_team_repository.bulk_save_users_team(users_team)
+    
     async def get_user_team_by_id(self, user_team_id: int):
         return await self.user_team_repository.get_by_id(user_team_id)
 

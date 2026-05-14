@@ -15,3 +15,8 @@ class TeamRepository(BaseRepository[Team]):
     
         teams = await self.db.execute(query)
         return teams.scalars().all()
+    
+    async def create_team_without_commit(self, team: Team):
+        self.db.add(team)
+        await self.db.flush()
+        return team

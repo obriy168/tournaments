@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from services.teams_service import TeamsService
 from typing import Annotated
-from services.models.team_model import TeamModel
+from services.models.team_model import TeamModel, TeamRegistrationModel
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
@@ -22,10 +22,12 @@ async def get_all_teams(teams_service: Annotated[TeamsService, Depends(TeamsServ
     teams = await teams_service.get_all_teams()
     return teams
 
+
 @team_router.post("/")
-async def create_team(team: TeamModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],
+async def create_team(team: TeamRegistrationModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],
                       user_session: Annotated[UserSession, Depends(validate_session)]):
     return await teams_service.create_team(team)
+
 
 @team_router.put("/{team_id}")
 async def update_team(team_id: int, team: TeamModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],
