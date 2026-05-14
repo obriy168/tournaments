@@ -19,6 +19,11 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
     return user
 
 @user_router.get("/")
+async def get_user_by_email(email: str, users_service: Annotated[UserService, Depends(UserService)],
+                            user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN]))]):
+    return await users_service.get_user_by_email()
+
+@user_router.get("/")
 async def get_all_users(users_service: Annotated[UserService, Depends(UserService)],
                         user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN]))]):
     return await users_service.get_all_users()
