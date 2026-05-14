@@ -10,7 +10,7 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
         super().__init__(model=User, db=db)
 
-    async def get_by_email(self, email: str):
+    async def get_user_by_email(self, email: str):
         query = select(User).where(User.email == email)
         result = await self.db.execute(query)
         return result.scalars().first()

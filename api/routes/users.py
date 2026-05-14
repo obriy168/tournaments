@@ -7,6 +7,7 @@ from enums.role_enum import RoleEnum
 from util.access.role_required import RoleRequired
 from util.auth import validate_session
 from routes.models.user_session import UserSession
+from routes.models.user_team_response import UserTeamResponse
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -17,6 +18,11 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
     if user is None:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
+@user_router.get("/email/", response_model=UserTeamResponse)
+async def get_user_by_email(email: str, users_service: Annotated[UserService, Depends(UserService)],
+                            user_session: Annotated[UserSession, Depends(validate_session)]):
+    return await users_service.get_user_by_email(email)
 
 @user_router.get("/")
 async def get_all_users(users_service: Annotated[UserService, Depends(UserService)],

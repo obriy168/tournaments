@@ -15,13 +15,15 @@ class UserService:
     async def get_user_by_id(self, user_id: int):
         return await self.user_repository.get_by_id(user_id)
     
-    
+    async def get_user_by_email(self, email: str):
+        return await self.user_repository.get_user_by_email(email)
+
     async def get_all_users(self):
         return await self.user_repository.get_all()
     
     async def create_user(self, user: UserModel) -> User:
 
-        existing_user = await self.user_repository.get_by_email(user.email)
+        existing_user = await self.user_repository.get_user_by_email(user.email)
         if existing_user:
             raise UserExistedException(email=user.email)
 
@@ -47,7 +49,7 @@ class UserService:
         return await self.user_repository.delete(user_id)
     
     async def login(self, email: str, password: str):
-        user = await self.user_repository.get_by_email(email)
+        user = await self.user_repository.get_user_by_email(email)
 
         password_hash = PasswordHash(hashers=["argon2"]).recommended()
 
