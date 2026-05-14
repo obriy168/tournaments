@@ -154,6 +154,8 @@ export interface Evaluation {
   requirement_id: number;
   scores: number;
   comment?: string;
+  submission_id?: number;
+  jury_id?: number;
 }
 
 export interface LeaderboardEntry {
@@ -407,4 +409,26 @@ export async function getTeams(): Promise<Team[]> {
 export async function getUserByEmail(email: string): Promise<User | null> {
   const { data } = await api.get<User>(`/users/email/`, { params: { email } });
   return data;
+}
+
+export async function getAllSubmissionsWithDetails(): Promise<Array<Submission & { task: Task; team: Team }>> {
+  const tournaments = await getTournaments();
+  const result = [];
+  
+  for (const tournament of tournaments) {
+    const tasks = await getTasks(tournament.id);
+    for (const task of tasks) {
+      const submissions = await getSubmissionsByTask(task.id);
+      for (const submission of submissions) {
+        const team = await getTeam(submission.team_id);
+        result.push({
+          ...submission,
+          task,
+          team,
+        });
+      }
+    }
+  }
+  
+  return result;
 }

@@ -1,0 +1,424 @@
+.container {
+  width: 100%;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 8px 0 0 0;
+}
+
+.filters {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.select {
+  padding: 10px 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s;
+  min-width: 220px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.searchInput {
+  padding: 10px 16px;
+  border: 2px solid #eee;
+  border-radius: 12px;
+  font-size: 14px;
+  font-family: "Inter", sans-serif;
+  min-width: 240px;
+  transition: 0.2s;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #000;
+}
+
+.loading,
+.empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #666;
+  font-size: 16px;
+}
+
+.tableWrapper {
+  background: #ffffff;
+  border: 2px solid black;
+  border-radius: 24px;
+  padding: 24px;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th {
+  text-align: left;
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+  border-bottom: 2px solid #eee;
+}
+
+.table td {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  vertical-align: top;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+
+.cellName {
+  font-weight: 600;
+  color: #000;
+}
+
+.link {
+  color: #000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 13px;
+}
+
+.link:hover {
+  color: #333;
+}
+
+.score {
+  font-weight: 600;
+  color: #000;
+}
+
+.scorePercent {
+  color: #888;
+  font-size: 12px;
+  font-weight: 400;
+}
+
+.scorePending {
+  color: #888;
+  font-size: 13px;
+}
+
+.status {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.statusPending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusEvaluated {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.actionBtn {
+  padding: 8px 16px;
+  border: 2px solid #eee;
+  border-radius: 8px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  transition: 0.2s;
+  font-family: inherit;
+}
+
+.actionBtn:hover {
+  border-color: #000;
+  background: #000;
+  color: #fff;
+}
+
+.rowExpanded td {
+  border-bottom: none;
+}
+
+.detailRow td {
+  padding: 0 16px 16px;
+}
+
+.details {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.detailsGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detailSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0;
+}
+
+.detailLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detailLink {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+  color: #000;
+  text-decoration: none;
+  transition: 0.2s;
+}
+
+.detailLink:hover {
+  border-color: #000;
+}
+
+.detailLinkUrl {
+  font-size: 13px;
+  color: #666;
+  word-break: break-all;
+}
+
+.detailText {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.requirementsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.requirementItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.requirementScore {
+  color: #888;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.detailEmpty {
+  color: #888;
+  font-size: 14px;
+  margin: 0;
+}
+
+.evaluationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evaluationItem {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+
+.evaluationHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.evaluationJury {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.evaluationScore {
+  font-size: 14px;
+  font-weight: 700;
+  color: #000;
+}
+
+.evaluationComment {
+  font-size: 13px;
+  color: #555;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.evaluationTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.evaluationTotalScore {
+  font-size: 16px;
+  color: #000;
+}
+
+.groupsList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.tournamentGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.tournamentGroupHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.tournamentGroupTitle {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+  color: #000;
+}
+
+.tournamentGroupCount {
+  font-size: 13px;
+  font-weight: 600;
+  color: #888;
+  background: #f5f5f5;
+  padding: 4px 12px;
+  border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+  .title {
+    font-size: 24px;
+  }
+
+  .tableWrapper {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .table {
+    font-size: 13px;
+    min-width: 800px;
+  }
+
+  .table th,
+  .table td {
+    padding: 10px 12px;
+  }
+
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .select,
+  .searchInput {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .details {
+    padding: 16px;
+  }
+
+  .evaluationHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
