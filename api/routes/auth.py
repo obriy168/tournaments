@@ -48,7 +48,7 @@ async def get_current_user(user_service: Annotated[UserService, Depends(UserServ
 
     user_roles = await user_role_service.get_all_userroles(user.id)
 
-    ur = [UserRoleModel(role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
+    ur = [UserRoleModel(user_id=user.id, role=user_role.role, tournament_id=user_role.tournament_id) for user_role in user_roles]
     user_data.roles = ur
     
     return user_data
