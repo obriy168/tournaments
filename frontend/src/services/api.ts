@@ -2,6 +2,20 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000/";
 
+let isSessionExpired = false;
+
+export function resetSessionExpired() {
+  isSessionExpired = false;
+}
+
+export function markSessionExpired() {
+  isSessionExpired = true;
+}
+
+export function getIsSessionExpired() {
+  return isSessionExpired;
+}
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: { "Content-Type": "application/json" },
@@ -19,6 +33,16 @@ function getPathname(url: string | undefined): string {
   }
 }
 
+api.interceptors.request.use(
+  (config) => {
+    if (isSessionExpired) {
+      return Promise.reject(new axios.Cancel("Session expired"));
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -34,7 +58,11 @@ api.interceptors.response.use(
       ) {
         return Promise.reject(error);
       }
-      window.dispatchEvent(new CustomEvent("skyline:session-expired"));
+
+      if (!isSessionExpired) {
+        isSessionExpired = true;
+        window.dispatchEvent(new CustomEvent("skyline:session-expired"));
+      }
       return Promise.reject(error);
     }
 

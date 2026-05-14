@@ -1,5 +1,5 @@
 import { lazy, Suspense, Component, type ReactNode, useEffect } from "react";
-import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireAuth, PublicOnly, RoleGuard, RoleRedirect } from "@/app/guards/guards";
 import PublicLayout from "@/layouts/public/PublicLayout";
@@ -54,12 +54,34 @@ function ScrollToTopWrapper() {
 }
 
 function SessionGuard() {
-  const navigate = useNavigate();
+  const { initializing, user } = useAuth();
+
   useEffect(() => {
-    const handler = () => navigate("/login", { replace: true });
+    const handler = () => {
+      window.location.href = "/login";
+    };
     window.addEventListener("skyline:session-expired", handler);
     return () => window.removeEventListener("skyline:session-expired", handler);
-  }, [navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (!initializing && !user) {
+      const path = window.location.pathname;
+      if (path !== "/login" && path !== "/signup") {
+        const isExpired = (() => {
+          try {
+            return localStorage.getItem("skyline_auth") === null;
+          } catch {
+            return true;
+          }
+        })();
+        if (isExpired) {
+          window.location.href = "/login";
+        }
+      }
+    }
+  }, [initializing, user]);
+
   return <Outlet />;
 }
 
