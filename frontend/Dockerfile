@@ -1,8 +1,10 @@
+#!/bin/sh
+
 FROM node:24-slim AS build
 
 WORKDIR /app
 
-COPY package.json .
+COPY package.json package-lock.json* ./
 
 RUN npm install
 
