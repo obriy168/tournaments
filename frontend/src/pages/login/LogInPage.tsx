@@ -2,8 +2,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
+import { resetSessionExpired } from "@/services/api";
 import styles from "@/features/auth/components/Auth.module.css";
 
 const loginSchema = z.object({
@@ -21,6 +23,10 @@ export default function LogInPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    resetSessionExpired();
+  }, []);
 
   const {
     register,

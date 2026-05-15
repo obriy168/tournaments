@@ -64,29 +64,9 @@ export default function CreateTeamStep3() {
     const pendingMembers = JSON.parse(
       sessionStorage.getItem("createTeam_pendingMembers") || "[]"
     );
-    const totalMembers = 1 + verifiedMembers.length + pendingMembers.length;
 
     if (!step1Data.name) {
       navigate("/app/participant/team/create/step1");
-      return;
-    }
-
-    if (
-      selectedTournament?.min_user_count &&
-      totalMembers < selectedTournament.min_user_count
-    ) {
-      setValidationError(
-        `This tournament requires at least ${selectedTournament.min_user_count} team members (including you).`
-      );
-      return;
-    }
-    if (
-      selectedTournament?.max_user_count &&
-      totalMembers > selectedTournament.max_user_count
-    ) {
-      setValidationError(
-        `This tournament allows at most ${selectedTournament.max_user_count} team members (including you).`
-      );
       return;
     }
 
@@ -103,7 +83,9 @@ export default function CreateTeamStep3() {
       sessionStorage.removeItem("createTeam_pendingMembers");
 
       navigate("/app/participant/team/create/success");
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create team";
+      setValidationError(message);
       console.error("Failed to create team:", err);
     }
   };

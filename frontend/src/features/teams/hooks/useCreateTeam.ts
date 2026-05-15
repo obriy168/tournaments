@@ -1,10 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  createTeam,
-  addUserToTeam,
-  changeTeamLeader,
-  getMyTeams,
-} from "@/services/api";
+import { createTeam } from "@/services/api";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { myTeamsKeys } from "./useMyTeams";
@@ -28,6 +23,13 @@ interface CreateTeamPayload {
   pendingMembers?: TeamMember[];
 }
 
+function clearCreateTeamStorage() {
+  sessionStorage.removeItem("createTeam_step1");
+  sessionStorage.removeItem("createTeam_verifiedMembers");
+  sessionStorage.removeItem("createTeam_pendingMembers");
+  localStorage.removeItem("pending_team_invites");
+}
+
 export function useCreateTeam() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -43,40 +45,33 @@ export function useCreateTeam() {
         throw new Error("Tournament is required");
       }
 
-      const team = await createTeam({
-        name: teamData.name,
-        city: teamData.city,
-        organization: teamData.organization,
-        tournament_id: teamData.tournament_id,
-      });
-
-      await Promise.all([
-        addUserToTeam(team.id, user.id),
-        changeTeamLeader(team.id, user.id),
-      ]);
+      const userTeams = [
+        {
+          user_id: user.id,
+          is_lead: true,
+        },
+      ];
 
       if (verifiedMembers && verifiedMembers.length > 0) {
         const validMembers = verifiedMembers.filter(
           (member) => member.userId && member.userId !== user.id
         );
 
-        const memberPromises = validMembers.map(async (member) => {
-          try {
-            const userTeams = await getMyTeams(member.userId!);
-            if (userTeams.length > 0) {
-              console.warn(`User ${member.email} is already in another team, skipping.`);
-              return null;
-            }
-            await addUserToTeam(team.id, member.userId!);
-            return member.userId;
-          } catch (err) {
-            console.error(`Failed to add user ${member.email}:`, err);
-            return null;
-          }
-        });
-
-        await Promise.all(memberPromises);
+        for (const member of validMembers) {
+          userTeams.push({
+            user_id: member.userId!,
+            is_lead: false,
+          });
+        }
       }
+
+      const team = await createTeam({
+        name: teamData.name,
+        city: teamData.city,
+        organization: teamData.organization,
+        tournament_id: teamData.tournament_id,
+        user_teams: userTeams,
+      });
 
       if (pendingMembers && pendingMembers.length > 0) {
         const allInvites = JSON.parse(
@@ -102,8 +97,12 @@ export function useCreateTeam() {
       return team;
     },
     onSuccess: () => {
+      clearCreateTeamStorage();
       queryClient.invalidateQueries({ queryKey: myTeamsKeys.all });
       checkTeam();
+    },
+    onError: () => {
+      clearCreateTeamStorage();
     },
   });
 }

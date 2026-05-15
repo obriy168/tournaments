@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import axios from "axios";
-import { api, type User } from "@/services/api";
+import { api, resetSessionExpired, type User } from "@/services/api";
 import { queryClient } from "@/queryClient";
 
 interface BackendUserRole {
@@ -214,6 +214,7 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (email, password) => {
+        resetSessionExpired();
         set({ isLoading: true });
         try {
           await api.post("/auth/login", { email, password });
@@ -248,6 +249,7 @@ export const useAuthStore = create<AuthState>()(
           localStorage.removeItem(AUTH_FLAG);
           localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
           localStorage.removeItem(ACTIVE_ROLE_KEY);
+          resetSessionExpired();
           set({
             user: null,
             isLoading: false,

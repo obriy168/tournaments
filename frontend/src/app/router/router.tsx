@@ -1,5 +1,5 @@
 import { lazy, Suspense, Component, type ReactNode, useEffect } from "react";
-import { createBrowserRouter, Navigate, RouterProvider, useLocation, useNavigate, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, Outlet } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireAuth, PublicOnly, RoleGuard, RoleRedirect } from "@/app/guards/guards";
 import PublicLayout from "@/layouts/public/PublicLayout";
@@ -54,12 +54,34 @@ function ScrollToTopWrapper() {
 }
 
 function SessionGuard() {
-  const navigate = useNavigate();
+  const { initializing, user } = useAuth();
+
   useEffect(() => {
-    const handler = () => navigate("/login", { replace: true });
+    const handler = () => {
+      window.location.href = "/login";
+    };
     window.addEventListener("skyline:session-expired", handler);
     return () => window.removeEventListener("skyline:session-expired", handler);
-  }, [navigate]);
+  }, []);
+
+  useEffect(() => {
+    if (!initializing && !user) {
+      const path = window.location.pathname;
+      if (path !== "/login" && path !== "/signup") {
+        const isExpired = (() => {
+          try {
+            return localStorage.getItem("skyline_auth") === null;
+          } catch {
+            return true;
+          }
+        })();
+        if (isExpired) {
+          window.location.href = "/login";
+        }
+      }
+    }
+  }, [initializing, user]);
+
   return <Outlet />;
 }
 
@@ -79,6 +101,7 @@ const SignUpPage = lazy(() => import("@/pages/sign-up/SignUpPage"));
 const ProfilePage = lazy(() => import("@/pages/profile/ProfilePage"));
 const PrivacyPage = lazy(() => import("@/pages/legal/privacy/PrivacyCookiePage"));
 const TermsPage = lazy(() => import("@/pages/legal/terms/TermsPage"));
+
 const AdminDashboard = lazy(() => import("@/pages/dashboard/admin/dashboard/AdminDashboard"));
 const AdminTournaments = lazy(() => import("@/pages/dashboard/admin/tournaments/AdminTournaments"));
 const AdminTeams = lazy(() => import("@/pages/dashboard/admin/teams/AdminTeams"));
@@ -86,9 +109,11 @@ const AdminJury = lazy(() => import("@/pages/dashboard/admin/jury/AdminJury"));
 const AdminTasks = lazy(() => import("@/pages/dashboard/admin/tasks/AdminTasks"));
 const AdminRounds = lazy(() => import("@/pages/dashboard/admin/rounds/AdminRounds"));
 const AdminSubmissions = lazy(() => import("@/pages/dashboard/admin/submissions/AdminSubmissions"));
+
 const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
 const JuryAssignments = lazy(() => import("@/pages/dashboard/jury/JuryAssignments"));
 const JuryEvaluation = lazy(() => import("@/pages/dashboard/jury/JuryEvaluation"));
+
 const ParticipantDashboard = lazy(() => import("@/pages/dashboard/participant/dashboard/ParticipantDashboard"));
 const ParticipantMyTeam = lazy(() => import("@/pages/dashboard/participant/MyTeam/ParticipantMyTeam"));
 const ParticipantSubmissions = lazy(() => import("@/pages/dashboard/participant/submissions/ParticipantSubmissions"));
@@ -97,8 +122,11 @@ const CreateTeamStep1 = lazy(() => import("@/pages/dashboard/participant/CreateT
 const CreateTeamStep2 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep2"));
 const CreateTeamStep3 = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamStep3"));
 const CreateTeamSuccess = lazy(() => import("@/pages/dashboard/participant/CreateTeam/CreateTeamSuccess"));
-const OrganizerDashboard = lazy(() => import("@/pages/dashboard/organizer/OrganizerDashboard"));
-const OrganizerTournaments = lazy(() => import("@/pages/dashboard/organizer/OrganizerTournaments"));
+
+const OrganizerDashboard = lazy(() => import("@/pages/dashboard/organizer/dashboard/OrganizerDashboard"));
+const OrganizerTournaments = lazy(() => import("@/pages/dashboard/organizer/tournaments/OrganizerTournaments"));
+const OrganizerTasks = lazy(() => import("@/pages/dashboard/organizer/tasks/OrganizerTasks"))
+const OrganizerTeams = lazy(() => import("@/pages/dashboard/organizer/teams/OrganizerTeams"));
 
 const wrap = (node: ReactNode) => (
   <ErrorBoundaryWrapper>
@@ -157,6 +185,8 @@ const router = createBrowserRouter([
                     children: [
                       { path: "/app/organizer", element: wrap(<OrganizerDashboard />) },
                       { path: "/app/organizer/tournaments", element: wrap(<OrganizerTournaments />) },
+                      { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />)},
+                      { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />)},
                       { path: "/app/organizer/*", element: <Navigate to="/app/organizer" replace /> },
                     ],
                   },
