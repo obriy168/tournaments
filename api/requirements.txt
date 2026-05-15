@@ -6,3 +6,4 @@ alembic
 asyncpg
 dotenv
 pwdlib[argon2]
+polyfactory
