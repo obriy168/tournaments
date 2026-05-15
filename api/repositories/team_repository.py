@@ -4,6 +4,7 @@ from database.schemas.schema import Team
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from repositories.base_repository import BaseRepository
 
 class TeamRepository(BaseRepository[Team]):
@@ -15,3 +16,11 @@ class TeamRepository(BaseRepository[Team]):
     
         teams = await self.db.execute(query)
         return teams.scalars().all()
+    
+    async def save_team_with_users(self, entity: Team) -> Team:
+        self.db.add(entity)
+        await self.db.commit()
+    
+        query = select(Team).options(selectinload(Team.user_teams)).where(Team.id == entity.id)
+        result = await self.db.execute(query)
+        return result.scalars().first()

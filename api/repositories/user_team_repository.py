@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from database.schemas.schema import UserTeam, Team, User
 from typing import Annotated
 from fastapi import Depends
-from sqlalchemy import select, delete
+from sqlalchemy import select, insert
 from repositories.base_repository import BaseRepository
 
 class UserTeamRepository(BaseRepository[UserTeam]):
