@@ -42,12 +42,25 @@ api.interceptors.response.use(
   }
 );
 
+export interface CreateTournamentData {
+  name: string;
+  description: string;
+  start_date: string;
+  registration_start_date: string;
+  registration_end_date: string;
+  max_teams: number;
+  min_user_count: number;
+  max_user_count: number;
+  status?: Tournament["status"];
+}
+
 export interface User {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
   role: "admin" | "jury" | "participant" | "captain" | "organizer";
+  roles?: Array<{ role: string; tournament_id?: number | null }>;
 }
 
 export interface Tournament {
@@ -108,9 +121,16 @@ export interface Score {
   comment?: string;
 }
 
+export interface RequirementGroup {
+  id: number;
+  name: string;
+  task_id: number;
+}
+
 export interface Requirement {
   id: number;
-  task_id: number;
+  requirement_group_id: number;
+  name: string;
   description: string;
   max_score: number;
 }
@@ -134,6 +154,8 @@ export interface Evaluation {
   requirement_id: number;
   scores: number;
   comment?: string;
+  submission_id?: number;
+  jury_id?: number;
 }
 
 export interface LeaderboardEntry {
@@ -144,8 +166,7 @@ export interface LeaderboardEntry {
 }
 
 export interface TeamMemberFull {
-  user_team_id: number;
-  user_id: number;
+  id: number;
   first_name: string;
   last_name: string;
   email: string;
@@ -178,7 +199,7 @@ export async function updateTournament(id: number, data: Partial<Tournament>): P
 }
 
 export async function updateTournamentStatus(id: number, status: Tournament["status"]): Promise<Tournament> {
-  const { data: res } = await api.patch<Tournament>(`/tournaments/${id}/status`, { status });
+  const { data: res } = await api.patch<Tournament>(`/tournaments/${id}/status?status=${status}`);
   return res;
 }
 
@@ -236,6 +257,11 @@ export async function isUserLeader(teamId: number, userId: number): Promise<bool
   return data;
 }
 
+export async function getTeamMembers(teamId: number): Promise<TeamMemberFull[]> {
+  const { data } = await api.get<TeamMemberFull[]>(`/users_team/${teamId}/members`);
+  return data;
+}
+
 export async function getTasks(tournamentId: number): Promise<Task[]> {
   const { data } = await api.get<Task[]>(`/tasks/tournament/${tournamentId}`);
   return data;
@@ -257,7 +283,7 @@ export async function updateTask(id: number, taskData: Partial<Task>): Promise<T
 }
 
 export async function updateTaskStatus(id: number, status: Task["status"]): Promise<Task> {
-  const { data } = await api.patch<Task>(`/tasks/${id}/status`, { status });
+  const { data } = await api.patch<Task>(`/tasks/${id}/status?status=${encodeURIComponent(status)}`);
   return data;
 }
 
@@ -294,8 +320,13 @@ export async function createEvaluation(evaluation: { assignment_id: number; requ
   return data;
 }
 
+export async function getEvaluation(id: number): Promise<Evaluation> {
+  const { data } = await api.get<Evaluation>(`/evaluations/${id}`);
+  return data;
+}
+
 export async function getEvaluationsByTask(taskId: number): Promise<Evaluation[]> {
-  const { data } = await api.get<Evaluation[]>(`/evaluations/${taskId}`);
+  const { data } = await api.get<Evaluation[]>(`/evaluations/task/${taskId}`);
   return data;
 }
 
@@ -316,6 +347,20 @@ export async function createRequirement(requirement: Partial<Requirement>): Prom
 
 export async function deleteRequirements(ids: number[]): Promise<void> {
   await api.delete("/requirements/", { params: { ids } });
+}
+
+export async function getRequirementGroups(taskId: number): Promise<RequirementGroup[]> {
+  const { data } = await api.get<RequirementGroup[]>(`/requirement_groups/${taskId}`);
+  return data;
+}
+
+export async function createRequirementGroup(group: Partial<RequirementGroup>): Promise<RequirementGroup> {
+  const { data } = await api.post<RequirementGroup>("/requirement_groups/", group);
+  return data;
+}
+
+export async function deleteRequirementGroup(id: number): Promise<void> {
+  await api.delete(`/requirement_groups/${id}`);
 }
 
 export async function getJuryAssignments(evaluatorId: number): Promise<JuryAssignment[]> {
@@ -351,22 +396,39 @@ export async function registerTeamForTournament(teamId: number, tournamentId: nu
   return data;
 }
 
-export async function getTeamMembers(teamId: number): Promise<TeamMemberFull[]> {
-  const { data: links } = await api.get<Array<{ id: number; user_id: number; team_id: number; is_lead: boolean }>>(`/users_team/${teamId}/members`);
-  if (!links || links.length === 0) return [];
+export async function getUsers(): Promise<User[]> {
+  const { data } = await api.get<User[]>("/users/");
+  return data;
+}
 
-  const { data: users } = await api.get<User[]>("/users/");
-  const userMap = new Map(users.map((u) => [u.id, u]));
+export async function getTeams(): Promise<Team[]> {
+  const { data } = await api.get<Team[]>("/teams/");
+  return data;
+}
 
-  return links.map((link) => {
-    const user = userMap.get(link.user_id);
-    return {
-      user_team_id: link.id,
-      user_id: link.user_id,
-      first_name: user?.first_name ?? "",
-      last_name: user?.last_name ?? "",
-      email: user?.email ?? "",
-      is_lead: link.is_lead,
-    };
-  });
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const { data } = await api.get<User>(`/users/email/`, { params: { email } });
+  return data;
+}
+
+export async function getAllSubmissionsWithDetails(): Promise<Array<Submission & { task: Task; team: Team }>> {
+  const tournaments = await getTournaments();
+  const result = [];
+  
+  for (const tournament of tournaments) {
+    const tasks = await getTasks(tournament.id);
+    for (const task of tasks) {
+      const submissions = await getSubmissionsByTask(task.id);
+      for (const submission of submissions) {
+        const team = await getTeam(submission.team_id);
+        result.push({
+          ...submission,
+          task,
+          team,
+        });
+      }
+    }
+  }
+  
+  return result;
 }

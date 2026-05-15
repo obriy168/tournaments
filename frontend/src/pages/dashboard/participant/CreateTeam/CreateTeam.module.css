@@ -556,3 +556,106 @@
     opacity: 0.5;
   }
 }
+
+@media (max-width: 768px) {
+  .header {
+    margin-bottom: 4px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .registrationContent {
+    padding: 20px;
+    border-radius: 16px;
+    gap: 20px;
+  }
+
+  .registrationTitle {
+    font-size: 20px;
+  }
+
+  .registrationSubtitle {
+    font-size: 13px;
+  }
+
+  .formRow {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .formRow .field {
+    width: 100%;
+  }
+
+  .fieldHalf {
+    width: 100%;
+  }
+
+  .addBtn {
+    margin-top: 8px;
+    width: 100%;
+    padding: 12px;
+  }
+
+  .captainCard {
+    padding: 16px;
+  }
+
+  .captainAvatar {
+    width: 44px;
+    height: 44px;
+    font-size: 16px;
+  }
+
+  .member {
+    padding: 12px;
+  }
+
+  .memberAvatar {
+    width: 36px;
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .memberName {
+    font-size: 14px;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 12px 20px;
+  }
+
+  .tournamentOption {
+    padding: 16px;
+    border-radius: 12px;
+  }
+
+  .tournamentOptionName {
+    font-size: 15px;
+  }
+
+  .successTitle {
+    font-size: 22px;
+  }
+
+  .successText {
+    font-size: 14px;
+  }
+
+  .successIcon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .registrationContentCenter {
+    min-height: 300px;
+  }
+}

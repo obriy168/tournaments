@@ -429,8 +429,64 @@
   margin-top: 8px;
 }
 
-.successText {
-  color: #15803d;
-  font-size: 13px;
-  margin-top: 8px;
+@media (max-width: 768px) {
+  .header {
+    margin-bottom: 16px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .card {
+    padding: 20px;
+    border-radius: 16px;
+    gap: 16px;
+  }
+
+  .teamName {
+    font-size: 20px;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .memberItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .memberActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .inviteForm {
+    flex-direction: column;
+  }
+
+  .inviteForm .input {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .actions {
+    padding-top: 16px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    font-size: 13px;
+  }
+
+  .emptyCard {
+    padding: 40px 20px;
+  }
+
+  .emptyTitle {
+    font-size: 22px;
+  }
 }

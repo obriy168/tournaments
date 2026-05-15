@@ -54,3 +54,17 @@
     transform: translateX(100%);
   }
 }
+
+@media (max-width: 768px) {
+  .logo {
+    font-size: 22px;
+  }
+
+  .bar {
+    width: 100px;
+  }
+
+  .content {
+    gap: 16px;
+  }
+}

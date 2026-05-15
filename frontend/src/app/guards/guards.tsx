@@ -1,14 +1,16 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import type { UserRole } from "@/features/auth/context/authContextValue";
 import styles from "./guards.module.css";
 
-function normalizeRole(role: UserRole): Exclude<UserRole, "captain"> {
-  return role === "captain" ? "participant" : role;
+function normalizeRole(role: UserRole | string, activeRole?: string | null): string {
+  if (activeRole) return activeRole.toLowerCase();
+  return role === "captain" ? "participant" : role.toLowerCase();
 }
 
-function getRolePath(role: UserRole): string {
-  return normalizeRole(role);
+function getRolePath(activeRole?: string | null, userRole?: string): string {
+  const effective = activeRole || userRole || "participant";
+  return effective === "captain" ? "participant" : effective.toLowerCase();
 }
 
 export function LoadingFallback() {
@@ -23,7 +25,8 @@ export function LoadingFallback() {
 }
 
 export function RequireAuth() {
-  const { user, initializing } = useAuth();
+  const initializing = useAuthStore((s) => s.initializing);
+  const user = useAuthStore((s) => s.user);
   const location = useLocation();
 
   if (initializing) return <LoadingFallback />;
@@ -32,30 +35,39 @@ export function RequireAuth() {
 }
 
 export function PublicOnly() {
-  const { user, initializing } = useAuth();
+  const initializing = useAuthStore((s) => s.initializing);
+  const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
+
   if (initializing) return <LoadingFallback />;
-  if (user) return <Navigate to={`/app/${getRolePath(user.role)}`} replace />;
+  if (user) return <Navigate to={`/app/${getRolePath(activeRole, user.role)}`} replace />;
   return <Outlet />;
 }
 
 export function RoleGuard({ allowed }: { allowed: UserRole[] }) {
-  const { user, initializing } = useAuth();
+  const initializing = useAuthStore((s) => s.initializing);
+  const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
 
   if (initializing) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
 
-  const effectiveRole = normalizeRole(user.role);
-  const normalizedAllowed = allowed.map(normalizeRole);
+  const effectiveRole = normalizeRole(user.role, activeRole);
+  const normalizedAllowed = allowed.map((r) => normalizeRole(r));
 
   if (!normalizedAllowed.includes(effectiveRole)) {
-    return <Navigate to={`/app/${getRolePath(user.role)}`} replace />;
+    return <Navigate to={`/app/${getRolePath(activeRole, user.role)}`} replace />;
   }
   return <Outlet />;
 }
 
 export function RoleRedirect() {
-  const { user, initializing } = useAuth();
+  const initializing = useAuthStore((s) => s.initializing);
+  const user = useAuthStore((s) => s.user);
+  const activeRole = useAuthStore((s) => s.activeRole);
+
   if (initializing) return <LoadingFallback />;
   if (!user) return <Navigate to="/login" replace />;
-  return <Navigate to={`/app/${getRolePath(user.role)}`} replace />;
+  
+  return <Navigate to={`/app/${getRolePath(activeRole, user.role)}`} replace />;
 }

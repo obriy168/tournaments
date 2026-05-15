@@ -57,3 +57,23 @@
 .section strong {
   color: #333;
 }
+
+@media (max-width: 768px) {
+  .page {
+    margin: 0;
+    padding: 24px 16px;
+    min-height: auto;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .section h2 {
+    font-size: 18px;
+  }
+
+  .section p {
+    font-size: 14px;
+  }
+}

@@ -15,6 +15,13 @@
   --radius-xl: 50px;
 }
 
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+    --radius-xl: 24px;
+  }
+}
+
 *,
 *::before,
 *::after {

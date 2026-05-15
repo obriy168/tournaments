@@ -1,25 +1,24 @@
-import { useEffect, useMemo, type ReactNode } from "react";
+import { useEffect, type ReactNode, useRef } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { AuthContext } from "./authContextValue";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const user = useAuthStore((s) => s.user);
-  const loading = useAuthStore((s) => s.isLoading);
-  const initializing = useAuthStore((s) => s.initializing);
-  const hasTeam = useAuthStore((s) => s.hasTeam);
-  const login = useAuthStore((s) => s.login);
-  const logout = useAuthStore((s) => s.logout);
-  const fetchMe = useAuthStore((s) => s.fetchMe);
+  const store = useAuthStore();
+  const fetchedRef = useRef(false);
 
   useEffect(() => {
-    fetchMe();
-  }, [fetchMe]);
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      store.fetchMe();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         const state = useAuthStore.getState();
-        if (state.user) {
+        if (state.user && !state.initializing) {
           state.fetchMe();
         }
       }
@@ -28,17 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("visibilitychange", handleVisibility);
   }, []);
 
-  const value = useMemo(
-    () => ({
-      user,
-      loading,
-      initializing,
-      hasTeam,
-      login,
-      logout,
-    }),
-    [user, loading, initializing, hasTeam, login, logout]
-  );
+  const value = {
+    user: store.user,
+    loading: store.isLoading,
+    initializing: store.initializing,
+    hasTeam: store.hasTeam,
+    activeTournamentId: store.activeTournamentId,
+    activeRole: store.activeRole,
+    login: store.login,
+    logout: store.logout,
+    setActiveTournament: store.setActiveTournament,
+  };
 
   return (
     <AuthContext.Provider value={value}>

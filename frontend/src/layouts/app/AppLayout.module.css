@@ -9,3 +9,11 @@
   margin-left: var(--sidebar-width);
   min-width: 0;
 }
+
+@media (max-width: 768px) {
+  .main {
+    padding: 16px;
+    margin-left: 0;
+    padding-bottom: 80px;
+  }
+}

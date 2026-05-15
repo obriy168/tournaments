@@ -22,6 +22,8 @@ interface CreateTeamPayload {
   city: string;
   organization: string;
   tournament_id: number;
+  captain_phone?: string;
+  captain_contact?: string;
   verifiedMembers?: TeamMember[];
   pendingMembers?: TeamMember[];
 }
@@ -48,28 +50,32 @@ export function useCreateTeam() {
         tournament_id: teamData.tournament_id,
       });
 
-      await addUserToTeam(team.id, user.id);
-      await changeTeamLeader(team.id, user.id);
+      await Promise.all([
+        addUserToTeam(team.id, user.id),
+        changeTeamLeader(team.id, user.id),
+      ]);
 
       if (verifiedMembers && verifiedMembers.length > 0) {
-        await Promise.all(
-          verifiedMembers
-            .filter((member) => member.userId && member.userId !== user.id)
-            .map(async (member) => {
-              try {
-                const userTeams = await getMyTeams(member.userId!);
-                if (userTeams.length > 0) {
-                  console.warn(
-                    `User ${member.email} is already in another team, skipping.`
-                  );
-                  return;
-                }
-                await addUserToTeam(team.id, member.userId!);
-              } catch (err) {
-                console.error(`Failed to add user ${member.email}:`, err);
-              }
-            })
+        const validMembers = verifiedMembers.filter(
+          (member) => member.userId && member.userId !== user.id
         );
+
+        const memberPromises = validMembers.map(async (member) => {
+          try {
+            const userTeams = await getMyTeams(member.userId!);
+            if (userTeams.length > 0) {
+              console.warn(`User ${member.email} is already in another team, skipping.`);
+              return null;
+            }
+            await addUserToTeam(team.id, member.userId!);
+            return member.userId;
+          } catch (err) {
+            console.error(`Failed to add user ${member.email}:`, err);
+            return null;
+          }
+        });
+
+        await Promise.all(memberPromises);
       }
 
       if (pendingMembers && pendingMembers.length > 0) {
@@ -90,10 +96,7 @@ export function useCreateTeam() {
             invitedAt: new Date().toISOString(),
           });
         }
-        localStorage.setItem(
-          "pending_team_invites",
-          JSON.stringify(allInvites)
-        );
+        localStorage.setItem("pending_team_invites", JSON.stringify(allInvites));
       }
 
       return team;

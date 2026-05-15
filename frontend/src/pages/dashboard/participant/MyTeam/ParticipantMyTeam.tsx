@@ -32,7 +32,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
     enabled: !!team.tournament_id,
   });
 
-  const isCaptain = isLead || user.role === "captain";
+  const isCaptain = isLead === true;
 
   const [isEditing, setIsEditing] = useState(false);
   const [form, setForm] = useState({
@@ -62,7 +62,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
         throw new Error("User not found. Ask them to sign up first.");
       if (found.id === user.id) throw new Error("You are already in the team.");
 
-      const alreadyInTeam = members?.some((m) => m.user_id === found.id);
+      const alreadyInTeam = members?.some((m) => m.id === found.id);
       if (alreadyInTeam) throw new Error("User is already in the team.");
 
       const currentSize = members?.length || 1;
@@ -138,7 +138,13 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       !form.organization.trim()
     )
       return;
-    updateMut.mutate(form);
+
+    updateMut.mutate({
+      name: form.name,
+      city: form.city,
+      organization: form.organization,
+      tournament_id: team.tournament_id,
+    });
   };
 
   const handleInvite = (e: React.FormEvent) => {
@@ -163,8 +169,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       ? members
       : [
           {
-            user_team_id: 0,
-            user_id: user.id,
+            id: user.id,
             first_name: user.first_name,
             last_name: user.last_name,
             email: user.email,
@@ -189,6 +194,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
+                autoComplete="off"
               />
             </div>
             <div className={styles.field}>
@@ -199,6 +205,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                 onChange={(e) =>
                   setForm((f) => ({ ...f, city: e.target.value }))
                 }
+                autoComplete="off"
               />
             </div>
             <div className={styles.field}>
@@ -212,6 +219,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                     organization: e.target.value,
                   }))
                 }
+                autoComplete="off"
               />
             </div>
           </div>
@@ -276,9 +284,9 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
         ) : (
           <ul className={styles.membersList}>
             {displayMembers.map((member) => {
-              const isMe = member.user_id === user.id;
+              const isMe = member.id === user.id;
               return (
-                <li key={member.user_id} className={styles.memberItem}>
+                <li key={member.id} className={styles.memberItem}>
                   <div className={styles.memberLeft}>
                     <div className={styles.memberAvatar}>
                       {(member.first_name?.[0] || "") +
@@ -308,7 +316,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                       <button
                         className={`${styles.btn} ${styles.btnSmall}`}
                         onClick={() =>
-                          captainMut.mutate(member.user_id)
+                          captainMut.mutate(member.id)
                         }
                         disabled={captainMut.isPending}
                         title="Make captain"
@@ -323,7 +331,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
                               `Remove ${member.first_name} ${member.last_name} from the team?`
                             )
                           ) {
-                            removeMut.mutate(member.user_id);
+                            removeMut.mutate(member.id);
                           }
                         }}
                         disabled={removeMut.isPending}
@@ -351,6 +359,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               disabled={inviteMut.isPending}
+              autoComplete="off"
             />
             <button
               type="submit"

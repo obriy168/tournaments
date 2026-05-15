@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/hooks/useLogout";
+import TournamentSwitcher from "@/components/TournamentSwitcher/TournamentSwitcher";
 import type { UserRole } from "@/features/auth/context/authContextValue";
 import styles from "./Sidebar.module.css";
 
@@ -11,12 +12,16 @@ interface LinkItem {
 }
 
 export default function Sidebar() {
-  const { user, hasTeam } = useAuth();
+  const user = useAuthStore((s) => s.user);
+  const hasTeam = useAuthStore((s) => s.hasTeam);
+  const activeRole = useAuthStore((s) => s.activeRole);
+  const initializing = useAuthStore((s) => s.initializing);
   const logout = useLogout();
 
-  const links = user ? getLinksByRole(user.role, hasTeam) : [];
+  if (initializing || !user) return null;
 
-  if (!user) return null;
+  const effectiveRole = (activeRole || user.role || "participant") as UserRole;
+  const links = getLinksByRole(effectiveRole, hasTeam);
 
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
@@ -39,7 +44,26 @@ export default function Sidebar() {
             {link.label}
           </NavLink>
         ))}
+        <NavLink
+          to="/app/profile"
+          className={({ isActive }) =>
+            `${styles.link} ${styles.mobileOnly} ${
+              isActive ? styles.linkCurrent : ""
+            }`
+          }
+        >
+          Profile
+        </NavLink>
+        <button
+          onClick={logout}
+          className={`${styles.link} ${styles.mobileOnly} ${styles.linkDanger}`}
+          type="button"
+        >
+          Log out
+        </button>
       </nav>
+
+      <TournamentSwitcher />
 
       <div className={styles.footer}>
         <NavLink
@@ -68,19 +92,22 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
       return [
         { to: "/app/admin", label: "Dashboard", end: true },
         { to: "/app/admin/tournaments", label: "Tournaments", end: false },
-        // { to: "/app/admin/teams", label: "Teams", end: false },     // заглушка
-        // { to: "/app/admin/jury", label: "Jury", end: false },       // заглушка
+        { to: "/app/admin/teams", label: "Teams", end: false },
+        { to: "/app/admin/rounds", label: "Rounds", end: false },
+        { to: "/app/admin/tasks", label: "Tasks", end: false },
+        { to: "/app/admin/submissions", label: "Submissions", end: false },
+        { to: "/app/admin/jury", label: "Jury", end: false },
       ];
-      case "organizer":
+    case "organizer":
       return [
         { to: "/app/organizer", label: "Dashboard", end: true },
-        { to: "/app/admin/tournaments", label: "Tournaments", end: false },
+        { to: "/app/organizer/tournaments", label: "Tournaments", end: false },
       ];
     case "jury":
       return [
         { to: "/app/jury", label: "Dashboard", end: true },
-        // { to: "/app/jury/assignments", label: "Assignments", end: false },  // заглушка
-        // { to: "/app/jury/evaluation", label: "Evaluation", end: false },    // заглушка
+        { to: "/app/jury/assignments", label: "Assignments", end: false },
+        { to: "/app/jury/evaluation", label: "Evaluation", end: false },
       ];
     case "participant":
       if (hasTeam) {
@@ -91,9 +118,7 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
           { to: "/app/participant/submissions", label: "Submissions", end: false },
         ];
       }
-      return [
-        { to: "/app/participant", label: "Dashboard", end: true },
-      ];
+      return [{ to: "/app/participant", label: "Dashboard", end: true }];
     case "captain":
       return [
         { to: "/app/participant", label: "Dashboard", end: true },
