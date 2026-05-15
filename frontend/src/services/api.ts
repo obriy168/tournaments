@@ -110,6 +110,7 @@ export interface Team {
   name: string;
   city: string;
   organization: string;
+  user_teams?: UserTeamRegistration[];
 }
 
 export interface CreateTeamData {
@@ -199,6 +200,19 @@ export interface TeamMemberFull {
   last_name: string;
   email: string;
   is_lead: boolean;
+}
+
+export interface UserTeamRegistration {
+  user_id: number;
+  is_lead: boolean;
+}
+
+export interface CreateTeamData {
+  tournament_id: number;
+  name: string;
+  city: string;
+  organization: string;
+  user_teams: UserTeamRegistration[];
 }
 
 export async function registerUser(data: RegisterData): Promise<{ id: number }> {
