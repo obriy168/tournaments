@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class UserTeamModel(BaseModel):
@@ -7,7 +7,8 @@ class UserTeamModel(BaseModel):
     team_id: int
     is_lead: bool
 
-class UserTeamModel(BaseModel):
+class UserTeamRegistrationModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: Optional[int] = None
     user_id: int
     team_id: Optional[int] = 0

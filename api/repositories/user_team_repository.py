@@ -44,8 +44,3 @@ class UserTeamRepository(BaseRepository[UserTeam]):
         await self.db.delete(user_team)
         await self.db.commit()
         return True
-    
-    async def bulk_save_users_team(self, users_team: list[dict]):
-        query = insert(UserTeam).values(users_team)
-        await self.db.execute(query)
-        return 

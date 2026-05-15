@@ -17,30 +17,15 @@ class TeamsService:
     async def get_all_teams(self):
         return await self.team_repository.get_all()
     
-    async def create_team(self, team: TeamRegistrationModel) -> Team:
-        data_team = team.model_dump(exclude={"id", "users_team"})
-
-        team_entity = Team(**data_team)
-        saved_team = await self.team_repository.create_team_without_commit(team_entity)
-
-        if not saved_team:
-            return None
-
-        team_id = saved_team.id
-
-        users_list = team.users_team
-
-        entities_to_save: list[dict] = []
-        for i in range(0, len(users_list)):
-            users_list[i].team_id = team_id
-
-            user_dict = users_list[i].model_dump(exclude={"id"})
-            entities_to_save.append(user_dict)
+    async def create_team(self, team: TeamRegistrationModel) -> TeamRegistrationModel:
+        team_entity = Team(**team.model_dump(exclude={"id", "user_teams"}),
+                      user_teams=[
+                          UserTeam(**user.model_dump(exclude={"id"})) 
+                          for user in team.user_teams])
         
-        await self.user_team_service.bulk_save_users_team(entities_to_save)
-        await self.team_repository.commit()
-        return saved_team
-
+        saved_team = await self.team_repository.save_team_with_users(team_entity)
+        return TeamRegistrationModel.model_validate(saved_team)
+    
     async def update_team(self, team_id: int, team: TeamModel) -> Team:
         db_team = await self.team_repository.get_by_id(team_id)
 
