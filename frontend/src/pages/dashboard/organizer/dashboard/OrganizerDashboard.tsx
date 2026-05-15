@@ -44,7 +44,7 @@ export default function OrganizerDashboard() {
           <div className={styles.actionsGrid}>
             <button
               className={styles.actionCard}
-              onClick={() => navigate("/app/organizer/tournament")}
+              onClick={() => navigate("/app/organizer/tournaments")}
             >
               <div className={styles.actionIcon}>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
