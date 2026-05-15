@@ -8,6 +8,7 @@ from util.access.role_required import RoleRequired
 from util.auth import validate_session
 from routes.models.user_session import UserSession
 from routes.models.user_team_response import UserTeamResponse
+from routes.models.login_response import LoginResponse
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 
@@ -24,7 +25,7 @@ async def get_user_by_email(email: str, users_service: Annotated[UserService, De
                             user_session: Annotated[UserSession, Depends(validate_session)]):
     return await users_service.get_user_by_email(email)
 
-@user_router.get("/")
+@user_router.get("/", response_model=LoginResponse)
 async def get_all_users(users_service: Annotated[UserService, Depends(UserService)],
                         user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN]))]):
     return await users_service.get_all_users()
