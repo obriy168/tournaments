@@ -25,7 +25,7 @@ async def create_task(task: TaskModel,
 
     return await tasks_service.create_task(task)
 
-@task_router.put("/{task_id}")
+@task_router.put("/")
 async def update_task(task_id: int, task: TaskModel, 
                       tasks_service: Annotated[TaskService, Depends(TaskService)],
                       user_session: Annotated[UserSession, Depends(TaskAccess.as_organizer)]):
