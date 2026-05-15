@@ -23,6 +23,7 @@ from services.models.evaluation_model import EvaluationModel
 from services.models.task_assigment_model import TaskAssigmentModel
 
 from pwdlib import PasswordHash
+from sqlalchemy import select
 import random
 
 fake = Faker()
@@ -104,6 +105,22 @@ async def seed_data():
     async with async_session_factory() as session:
         print("=== START SEEDING ===")
         admin = create_user(UserFactory.build(first_name="Admin", last_name="Root", email="admin@system.com"))
+        admin_email = "admin@system.com"
+        result = await session.execute(select(User).where(User.email == admin_email))
+        admin = result.scalar_one_or_none()
+
+        if not admin:
+            print(f"Creating admin: {admin_email}")
+            admin = create_user(UserFactory.build(
+                first_name="Admin", 
+                last_name="Root", 
+                email=admin_email
+            ))
+            session.add(admin)
+            await session.flush()
+            session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
+        else:
+            print(f"Admin {admin_email} already exists, skipping...")
         session.add(admin)
         await session.flush()
         session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
