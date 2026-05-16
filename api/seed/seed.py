@@ -108,7 +108,7 @@ def create_evaluation(s): return Evaluation(**s.model_dump(exclude={"id"}))
 
 async def seed_data():
     async with async_session_factory() as session:
-        with open('users.txt', 'w', encoding='utf-8') as file:
+        with open('/app/seed_log/users.txt', 'w', encoding='utf-8') as file:
             print("=== SEED STARTED ===")
             file.write("All users that created in seed.py have password: 12345678 \n")
             admin_email = "admin@system.com"

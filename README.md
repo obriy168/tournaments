@@ -26,8 +26,6 @@ cp .env.example .env
 ### 2. Configuration
 Open the newly created `.env` file and set a secure password for the `POSTGRES_PASSWORD` variable.
 
-The file `users.txt` in the project root contains user emails.
-
 ### 3. Deployment
 Build and launch the application services:
 ```bash
@@ -44,6 +42,8 @@ Once the deployment is successful, the services will be available at:
 | :--- | :--- |
 | **Frontend** | [http://localhost:8080/](http://localhost:8080/) |
 | **API Docs** | [http://localhost:8000/docs](http://localhost:8000/docs) |
+
+You can find description of test data created during seed process in `/seed_log/users.txt` file.
 
 ---
 
