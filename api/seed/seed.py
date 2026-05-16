@@ -117,6 +117,8 @@ async def seed_data():
             result = await session.execute(select(User).where(User.email == admin_email))
             admin = result.scalar_one_or_none()
 
+            print("[1/6] Creating admin...", end="\r")
+
             if not admin:
                 admin = create_user(UserFactory.build(
                     first_name="Admin", 
@@ -126,23 +128,35 @@ async def seed_data():
                 session.add(admin)
                 await session.flush()
                 session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
-            else:
-                print(f"Admin {admin_email} already exists, skipping...")
+
+            print("[2/6] Creating users pool...", end="\r")
 
             users_pool = [create_user(UserFactory.build()) for _ in range(100)]
             session.add_all(users_pool)
             await session.flush()
 
+            print("[3/6] Loading users from database...", end="\r")
+
             db_users_result = await session.execute(select(User))
             db_users = db_users_result.scalars().all()
+            
+            print("\r" + " " * 100, end="\r")
+            print("[4/6] Creating tournaments...", end="\r")
 
             tournaments = [create_tournament(TournamentFactory.build()) for _ in range(20)]
             session.add_all(tournaments)
             await session.flush()
+            
+            tournament_len = len(tournaments)
+            num_of_iteractions = 0
 
             for tournament in tournaments:
+                num_of_iteractions += 1
+
                 file.write(f"\n===TOURNAMENT '{tournament.name}' \n")
                 file.write("==ORGANIZERS==\n")
+
+                print(f"[{num_of_iteractions}/{tournament_len}] Assigning organizers and jury...", end="\r")
 
                 tournament_organizers = random.sample(db_users, 2)
                 for organizer in tournament_organizers:
@@ -155,6 +169,8 @@ async def seed_data():
                 for jury in tournament_jury:
                     session.add(UserRole(user_id=jury.id, tournament_id=tournament.id, role=RoleEnum.JURY))
                     file.write(f"Jury email {jury.email} \n") 
+
+                print(f"[{num_of_iteractions}/{tournament_len}] Creating teams and participants...", end="\r")
 
                 teams = [create_team(TeamFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(5, 10))]
                 session.add_all(teams)
@@ -175,6 +191,8 @@ async def seed_data():
                     for member in members[1:]:
                         file.write(f"Team member email {member.email}\n")
 
+                print(f"[{num_of_iteractions}/{tournament_len}] Creating tasks, requirement groups and requirements...", end="\r")
+
                 task_to_requirements = {}
                 tasks = [create_task(TaskFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(2, 5))]
                 session.add_all(tasks)
@@ -190,6 +208,8 @@ async def seed_data():
                         session.add_all(reqs)
                         task_to_requirements[task.id].extend(reqs)
                     await session.flush()
+
+                print(f"[{num_of_iteractions}/{tournament_len}] Creating submissions, assignments and evaluations...", end="\r")
 
                 submissions = []
                 for task in tasks:
@@ -214,7 +234,12 @@ async def seed_data():
                     for req in all_reqs:
                         session.add(create_evaluation(EvaluationFactory.build(assignment_id=assignment.id, requirement_id=req.id)))
 
+                print("\r" + " " * 100, end="\r")
+                print(f"Tournament {num_of_iteractions}/{tournament_len} created")
+
+        print("[6/6] Committing changes to database...", end="\r")
         await session.commit()
+        print("\r" + " " * 100, end="\r")
         print("=== SEED COMPLETED ===")
 
 if __name__ == "__main__":
