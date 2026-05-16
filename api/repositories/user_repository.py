@@ -13,7 +13,7 @@ class UserRepository(BaseRepository[User]):
     async def get_user_by_email(self, email: str) -> User | None:
         query = select(User).where(User.email == email)
         result = await self.db.execute(query)
-        return result.scalars().first()
+        return result.scalar_one_or_none()
     
     async def users_count(self):
         query = select(User)

@@ -24,9 +24,7 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
 async def get_user_by_email(email: str, users_service: Annotated[UserService, Depends(UserService)],
                             user_session: Annotated[UserSession, Depends(validate_session)]):
     user = await users_service.get_user_by_email(email)
-    if user is None:
-        return None
-    return UserTeamResponse(**user.dict())
+    return user
 
 @user_router.get("/", response_model=list[LoginResponse])
 async def get_all_users(users_service: Annotated[UserService, Depends(UserService)],
@@ -37,7 +35,7 @@ async def get_all_users(users_service: Annotated[UserService, Depends(UserServic
 async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
     return await users_service.create_user(user)
 
-@user_router.delete("")
+@user_router.delete("/")
 async def delete_user(user_id: int, users_service: Annotated[UserService, Depends(UserService)],
                       user_session: Annotated[UserSession, Depends(validate_session)]):
     if not user_session.is_admin and user_session.user_id != user_id:
