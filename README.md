@@ -1,4 +1,4 @@
-# 🏆 Slyline
+# 🏆 Skyline
 
 Tournaments Management System
 
@@ -25,6 +25,8 @@ cp .env.example .env
 
 ### 2. Configuration
 Open the newly created `.env` file and set a secure password for the `POSTGRES_PASSWORD` variable.
+
+The file `users.txt` in the project root contains user emails.
 
 ### 3. Deployment
 Build and launch the application services:
