@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { usePagination } from "@/features/Pagination/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   getTasks,
@@ -120,17 +121,46 @@ export default function AdminSubmissions() {
     return res;
   }, [submissionsWithDetails, search]);
 
+  const {
+    currentPage,
+    itemsPerPage,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    resetPage,
+  } = usePagination({ data: filtered, defaultPerPage: 15, maxPerPage: 15 });
+
   const groupedByTournament = useMemo(() => {
     const groups = new Map<string, SubmissionWithDetails[]>();
-    filtered.forEach(sub => {
+    paginatedData.forEach(sub => {
       const key = `${sub.tournamentId}-${sub.tournamentName}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(sub);
     });
     return groups;
-  }, [filtered]);
+  }, [paginatedData]);
 
   const isLoading = tasksLoading || submissionsLoading;
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 2 && i <= currentPage + 2)
+      ) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== "...") {
+        pages.push("...");
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className={styles.container}>
@@ -149,6 +179,7 @@ export default function AdminSubmissions() {
             const value = e.target.value;
             setSelectedTournament(value === "all" ? "all" : Number(value));
             setSelectedTask("all");
+            resetPage();
           }}
         >
           <option value="all">All Tournaments</option>
@@ -163,6 +194,7 @@ export default function AdminSubmissions() {
           onChange={(e) => {
             const value = e.target.value;
             setSelectedTask(value === "all" ? "all" : Number(value));
+            resetPage();
           }}
           disabled={selectedTournament === "all"}
         >
@@ -177,7 +209,10 @@ export default function AdminSubmissions() {
           placeholder="Search by team, task, or GitHub URL..."
           className={styles.searchInput}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            resetPage();
+          }}
         />
       </div>
 
@@ -185,27 +220,82 @@ export default function AdminSubmissions() {
         <div className={styles.loading}>Loading submissions…</div>
       ) : filtered.length === 0 ? (
         <div className={styles.empty}>No submissions found</div>
-      ) : selectedTournament === "all" ? (
-        <div className={styles.groupsList}>
-          {Array.from(groupedByTournament.entries()).map(([key, subs]) => {
-            const [, tournamentName] = key.split("-", 2);
-            return (
-              <div key={key} className={styles.tournamentGroup}>
-                <div className={styles.tournamentGroupHeader}>
-                  <h3 className={styles.tournamentGroupTitle}>{tournamentName}</h3>
-                  <span className={styles.tournamentGroupCount}>
-                    {subs.length} submission{subs.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <SubmissionsTable submissions={subs} />
-              </div>
-            );
-          })}
-        </div>
       ) : (
-        <div className={styles.tableWrapper}>
-          <SubmissionsTable submissions={filtered} />
-        </div>
+        <>
+          {selectedTournament === "all" ? (
+            <div className={styles.groupsList}>
+              {Array.from(groupedByTournament.entries()).map(([key, subs]) => {
+                const [, tournamentName] = key.split("-", 2);
+                return (
+                  <div key={key} className={styles.tournamentGroup}>
+                    <div className={styles.tournamentGroupHeader}>
+                      <h3 className={styles.tournamentGroupTitle}>{tournamentName}</h3>
+                      <span className={styles.tournamentGroupCount}>
+                        {subs.length} submission{subs.length !== 1 ? "s" : ""}
+                      </span>
+                    </div>
+                    <div className={styles.tableWrapper}>
+                      <SubmissionsTable submissions={subs} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <SubmissionsTable submissions={paginatedData} />
+            </div>
+          )}
+
+          <div className={styles.pagination}>
+            <div className={styles.paginationInfo}>
+              Showing <b>{startIndex + 1}</b>–<b>{endIndex}</b> of <b>{totalItems}</b>
+              <select
+                className={styles.perPageSelect}
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value={5}>5 / page</option>
+                <option value={10}>10 / page</option>
+                <option value={15}>15 / page</option>
+              </select>
+            </div>
+
+            <div className={styles.paginationControls}>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                ← Prev
+              </button>
+
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                ) : (
+                  <button
+                    key={p}
+                    className={`${styles.pageBtn} ${
+                      currentPage === p ? styles.pageBtnActive : ""
+                    }`}
+                    onClick={() => goToPage(p as number)}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   );

@@ -187,6 +187,7 @@ const router = createBrowserRouter([
                       { path: "/app/organizer/tournaments", element: wrap(<OrganizerTournaments />) },
                       { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />)},
                       { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />)},
+                    //  { path: "/app/organizer/submissions", element: wrap(<OrganizerTeams />)},
                       { path: "/app/organizer/*", element: <Navigate to="/app/organizer" replace /> },
                     ],
                   },
