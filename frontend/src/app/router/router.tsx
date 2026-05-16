@@ -1,5 +1,5 @@
 import { lazy, Suspense, Component, type ReactNode, useEffect } from "react";
-import { createBrowserRouter, Navigate, RouterProvider, useLocation, Outlet } from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { RequireAuth, PublicOnly, RoleGuard, RoleRedirect } from "@/app/guards/guards";
 import PublicLayout from "@/layouts/public/PublicLayout";
@@ -53,21 +53,29 @@ function ScrollToTopWrapper() {
   );
 }
 
-function SessionGuard() {
+const PUBLIC_PATHS = ["/", "/privacy", "/terms", "/login", "/signup"];
+
+export function SessionGuard() {
   const { initializing, user } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = () => {
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
     };
     window.addEventListener("skyline:session-expired", handler);
     return () => window.removeEventListener("skyline:session-expired", handler);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (!initializing && !user) {
-      const path = window.location.pathname;
-      if (path !== "/login" && path !== "/signup") {
+      const path = location.pathname;
+      const isPublic = PUBLIC_PATHS.some(
+        (p) => path === p || path.startsWith(p + "/")
+      );
+
+      if (!isPublic) {
         const isExpired = (() => {
           try {
             return localStorage.getItem("skyline_auth") === null;
@@ -76,11 +84,11 @@ function SessionGuard() {
           }
         })();
         if (isExpired) {
-          window.location.href = "/login";
+          navigate("/login", { replace: true });
         }
       }
     }
-  }, [initializing, user]);
+  }, [initializing, user, location.pathname, navigate]);
 
   return <Outlet />;
 }
