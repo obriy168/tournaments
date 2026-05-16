@@ -24,7 +24,6 @@ from services.models.task_assigment_model import TaskAssigmentModel
 
 from pwdlib import PasswordHash
 from sqlalchemy import select
-import random
 
 fake = Faker()
 
@@ -34,7 +33,11 @@ def hash_password(password: str) -> str:
 
 class TournamentFactory(ModelFactory[TournamentModel]):
     __model__ = TournamentModel
-    name = Use(lambda: f"Hackathon {fake.company()}")
+    name = Use(lambda: (
+        f"{random.choice(['AI & Deep Learning', 'Web Development', 'Cybersecurity', 'Data Science', 'DevOps & Cloud', 'Mobile Development', 'GameDev Frameworks', 'Blockchain Innovation'])} "
+        f"{random.choice(['Cup', 'Championship', 'Challenge', 'Hackathon', 'Marathon', 'Summit'])} "
+        f"{random.choice(['', '', datetime.now(timezone.utc).year])}"
+    ).strip())
     description = Use(fake.paragraph)
     registration_start_date = Use(lambda: datetime.now(timezone.utc) - timedelta(days=random.randint(1, 30)))
     registration_end_date = Use(lambda: datetime.now(timezone.utc) + timedelta(days=random.randint(1, 10)))
@@ -78,7 +81,9 @@ class RequirementFactory(ModelFactory[RequirementModel]):
 
 class SubmissionFactory(ModelFactory[SubmissionModel]):
     __model__ = SubmissionModel
-    github_url = Use(fake.url); video_url = Use(fake.url); live_demo_url = Use(fake.url)
+    github_url = Use(fake.url)
+    video_url = Use(fake.url)
+    live_demo_url = Use(fake.url)
     description = Use(fake.paragraph)
     created_on = Use(lambda: datetime.now(timezone.utc))
 
@@ -103,84 +108,111 @@ def create_evaluation(s): return Evaluation(**s.model_dump(exclude={"id"}))
 
 async def seed_data():
     async with async_session_factory() as session:
-        print("=== START SEEDING ===")
-        admin = create_user(UserFactory.build(first_name="Admin", last_name="Root", email="admin@system.com"))
-        admin_email = "admin@system.com"
-        result = await session.execute(select(User).where(User.email == admin_email))
-        admin = result.scalar_one_or_none()
-
-        if not admin:
-            print(f"Creating admin: {admin_email}")
-            admin = create_user(UserFactory.build(
-                first_name="Admin", 
-                last_name="Root", 
-                email=admin_email
-            ))
-            session.add(admin)
-            await session.flush()
-            session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
-        else:
-            print(f"Admin {admin_email} already exists, skipping...")
-        session.add(admin)
-        await session.flush()
-        session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
-
-        users_pool = [create_user(UserFactory.build()) for _ in range(100)]
-        session.add_all(users_pool); await session.flush()
-
-        tournaments = [create_tournament(TournamentFactory.build()) for _ in range(20)]
-        session.add_all(tournaments); await session.flush()
-
-        for tournament in tournaments:
-            for organizer in random.sample(users_pool, 2):
-                session.add(UserRole(user_id=organizer.id, tournament_id=tournament.id, role=RoleEnum.ORGANIZER))
+        with open('users.txt', 'w', encoding='utf-8') as file:
+            print("=== SEED STARTED ===")
+            file.write("All users that created in seed.py have password: 12345678 \n")
+            admin_email = "admin@system.com"
+            file.write(f"Admin email: {admin_email} \n")
             
-            jury_users = random.sample(users_pool, 5)
-            for jury in jury_users:
-                session.add(UserRole(user_id=jury.id, tournament_id=tournament.id, role=RoleEnum.JURY))
+            result = await session.execute(select(User).where(User.email == admin_email))
+            admin = result.scalar_one_or_none()
 
-            teams = [create_team(TeamFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(5, 10))]
-            session.add_all(teams); await session.flush()
+            if not admin:
+                admin = create_user(UserFactory.build(
+                    first_name="Admin", 
+                    last_name="Root", 
+                    email=admin_email
+                ))
+                session.add(admin)
+                await session.flush()
+                session.add(UserRole(user_id=admin.id, role=RoleEnum.ADMIN))
+            else:
+                print(f"Admin {admin_email} already exists, skipping...")
 
-            for team in teams:
-                members = random.sample(users_pool, random.randint(tournament.min_user_count, tournament.max_user_count))
-                captain = members[0]
-                for member in members:
-                    session.add(UserRole(user_id=member.id, tournament_id=tournament.id, role=RoleEnum.PARTICIPANT))
-                    session.add(UserTeam(user_id=member.id, team_id=team.id, is_lead=(member.id == captain.id)))
+            users_pool = [create_user(UserFactory.build()) for _ in range(100)]
+            session.add_all(users_pool)
+            await session.flush()
 
-            task_to_requirements = {}
-            tasks = [create_task(TaskFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(2, 5))]
-            session.add_all(tasks); await session.flush()
+            db_users_result = await session.execute(select(User))
+            db_users = db_users_result.scalars().all()
 
-            for task in tasks:
-                task_to_requirements[task.id] = []
-                groups = [create_requirement_group(RequirementGroupFactory.build(task_id=task.id)) for _ in range(random.randint(2, 4))]
-                session.add_all(groups); await session.flush()
-                for group in groups:
-                    reqs = [create_requirement(RequirementFactory.build(requirement_group_id=group.id)) for _ in range(random.randint(3, 6))]
-                    session.add_all(reqs)
-                    task_to_requirements[task.id].extend(reqs)
+            tournaments = [create_tournament(TournamentFactory.build()) for _ in range(20)]
+            session.add_all(tournaments)
+            await session.flush()
+
+            for tournament in tournaments:
+                file.write(f"\n===TOURNAMENT '{tournament.name}' \n")
+                file.write("==ORGANIZERS==\n")
+
+                tournament_organizers = random.sample(db_users, 2)
+                for organizer in tournament_organizers:
+                    session.add(UserRole(user_id=organizer.id, tournament_id=tournament.id, role=RoleEnum.ORGANIZER))
+                    file.write(f"Organizer email {organizer.email} \n")
+                
+                file.write(" \n==JURY==\n")
+
+                tournament_jury = random.sample(db_users, 5)
+                for jury in tournament_jury:
+                    session.add(UserRole(user_id=jury.id, tournament_id=tournament.id, role=RoleEnum.JURY))
+                    file.write(f"Jury email {jury.email} \n") 
+
+                teams = [create_team(TeamFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(5, 10))]
+                session.add_all(teams)
                 await session.flush()
 
-            submissions = []
-            for task in tasks:
-                if task.status != TaskStatus.DRAFT:
-                    for team in random.sample(teams, random.randint(1, len(teams))):
-                        submissions.append(create_submission(SubmissionFactory.build(team_id=team.id, task_id=task.id)))
-            session.add_all(submissions); await session.flush()
+                file.write(f"\n==TOURNAMENT TEAMS== \n")
 
-            assignments = []
-            for submission in submissions:
-                for jury in random.sample(jury_users, 2):
-                    assignments.append(create_assignment(TaskAssignmentFactory.build(evaluator_id=jury.id, submission_id=submission.id)))
-            session.add_all(assignments); await session.flush()
+                for team in teams:
+                    file.write(f" \n=TEAM {team.name}= \n")
 
-            for assignment in assignments:
-                sub = next(s for s in submissions if s.id == assignment.submission_id)
-                all_reqs = task_to_requirements.get(sub.task_id, [])
-                for req in all_reqs:
-                    session.add(create_evaluation(EvaluationFactory.build(assignment_id=assignment.id, requirement_id=req.id)))
+                    members = random.sample(db_users, random.randint(tournament.min_user_count, tournament.max_user_count))
+                    captain = members[0]
+                    for member in members:
+                        session.add(UserRole(user_id=member.id, tournament_id=tournament.id, role=RoleEnum.PARTICIPANT))
+                        session.add(UserTeam(user_id=member.id, team_id=team.id, is_lead=(member.id == captain.id)))
+                    
+                    file.write(f"Captain email {captain.email}\n")
+                    for member in members[1:]:
+                        file.write(f"Team member email {member.email}\n")
+
+                task_to_requirements = {}
+                tasks = [create_task(TaskFactory.build(tournament_id=tournament.id)) for _ in range(random.randint(2, 5))]
+                session.add_all(tasks)
+                await session.flush()
+
+                for task in tasks:
+                    task_to_requirements[task.id] = []
+                    groups = [create_requirement_group(RequirementGroupFactory.build(task_id=task.id)) for _ in range(random.randint(2, 4))]
+                    session.add_all(groups)
+                    await session.flush()
+                    for group in groups:
+                        reqs = [create_requirement(RequirementFactory.build(requirement_group_id=group.id)) for _ in range(random.randint(3, 6))]
+                        session.add_all(reqs)
+                        task_to_requirements[task.id].extend(reqs)
+                    await session.flush()
+
+                submissions = []
+                for task in tasks:
+                    if task.status != TaskStatus.DRAFT:
+                        for team in random.sample(teams, random.randint(1, len(teams))):
+                            submissions.append(create_submission(SubmissionFactory.build(team_id=team.id, task_id=task.id)))
+                session.add_all(submissions)
+                await session.flush()
+
+                submissions_dict = {s.id: s for s in submissions}
+
+                assignments = []
+                for submission in submissions:
+                    for jury in random.sample(tournament_jury, 2):
+                        assignments.append(create_assignment(TaskAssignmentFactory.build(evaluator_id=jury.id, submission_id=submission.id)))
+                session.add_all(assignments)
+                await session.flush()
+
+                for assignment in assignments:
+                    sub = submissions_dict[assignment.submission_id]
+                    all_reqs = task_to_requirements.get(sub.task_id, [])
+                    for req in all_reqs:
+                        session.add(create_evaluation(EvaluationFactory.build(assignment_id=assignment.id, requirement_id=req.id)))
 
         await session.commit()
         print("=== SEED COMPLETED ===")
