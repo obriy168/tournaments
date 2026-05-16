@@ -1,5 +1,4 @@
 services:
-
   db:
     image: postgres:15
     environment:
@@ -12,15 +11,24 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - school-project-net
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   api:
     build:
       context: api
       dockerfile: Dockerfile
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     ports:
       - "8000:8000"
+    volumes:
+      - ./seed_log/:/app/seed_log/
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

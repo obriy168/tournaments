@@ -1,4 +1,4 @@
-# 🏆 Slyline
+# 🏆 Skyline
 
 Tournaments Management System
 
@@ -42,6 +42,8 @@ Once the deployment is successful, the services will be available at:
 | :--- | :--- |
 | **Frontend** | [http://localhost:8080/](http://localhost:8080/) |
 | **API Docs** | [http://localhost:8000/docs](http://localhost:8000/docs) |
+
+You can find description of test data created during seed process in `/seed_log/users.txt` file.
 
 ---
 
