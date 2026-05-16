@@ -23,7 +23,7 @@ async def get_submissions_by_task_id(task_id: int, submission_service: Annotated
 async def create_submission(submission: SubmissionModel, submission_service: Annotated[SubmissionService, Depends(SubmissionService)],
                             user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN, RoleEnum.PARTICIPANT]))]):
     is_member = await submission_service.check_user_in_team(user_session.user_id, submission.team_id)
-    if not is_member:
+    if not is_member and not user_session.is_admin:
         raise HTTPException(status_code=403, detail="You are not a member of this team")
     return await submission_service.create_submission(submission)
 
