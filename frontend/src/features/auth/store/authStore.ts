@@ -149,12 +149,32 @@ export const useAuthStore = create<AuthState>()(
             const user = normalizeUser(data);
             const { activeId, activeRole } = resolveActiveState(data);
 
+            const savedTournamentId = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
+            const savedRole = localStorage.getItem(ACTIVE_ROLE_KEY);
+            
+            let finalActiveId = activeId;
+            let finalActiveRole = activeRole;
+            
+            if (savedTournamentId) {
+              const savedId = Number(savedTournamentId);
+              const hasRoleForSavedTournament = data.roles?.some(
+                (r) => r.tournament_id === savedId
+              );
+              
+              if (hasRoleForSavedTournament) {
+                finalActiveId = savedId;
+                finalActiveRole = savedRole 
+                  ? normalizeRole(savedRole) 
+                  : activeRole;
+              }
+            }
+
             set({
               user,
               initializing: false,
               initialized: true,
-              activeTournamentId: activeId,
-              activeRole,
+              activeTournamentId: finalActiveId,
+              activeRole: finalActiveRole,
             });
             await get().checkTeam();
           } catch (err: unknown) {
@@ -280,7 +300,12 @@ export const useAuthStore = create<AuthState>()(
         localStorage.setItem(ACTIVE_TOURNAMENT_KEY, String(tournamentId));
         localStorage.setItem(ACTIVE_ROLE_KEY, newRole);
         set({ activeTournamentId: tournamentId, activeRole: newRole });
-        queryClient.clear();
+        
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+        queryClient.invalidateQueries({ queryKey: ["teams"] });
+        queryClient.invalidateQueries({ queryKey: ["rounds"] });
+        queryClient.invalidateQueries({ queryKey: ["submissions"] });
+        queryClient.invalidateQueries({ queryKey: ["organizer-stats"] });
       },
     }),
     { name: "AuthStore" }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
+import { useActiveTeam } from "@/features/teams/hooks/useActiveTeam";
 import { useIsTeamLead } from "@/features/teams/hooks/useUserRole";
 import { useTeamMembers } from "@/features/teams/hooks/useTeamMembers";
 import { useLeaveTeam } from "@/features/teams/hooks/useLeaveTeam";
@@ -437,7 +437,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
 export default function ParticipantMyTeam() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: teams, isLoading: teamsLoading } = useMyTeams();
+  const { team, isLoading: teamsLoading, hasTeam } = useActiveTeam();
 
   if (teamsLoading) {
     return (
@@ -460,7 +460,7 @@ export default function ParticipantMyTeam() {
     );
   }
 
-  if (!teams || teams.length === 0) {
+  if (!hasTeam) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -498,9 +498,7 @@ export default function ParticipantMyTeam() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>
-            {teams.length > 1 ? "My Teams" : "My Team"}
-          </h1>
+          <h1 className={styles.title}>My Team</h1>
           <p className={styles.subtitle}>
             Manage your team and members.
           </p>
@@ -512,9 +510,7 @@ export default function ParticipantMyTeam() {
         </div>
       </header>
       <div className={styles.teamsList}>
-        {teams.map((team) => (
-          <TeamCard key={team.id} team={team} user={user!} />
-        ))}
+        {team && <TeamCard key={team.id} team={team} user={user!} />}
       </div>
     </div>
   );

@@ -3,7 +3,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useActiveTeam } from "@/features/teams/hooks/useActiveTeam";
 import {
   useQuery,
   useQueryClient,
@@ -427,8 +428,8 @@ function TaskSubmissionCard({
 
 export default function ParticipantSubmissions() {
   const { user } = useAuth();
-  const { data: teams, isLoading: teamsLoading } = useMyTeams();
-  const team = teams?.[0] ?? null;
+  const { team, isLoading: teamsLoading, hasTeam } = useActiveTeam();
+  const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
   const teamId = team?.id;
 
   const queryClient = useQueryClient();
@@ -439,9 +440,9 @@ export default function ParticipantSubmissions() {
     isLoading: tasksLoading,
     error: tasksError,
   } = useQuery({
-    queryKey: ["tasks", team?.tournament_id],
-    queryFn: () => getTasks(team!.tournament_id!),
-    enabled: !!team?.tournament_id,
+    queryKey: ["tasks", activeTournamentId],
+    queryFn: () => getTasks(activeTournamentId!),
+    enabled: !!activeTournamentId,
   });
 
   const {
@@ -486,7 +487,7 @@ export default function ParticipantSubmissions() {
     );
   }
 
-  if (!team) {
+  if (!hasTeam) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -564,7 +565,7 @@ export default function ParticipantSubmissions() {
               <TaskSubmissionCard
                 key={task.id}
                 task={task}
-                teamId={team.id}
+                teamId={team!.id}
                 existingSubmission={submissionsMap.get(task.id)}
                 onSubmissionChange={handleSubmissionChange}
               />
