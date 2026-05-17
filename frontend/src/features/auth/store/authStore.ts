@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import axios from "axios";
-import { api, resetSessionExpired, type User } from "@/services/api";
+import { api, resetSessionExpired, type User, type Team } from "@/services/api";
 import { queryClient } from "@/queryClient";
 
 interface BackendUserRole {
@@ -125,7 +125,7 @@ export const useAuthStore = create<AuthState>()(
 
       _setInternal: (patch) => set((s) => ({ ...s, ...patch })),
 
-      fetchMe: async () => {
+            fetchMe: async () => {
         const state = get();
         if (state.initialized && state.user) {
           return;
@@ -147,7 +147,28 @@ export const useAuthStore = create<AuthState>()(
           try {
             const { data } = await api.get<BackendUserResponse>("/auth/me");
             const user = normalizeUser(data);
-            const { activeId, activeRole } = resolveActiveState(data);
+            
+            let effectiveRoles = data.roles || [];
+            
+            if (!effectiveRoles.some(r => r.tournament_id)) {
+              try {
+                const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
+                if (Array.isArray(teams) && teams.length > 0) {
+                  const tournamentIds = [...new Set(teams.map(t => t.tournament_id).filter(Boolean))];
+                  effectiveRoles = tournamentIds.map(tid => ({
+                    role: "participant",
+                    tournament_id: tid,
+                  }));
+                }
+              } catch {
+                // игнорируем ошибку
+              }
+            }
+
+            const { activeId, activeRole } = resolveActiveState({
+              ...data,
+              roles: effectiveRoles,
+            });
 
             const savedTournamentId = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
             const savedRole = localStorage.getItem(ACTIVE_ROLE_KEY);
@@ -157,7 +178,7 @@ export const useAuthStore = create<AuthState>()(
             
             if (savedTournamentId) {
               const savedId = Number(savedTournamentId);
-              const hasRoleForSavedTournament = data.roles?.some(
+              const hasRoleForSavedTournament = effectiveRoles.some(
                 (r) => r.tournament_id === savedId
               );
               
@@ -176,6 +197,7 @@ export const useAuthStore = create<AuthState>()(
               activeTournamentId: finalActiveId,
               activeRole: finalActiveRole,
             });
+            
             await get().checkTeam();
           } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -219,15 +241,23 @@ export const useAuthStore = create<AuthState>()(
         await attemptFetch(0);
       },
 
-      checkTeam: async () => {
+            checkTeam: async () => {
         const user = get().user;
+        const activeTournamentId = get().activeTournamentId;
+        
         if (!user) {
           set({ hasTeam: false });
           return;
         }
+        
         try {
-          const { data: teams } = await api.get<unknown[]>(`/users_team/${user.id}`);
-          set({ hasTeam: Array.isArray(teams) && teams.length > 0 });
+          const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
+          
+          const hasTeamForActiveTournament = Array.isArray(teams) && teams.some(
+            (t) => t.tournament_id === activeTournamentId
+          );
+          
+          set({ hasTeam: hasTeamForActiveTournament });
         } catch {
           set({ hasTeam: false });
         }
@@ -240,7 +270,28 @@ export const useAuthStore = create<AuthState>()(
           await api.post("/auth/login", { email, password });
           const { data } = await api.get<BackendUserResponse>("/auth/me");
           const user = normalizeUser(data);
-          const { activeId, activeRole } = resolveActiveState(data);
+          
+          let effectiveRoles = data.roles || [];
+          
+          if (!effectiveRoles.some(r => r.tournament_id)) {
+            try {
+              const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
+              if (Array.isArray(teams) && teams.length > 0) {
+                const tournamentIds = [...new Set(teams.map(t => t.tournament_id).filter(Boolean))];
+                effectiveRoles = tournamentIds.map(tid => ({
+                  role: "participant",
+                  tournament_id: tid,
+                }));
+              }
+            } catch {
+              // игнорируем
+            }
+          }
+
+          const { activeId, activeRole } = resolveActiveState({
+            ...data,
+            roles: effectiveRoles,
+          });
 
           localStorage.setItem(AUTH_FLAG, "1");
           set({
@@ -299,7 +350,10 @@ export const useAuthStore = create<AuthState>()(
 
         localStorage.setItem(ACTIVE_TOURNAMENT_KEY, String(tournamentId));
         localStorage.setItem(ACTIVE_ROLE_KEY, newRole);
+        
         set({ activeTournamentId: tournamentId, activeRole: newRole });
+        
+        get().checkTeam();
         
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["teams"] });

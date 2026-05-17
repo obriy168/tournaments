@@ -34,6 +34,7 @@ export function useCreateTeam() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const checkTeam = useAuthStore((s) => s.checkTeam);
+  const setActiveTournament = useAuthStore((s) => s.setActiveTournament);
 
   return useMutation({
     mutationFn: async (data: CreateTeamPayload) => {
@@ -96,10 +97,22 @@ export function useCreateTeam() {
 
       return team;
     },
-    onSuccess: () => {
+    onSuccess: async (team) => {
       clearCreateTeamStorage();
-      queryClient.invalidateQueries({ queryKey: myTeamsKeys.all });
-      checkTeam();
+      
+      await queryClient.invalidateQueries({ queryKey: myTeamsKeys.all });
+      if (user) {
+        await queryClient.refetchQueries({ 
+          queryKey: myTeamsKeys.list(user.id),
+          exact: true
+        });
+      }
+      
+      if (team.tournament_id) {
+        setActiveTournament(team.tournament_id);
+      }
+      
+      await checkTeam();
     },
     onError: () => {
       clearCreateTeamStorage();

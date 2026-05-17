@@ -40,31 +40,33 @@ function TournamentCard({
 
   return (
     <article className={styles.card}>
-      <h3 className={styles.title}>{tournament.name}</h3>
-      <p className={styles.description}>{tournament.description}</p>
+      <div className={styles.content}>
+        <h3 className={styles.title}>{tournament.name}</h3>
+        <p className={styles.description}>{tournament.description}</p>
 
-      <div className={styles.info}>
-        <span className={`${styles.status} ${isOpen ? styles.statusOpen : ""}`}>
-          <span className={styles.dot} aria-hidden="true" />
-          {tournament.status}
-        </span>
+        <div className={styles.info}>
+          <span className={`${styles.status} ${isOpen ? styles.statusOpen : ""}`}>
+            <span className={styles.dot} aria-hidden="true" />
+            {tournament.status}
+          </span>
 
-        <dl className={styles.dates}>
-          {dates.regStart && (
+          <dl className={styles.dates}>
+            {dates.regStart && (
+              <div className={styles.dateRow}>
+                <dt className={styles.dateLabel}>Registration opens</dt>
+                <dd className={styles.dateValue}>{dates.regStart}</dd>
+              </div>
+            )}
             <div className={styles.dateRow}>
-              <dt className={styles.dateLabel}>Registration opens</dt>
-              <dd className={styles.dateValue}>{dates.regStart}</dd>
+              <dt className={styles.dateLabel}>Registration closes</dt>
+              <dd className={styles.dateValue}>{dates.regEnd}</dd>
             </div>
-          )}
-          <div className={styles.dateRow}>
-            <dt className={styles.dateLabel}>Registration closes</dt>
-            <dd className={styles.dateValue}>{dates.regEnd}</dd>
-          </div>
-          <div className={styles.dateRow}>
-            <dt className={styles.dateLabel}>Tournament starts</dt>
-            <dd className={styles.dateValue}>{dates.start}</dd>
-          </div>
-        </dl>
+            <div className={styles.dateRow}>
+              <dt className={styles.dateLabel}>Tournament starts</dt>
+              <dd className={styles.dateValue}>{dates.start}</dd>
+            </div>
+          </dl>
+        </div>
       </div>
 
       {!hideAction &&
