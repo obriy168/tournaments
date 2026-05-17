@@ -1,6 +1,6 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from database.schemas.schema import User
 from typing import Annotated
 from fastapi import Depends
@@ -15,7 +15,3 @@ class UserRepository(BaseRepository[User]):
         result = await self.db.execute(query)
         return result.scalars().first()
     
-    async def users_count(self):
-        query = select(User)
-        result = await self.db.execute(query)
-        return len(result.scalars().all())

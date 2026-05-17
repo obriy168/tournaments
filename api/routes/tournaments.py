@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from enums.role_enum import RoleEnum
 from routes.models.user_session import UserSession
 from services.models.tournament_model import TournamentModel
+from services.models.pagination_model import PaginationModel
 from services.tournaments_service import TournamentsService
 from typing import Annotated
 from util.access.role_required import RoleRequired
@@ -9,7 +10,7 @@ from util.access.tournament_access import TournamentAccess
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
     
-@tournament_router.get("/{tournament_id}")
+@tournament_router.get("/tournament/{tournament_id}")
 async def read_tournament_by_id(tournament_id: int, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
     tournament = await tournaments_service.get_tournament_by_id(tournament_id)
     if not tournament:
@@ -20,6 +21,11 @@ async def read_tournament_by_id(tournament_id: int, tournaments_service: Annotat
 async def read_tournaments(tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)]):
     tournaments = await tournaments_service.get_all_tournaments()
     return tournaments
+
+@tournament_router.get("/pagination")
+async def get_all_tournaments_pagination(tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)],
+                                         pagination: Annotated[PaginationModel, Depends()]):
+    return await tournaments_service.get_all_tournaments_pagination(pagination)
 
 @tournament_router.post("/")
 async def create_tournament(tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)], 

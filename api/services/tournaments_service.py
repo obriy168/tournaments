@@ -1,8 +1,10 @@
 from repositories.tournament_repository import TournamentRepository
 from database.schemas.schema import Tournament, TournamentStatus
 from services.models.tournament_model import TournamentModel
+from services.models.pagination_model import PaginationModel
 from typing import Annotated
 from fastapi import Depends
+import math
 
 class TournamentsService:
     def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)]):
@@ -13,6 +15,19 @@ class TournamentsService:
     
     async def get_tournament_by_id(self, tournament_id: int):
         return await self.tournament_repository.get_by_id(tournament_id)
+
+    async def get_all_tournaments_pagination(self, pagination: PaginationModel):
+        tournaments, total_count = await self.tournament_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": tournaments,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
 
     async def create_tournament(self, tournament: TournamentModel) -> Tournament:
         data = tournament.model_dump(exclude={"id"})

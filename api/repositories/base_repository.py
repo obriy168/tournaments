@@ -2,7 +2,7 @@ from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from typing import Annotated, Generic, TypeVar, Type, Optional
 from fastapi import Depends
-from sqlalchemy import select, delete
+from sqlalchemy import select, delete, func
 
 T = TypeVar("T")
 
@@ -18,6 +18,21 @@ class BaseRepository(Generic[T]):
         result = await self.db.execute(select(self.model))
         return result.scalars().all()
     
+    async def count(self) -> int:
+        query = select(func.count()).select_from(self.model)
+        result = await self.db.execute(query)
+        return result.scalar_one()
+
+    async def get_all_paginated(self, limit: int, offset: int) -> list[T]:
+        query = select(self.model).limit(limit).offset(offset)
+        result = await self.db.execute(query)
+        items = result.scalars().all()
+
+        count_query = select(func.count()).select_from(self.model)
+        total_result = await self.db.execute(count_query)
+        total = total_result.scalar_one()
+        return items, total
+
     async def save(self, entity: T) -> T:
         self.db.add(entity)
         await self.db.commit()
