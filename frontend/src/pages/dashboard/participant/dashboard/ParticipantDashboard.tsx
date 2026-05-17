@@ -1,13 +1,13 @@
 import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useActiveTeam } from "@/features/teams/hooks/useActiveTeam";
 import {
   usePendingInvites,
   type TeamInvite,
 } from "@/features/teams/hooks/usePendingInvites";
 import { useQueryClient, useQuery, useQueries } from "@tanstack/react-query";
-import { myTeamsKeys } from "@/features/teams/hooks/useMyTeams";
 import {
   addUserToTeam,
   getTournament,
@@ -47,23 +47,22 @@ export default function ParticipantDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: teams, isLoading: teamsLoading } = useMyTeams();
+  const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
+  const { team, isLoading: teamsLoading, hasTeam } = useActiveTeam();
   const { data: invites, isLoading: invitesLoading } = usePendingInvites();
 
-  const team = teams?.[0] ?? null;
-  const hasTeam = !!team;
   const hasInvites = invites && invites.length > 0;
 
   const { data: tournament, isLoading: tournamentLoading } = useQuery({
-    queryKey: ["tournament", team?.tournament_id],
-    queryFn: () => getTournament(team!.tournament_id!),
-    enabled: !!team?.tournament_id,
+    queryKey: ["tournament", activeTournamentId],
+    queryFn: () => getTournament(activeTournamentId!),
+    enabled: !!activeTournamentId,
   });
 
   const { data: tasks, isLoading: tasksLoading } = useQuery({
-    queryKey: ["tasks", team?.tournament_id],
-    queryFn: () => getTasks(team!.tournament_id!),
-    enabled: !!team?.tournament_id,
+    queryKey: ["tasks", activeTournamentId],
+    queryFn: () => getTasks(activeTournamentId!),
+    enabled: !!activeTournamentId,
   });
 
   const submissionQueries = useQueries({
@@ -134,7 +133,7 @@ export default function ParticipantDashboard() {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["pending-invites"] }),
-        queryClient.invalidateQueries({ queryKey: myTeamsKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ["my-teams"] }),
       ]);
     } catch (err) {
       console.error("Failed to accept invite:", err);

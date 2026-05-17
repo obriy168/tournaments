@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { usePagination } from "@/features/Pagination/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   useRoundsByTournament,
@@ -109,9 +110,22 @@ export default function AdminRounds() {
     return rounds;
   }, [selectedTournament, allTournamentsRounds, singleTournamentRounds, tournaments, filter, search, loadAllRounds]);
 
+  const {
+    currentPage,
+    itemsPerPage,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    resetPage,
+  } = usePagination({ data: filteredRounds, defaultPerPage: 15, maxPerPage: 15 });
+
   const groupedRounds = useMemo(() => {
     const groups = new Map<string, RoundWithTournament[]>();
-    filteredRounds.forEach((round) => {
+    paginatedData.forEach((round) => {
       const key = `${round.tournament_id}-${round.tournamentName}`;
       if (!groups.has(key)) {
         groups.set(key, []);
@@ -119,7 +133,7 @@ export default function AdminRounds() {
       groups.get(key)!.push(round);
     });
     return groups;
-  }, [filteredRounds]);
+  }, [paginatedData]);
 
   const handleDelete = (id: number, name: string) => {
     if (!window.confirm(`Are you sure you want to delete round "${name}"?`)) return;
@@ -168,6 +182,22 @@ export default function AdminRounds() {
 
   const isRoundsLoading = selectedTournament === "all" ? loadingAll : isLoading;
 
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 2 && i <= currentPage + 2)
+      ) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== "...") {
+        pages.push("...");
+      }
+    }
+    return pages;
+  };
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -207,7 +237,10 @@ export default function AdminRounds() {
                 className={`${styles.filterBtn} ${
                   filter === f ? styles.filterBtnActive : ""
                 }`}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  setFilter(f);
+                  resetPage();
+                }}
               >
                 {f === "SubmissionClosed" ? "Closed" : f}
               </button>
@@ -220,7 +253,10 @@ export default function AdminRounds() {
           placeholder="Search rounds..."
           className={styles.searchInput}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            resetPage();
+          }}
         />
       </div>
 
@@ -228,191 +264,244 @@ export default function AdminRounds() {
         <div className={styles.loading}>Loading rounds…</div>
       ) : filteredRounds.length === 0 ? (
         <div className={styles.empty}>No rounds found</div>
-      ) : selectedTournament === "all" ? (
-        <div className={styles.groupsList}>
-          {Array.from(groupedRounds.entries()).map(([key, rounds]) => {
-            const [, tournamentName] = key.split("-", 2);
-            return (
-              <div key={key} className={styles.tournamentGroup}>
-                <div className={styles.tournamentGroupHeader}>
-                  <h3 className={styles.tournamentGroupTitle}>{tournamentName}</h3>
-                  <span className={styles.tournamentGroupCount}>
-                    {rounds.length} round{rounds.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className={styles.tableWrapper}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Period</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rounds.map((r) => {
-                        const nextStatus = getNextStatus(r.status);
-                        return (
-                          <tr key={r.id}>
-                            <td>
-                              <div className={styles.cellName}>{r.name}</div>
-                              <div className={styles.cellDesc}>{r.description}</div>
-                            </td>
-                            <td>
-                              <span
-                                className={`${styles.status} ${
-                                  styles[`status${r.status}`]
-                                }`}
-                              >
-                                {r.status === "SubmissionClosed" ? "Closed" : r.status}
-                              </span>
-                            </td>
-                            <td>
-                              {new Date(r.start_date).toLocaleDateString()} —{" "}
-                              {new Date(r.end_date).toLocaleDateString()}
-                            </td>
-                            <td>
-                              <div className={styles.actions}>
-                                <button
-                                  className={styles.actionBtn}
-                                  onClick={() => openEdit(r)}
-                                  title="Edit"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  className={styles.actionBtn}
-                                  onClick={() => openRequirements(r)}
-                                  title="Manage requirements"
-                                >
-                                  Criteria
-                                </button>
-                                {nextStatus && (
-                                  <button
-                                    className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                                    onClick={() => handleStatusChange(r.id, nextStatus)}
-                                    disabled={statusMutation.isPending}
-                                    title={`Change to ${nextStatus}`}
-                                  >
-                                    {nextStatus === "Active"
-                                      ? "Start"
-                                      : nextStatus === "SubmissionClosed"
-                                      ? "Close"
-                                      : "Finish"}
-                                  </button>
-                                )}
-                                <button
-                                  className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                                  onClick={() => handleDelete(r.id, r.name)}
-                                  disabled={deleteMutation.isPending}
-                                  title="Delete"
-                                >
-                                  Delete
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       ) : (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Period</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredRounds.map((r) => {
-                const nextStatus = getNextStatus(r.status);
+        <>
+          {selectedTournament === "all" ? (
+            <div className={styles.groupsList}>
+              {Array.from(groupedRounds.entries()).map(([key, rounds]) => {
+                const [, tournamentName] = key.split("-", 2);
                 return (
-                  <tr key={r.id}>
-                    <td>
-                      <div className={styles.cellName}>{r.name}</div>
-                      <div className={styles.cellDesc}>{r.description}</div>
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.status} ${
-                          styles[`status${r.status}`]
-                        }`}
-                      >
-                        {r.status === "SubmissionClosed" ? "Closed" : r.status}
+                  <div key={key} className={styles.tournamentGroup}>
+                    <div className={styles.tournamentGroupHeader}>
+                      <h3 className={styles.tournamentGroupTitle}>{tournamentName}</h3>
+                      <span className={styles.tournamentGroupCount}>
+                        {rounds.length} round{rounds.length !== 1 ? "s" : ""}
                       </span>
-                    </td>
-                    <td>
-                      {new Date(r.start_date).toLocaleDateString()} —{" "}
-                      {new Date(r.end_date).toLocaleDateString()}
-                    </td>
-                    <td>
-                      <div className={styles.actions}>
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => openEdit(r)}
-                          title="Edit"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => openRequirements(r)}
-                          title="Manage requirements"
-                        >
-                          Criteria
-                        </button>
-                        {r.status === "SubmissionClosed" && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnWarning}`}
-                            onClick={() => handleAutoAssign(r.id)}
-                            disabled={autoAssignMut.isPending}
-                            title="Auto-assign jury"
-                          >
-                            Assign Jury
-                          </button>
-                        )}
-                        {nextStatus && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                            onClick={() => handleStatusChange(r.id, nextStatus)}
-                            disabled={statusMutation.isPending}
-                            title={`Change to ${nextStatus}`}
-                          >
-                            {nextStatus === "Active"
-                              ? "Start"
-                              : nextStatus === "SubmissionClosed"
-                              ? "Close"
-                              : "Finish"}
-                          </button>
-                        )}
-                        {r.status === "Draft" && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                            onClick={() => handleDelete(r.id, r.name)}
-                            disabled={deleteMutation.isPending}
-                            title="Delete"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
+                    </div>
+                    <div className={styles.tableWrapper}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Period</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {rounds.map((r) => {
+                            const nextStatus = getNextStatus(r.status);
+                            return (
+                              <tr key={r.id}>
+                                <td>
+                                  <div className={styles.cellName}>{r.name}</div>
+                                  <div className={styles.cellDesc}>{r.description}</div>
+                                </td>
+                                <td>
+                                  <span
+                                    className={`${styles.status} ${
+                                      styles[`status${r.status}`]
+                                    }`}
+                                  >
+                                    {r.status === "SubmissionClosed" ? "Closed" : r.status}
+                                  </span>
+                                </td>
+                                <td>
+                                  {new Date(r.start_date).toLocaleDateString()} —{" "}
+                                  {new Date(r.end_date).toLocaleDateString()}
+                                </td>
+                                <td>
+                                  <div className={styles.actions}>
+                                    <button
+                                      className={styles.actionBtn}
+                                      onClick={() => openEdit(r)}
+                                      title="Edit"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      className={styles.actionBtn}
+                                      onClick={() => openRequirements(r)}
+                                      title="Manage requirements"
+                                    >
+                                      Criteria
+                                    </button>
+                                    {nextStatus && (
+                                      <button
+                                        className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
+                                        onClick={() => handleStatusChange(r.id, nextStatus)}
+                                        disabled={statusMutation.isPending}
+                                        title={`Change to ${nextStatus}`}
+                                      >
+                                        {nextStatus === "Active"
+                                          ? "Start"
+                                          : nextStatus === "SubmissionClosed"
+                                          ? "Close"
+                                          : "Finish"}
+                                      </button>
+                                    )}
+                                    <button
+                                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                                      onClick={() => handleDelete(r.id, r.name)}
+                                      disabled={deleteMutation.isPending}
+                                      title="Delete"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          ) : (
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Status</th>
+                    <th>Period</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedData.map((r) => {
+                    const nextStatus = getNextStatus(r.status);
+                    return (
+                      <tr key={r.id}>
+                        <td>
+                          <div className={styles.cellName}>{r.name}</div>
+                          <div className={styles.cellDesc}>{r.description}</div>
+                        </td>
+                        <td>
+                          <span
+                            className={`${styles.status} ${
+                              styles[`status${r.status}`]
+                            }`}
+                          >
+                            {r.status === "SubmissionClosed" ? "Closed" : r.status}
+                          </span>
+                        </td>
+                        <td>
+                          {new Date(r.start_date).toLocaleDateString()} —{" "}
+                          {new Date(r.end_date).toLocaleDateString()}
+                        </td>
+                        <td>
+                          <div className={styles.actions}>
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => openEdit(r)}
+                              title="Edit"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className={styles.actionBtn}
+                              onClick={() => openRequirements(r)}
+                              title="Manage requirements"
+                            >
+                              Criteria
+                            </button>
+                            {r.status === "SubmissionClosed" && (
+                              <button
+                                className={`${styles.actionBtn} ${styles.actionBtnWarning}`}
+                                onClick={() => handleAutoAssign(r.id)}
+                                disabled={autoAssignMut.isPending}
+                                title="Auto-assign jury"
+                              >
+                                Assign Jury
+                              </button>
+                            )}
+                            {nextStatus && (
+                              <button
+                                className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
+                                onClick={() => handleStatusChange(r.id, nextStatus)}
+                                disabled={statusMutation.isPending}
+                                title={`Change to ${nextStatus}`}
+                              >
+                                {nextStatus === "Active"
+                                  ? "Start"
+                                  : nextStatus === "SubmissionClosed"
+                                  ? "Close"
+                                  : "Finish"}
+                              </button>
+                            )}
+                            {r.status === "Draft" && (
+                              <button
+                                className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                                onClick={() => handleDelete(r.id, r.name)}
+                                disabled={deleteMutation.isPending}
+                                title="Delete"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          <div className={styles.pagination}>
+            <div className={styles.paginationInfo}>
+              Showing <b>{startIndex + 1}</b>–<b>{endIndex}</b> of <b>{totalItems}</b>
+              <select
+                className={styles.perPageSelect}
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value={5}>5 / page</option>
+                <option value={10}>10 / page</option>
+                <option value={15}>15 / page</option>
+              </select>
+            </div>
+
+            <div className={styles.paginationControls}>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                ← Prev
+              </button>
+
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                ) : (
+                  <button
+                    key={p}
+                    className={`${styles.pageBtn} ${
+                      currentPage === p ? styles.pageBtnActive : ""
+                    }`}
+                    onClick={() => goToPage(p as number)}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {modalOpen && (

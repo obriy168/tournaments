@@ -1,7 +1,19 @@
 import { lazy, Suspense, Component, type ReactNode, useEffect } from "react";
-import { createBrowserRouter, Navigate, RouterProvider, useLocation, Outlet } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/useAuth";
-import { RequireAuth, PublicOnly, RoleGuard, RoleRedirect } from "@/app/guards/guards";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+  useLocation,
+  Outlet,
+  useNavigate,
+} from "react-router-dom";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import {
+  RequireAuth,
+  PublicOnly,
+  RoleGuard,
+  RoleRedirect,
+} from "@/app/guards/guards";
 import PublicLayout from "@/layouts/public/PublicLayout";
 import AuthLayout from "@/layouts/authorization/AuthorizationLayout";
 import AppLayout from "@/layouts/app/AppLayout";
@@ -9,23 +21,32 @@ import SplashScreen from "@/components/SplashScreen/SplashScreen";
 import ScrollToTop from "@/components/ScrollToTop/ScrollToTop";
 import styles from "./Router.module.css";
 
-class RouteErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
+class RouteErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
   constructor(props: { children: ReactNode }) {
     super(props);
     this.state = { hasError: false };
   }
+
   static getDerivedStateFromError() {
     return { hasError: true };
   }
+
   componentDidCatch(error: Error) {
     console.error("Route error:", error);
   }
+
   render() {
     if (this.state.hasError) {
       return (
         <div className={styles.errorBoundary}>
           <h2>Something went wrong loading this page.</h2>
-          <button onClick={() => window.location.reload()} className={styles.reloadBtn}>
+          <button
+            onClick={() => window.location.reload()}
+            className={styles.reloadBtn}
+          >
             Reload page
           </button>
         </div>
@@ -54,33 +75,15 @@ function ScrollToTopWrapper() {
 }
 
 function SessionGuard() {
-  const { initializing, user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handler = () => {
-      window.location.href = "/login";
+      navigate("/login", { replace: true });
     };
     window.addEventListener("skyline:session-expired", handler);
     return () => window.removeEventListener("skyline:session-expired", handler);
-  }, []);
-
-  useEffect(() => {
-    if (!initializing && !user) {
-      const path = window.location.pathname;
-      if (path !== "/login" && path !== "/signup") {
-        const isExpired = (() => {
-          try {
-            return localStorage.getItem("skyline_auth") === null;
-          } catch {
-            return true;
-          }
-        })();
-        if (isExpired) {
-          window.location.href = "/login";
-        }
-      }
-    }
-  }, [initializing, user]);
+  }, [navigate]);
 
   return <Outlet />;
 }
@@ -125,7 +128,7 @@ const CreateTeamSuccess = lazy(() => import("@/pages/dashboard/participant/Creat
 
 const OrganizerDashboard = lazy(() => import("@/pages/dashboard/organizer/dashboard/OrganizerDashboard"));
 const OrganizerTournaments = lazy(() => import("@/pages/dashboard/organizer/tournaments/OrganizerTournaments"));
-const OrganizerTasks = lazy(() => import("@/pages/dashboard/organizer/tasks/OrganizerTasks"))
+const OrganizerTasks = lazy(() => import("@/pages/dashboard/organizer/tasks/OrganizerTasks"));
 const OrganizerTeams = lazy(() => import("@/pages/dashboard/organizer/teams/OrganizerTeams"));
 
 const wrap = (node: ReactNode) => (
@@ -167,6 +170,8 @@ const router = createBrowserRouter([
               {
                 element: <AppLayout />,
                 children: [
+                  { path: "/app", element: <RoleRedirect /> },
+                  { path: "/app/profile", element: wrap(<ProfilePage />) },
                   {
                     element: <RoleGuard allowed={["admin"]} />,
                     children: [
@@ -185,8 +190,9 @@ const router = createBrowserRouter([
                     children: [
                       { path: "/app/organizer", element: wrap(<OrganizerDashboard />) },
                       { path: "/app/organizer/tournaments", element: wrap(<OrganizerTournaments />) },
-                      { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />)},
-                      { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />)},
+                      { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />) },
+                      { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />) },
+                    //  { path: "/app/organizer/submissions", element: wrap(<OrganizerTeams />)},
                       { path: "/app/organizer/*", element: <Navigate to="/app/organizer" replace /> },
                     ],
                   },
@@ -213,8 +219,6 @@ const router = createBrowserRouter([
                       { path: "/app/participant/*", element: <Navigate to="/app/participant" replace /> },
                     ],
                   },
-                  { path: "/app", element: <RoleRedirect /> },
-                  { path: "/app/profile", element: wrap(<ProfilePage />) },
                 ],
               },
             ],
@@ -227,7 +231,7 @@ const router = createBrowserRouter([
 ]);
 
 export default function AppRouter() {
-  const { initializing } = useAuth();
+  const initializing = useAuthStore((s) => s.initializing);
   return (
     <>
       <SplashScreen visible={initializing} />

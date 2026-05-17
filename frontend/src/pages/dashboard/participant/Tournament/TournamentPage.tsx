@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useMyTeams } from "@/features/teams/hooks/useMyTeams";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useActiveTeam } from "@/features/teams/hooks/useActiveTeam";
 import {
   getTournament,
   getTasks,
@@ -67,20 +68,19 @@ function TaskCard({ task }: { task: Task }) {
 export default function TournamentRegistrationPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { data: teams, isLoading: teamsLoading } = useMyTeams();
-  const team = teams?.[0] ?? null;
-  const registeredTournamentId = team?.tournament_id ?? null;
+  const { isLoading: teamsLoading, hasTeam } = useActiveTeam();
+  const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
 
   const { data: tournament, isLoading: tournamentLoading } = useQuery({
-    queryKey: ["tournament", registeredTournamentId],
-    queryFn: () => getTournament(registeredTournamentId!),
-    enabled: !!registeredTournamentId,
+    queryKey: ["tournament", activeTournamentId],
+    queryFn: () => getTournament(activeTournamentId!),
+    enabled: !!activeTournamentId,
   });
 
   const { data: tasks, isLoading: tasksLoading } = useQuery({
-    queryKey: ["tasks", registeredTournamentId],
-    queryFn: () => getTasks(registeredTournamentId!),
-    enabled: !!registeredTournamentId,
+    queryKey: ["tasks", activeTournamentId],
+    queryFn: () => getTasks(activeTournamentId!),
+    enabled: !!activeTournamentId,
   });
 
   if (teamsLoading || tournamentLoading) {
@@ -104,7 +104,7 @@ export default function TournamentRegistrationPage() {
     );
   }
 
-  if (!team) {
+  if (!hasTeam) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>
@@ -135,7 +135,7 @@ export default function TournamentRegistrationPage() {
     );
   }
 
-  if (!registeredTournamentId || !tournament) {
+  if (!activeTournamentId || !tournament) {
     return (
       <div className={styles.container}>
         <header className={styles.header}>

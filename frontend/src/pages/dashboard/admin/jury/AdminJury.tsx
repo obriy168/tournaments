@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePagination } from "@/features/Pagination/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   getUsersByRole,
@@ -118,6 +119,34 @@ export default function AdminJury() {
     );
   }, [nonJuryUsers, searchUsers]);
 
+  const juryPagination = usePagination({
+    data: filteredJury,
+    defaultPerPage: 15,
+    maxPerPage: 15,
+  });
+
+  const usersPagination = usePagination({
+    data: filteredUsers,
+    defaultPerPage: 15,
+    maxPerPage: 15,
+  });
+
+  const getPageNumbers = (page: number, pages: number) => {
+    const nums: (number | string)[] = [];
+    for (let i = 1; i <= pages; i++) {
+      if (
+        i === 1 ||
+        i === pages ||
+        (i >= page - 2 && i <= page + 2)
+      ) {
+        nums.push(i);
+      } else if (nums[nums.length - 1] !== "...") {
+        nums.push("...");
+      }
+    }
+    return nums;
+  };
+
   const handleRemoveJury = (userId: number) => {
     if (!selectedTournament) return;
     if (
@@ -154,6 +183,8 @@ export default function AdminJury() {
             setSelectedTournament(Number(e.target.value) || "");
             setSearchJury("");
             setSearchUsers("");
+            juryPagination.resetPage();
+            usersPagination.resetPage();
           }}
         >
           <option value="">Choose a tournament...</option>
@@ -177,40 +208,96 @@ export default function AdminJury() {
                 placeholder="Search jury members..."
                 className={styles.searchInput}
                 value={searchJury}
-                onChange={(e) => setSearchJury(e.target.value)}
+                onChange={(e) => {
+                  setSearchJury(e.target.value);
+                  juryPagination.resetPage();
+                }}
               />
             </div>
 
             {isLoading ? (
               <div className={styles.loading}>Loading jury members…</div>
-            ) : filteredJury.length > 0 ? (
-              <div className={styles.list}>
-                {filteredJury.map((member) => (
-                  <div key={member.id} className={styles.card}>
-                    <div className={styles.avatar}>
-                      {(member.first_name?.[0] || "") +
-                        (member.last_name?.[0] || "")}
+            ) : juryPagination.paginatedData.length > 0 ? (
+              <>
+                <div className={styles.list}>
+                  {juryPagination.paginatedData.map((member) => (
+                    <div key={member.id} className={styles.card}>
+                      <div className={styles.avatar}>
+                        {(member.first_name?.[0] || "") +
+                          (member.last_name?.[0] || "")}
+                      </div>
+                      <div className={styles.info}>
+                        <span className={styles.name}>
+                          {member.first_name} {member.last_name}
+                        </span>
+                        <span className={styles.email}>{member.email}</span>
+                      </div>
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        onClick={() => handleRemoveJury(member.id)}
+                        disabled={removeJuryMutation.isPending}
+                        title="Remove from jury"
+                      >
+                        {removeJuryMutation.isPending &&
+                        removeJuryMutation.variables?.userId === member.id
+                          ? "Removing…"
+                          : "Remove"}
+                      </button>
                     </div>
-                    <div className={styles.info}>
-                      <span className={styles.name}>
-                        {member.first_name} {member.last_name}
-                      </span>
-                      <span className={styles.email}>{member.email}</span>
+                  ))}
+                </div>
+
+                {filteredJury.length > 15 && (
+                  <div className={styles.pagination}>
+                    <div className={styles.paginationInfo}>
+                      Showing <b>{juryPagination.startIndex + 1}</b>–<b>{juryPagination.endIndex}</b> of <b>{juryPagination.totalItems}</b>
+                      <select
+                        className={styles.perPageSelect}
+                        value={juryPagination.itemsPerPage}
+                        onChange={(e) => juryPagination.setItemsPerPage(Number(e.target.value))}
+                      >
+                        <option value={5}>5 / page</option>
+                        <option value={10}>10 / page</option>
+                        <option value={15}>15 / page</option>
+                      </select>
                     </div>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                      onClick={() => handleRemoveJury(member.id)}
-                      disabled={removeJuryMutation.isPending}
-                      title="Remove from jury"
-                    >
-                      {removeJuryMutation.isPending &&
-                      removeJuryMutation.variables?.userId === member.id
-                        ? "Removing…"
-                        : "Remove"}
-                    </button>
+
+                    <div className={styles.paginationControls}>
+                      <button
+                        className={styles.pageBtn}
+                        disabled={juryPagination.currentPage === 1}
+                        onClick={() => juryPagination.goToPage(juryPagination.currentPage - 1)}
+                      >
+                        ← Prev
+                      </button>
+
+                      {getPageNumbers(juryPagination.currentPage, juryPagination.totalPages).map((p, i) =>
+                        p === "..." ? (
+                          <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            className={`${styles.pageBtn} ${
+                              juryPagination.currentPage === p ? styles.pageBtnActive : ""
+                            }`}
+                            onClick={() => juryPagination.goToPage(p as number)}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        className={styles.pageBtn}
+                        disabled={juryPagination.currentPage === juryPagination.totalPages}
+                        onClick={() => juryPagination.goToPage(juryPagination.currentPage + 1)}
+                      >
+                        Next →
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             ) : (
               <div className={styles.empty}>
                 {searchJury.trim()
@@ -230,50 +317,106 @@ export default function AdminJury() {
                 placeholder="Search users..."
                 className={styles.searchInput}
                 value={searchUsers}
-                onChange={(e) => setSearchUsers(e.target.value)}
+                onChange={(e) => {
+                  setSearchUsers(e.target.value);
+                  usersPagination.resetPage();
+                }}
               />
             </div>
 
             {usersLoading ? (
               <div className={styles.loading}>Loading users…</div>
-            ) : filteredUsers.length === 0 ? (
+            ) : usersPagination.paginatedData.length === 0 ? (
               <div className={styles.empty}>
                 {searchUsers.trim()
                   ? "No users match your search"
                   : "No available users"}
               </div>
             ) : (
-              <div className={styles.list}>
-                {filteredUsers.map((user) => (
-                  <div key={user.id} className={styles.card}>
-                    <div className={styles.avatar}>
-                      {(user.first_name?.[0] || "") +
-                        (user.last_name?.[0] || "")}
+              <>
+                <div className={styles.list}>
+                  {usersPagination.paginatedData.map((user) => (
+                    <div key={user.id} className={styles.card}>
+                      <div className={styles.avatar}>
+                        {(user.first_name?.[0] || "") +
+                          (user.last_name?.[0] || "")}
+                      </div>
+                      <div className={styles.info}>
+                        <span className={styles.name}>
+                          {user.first_name} {user.last_name}
+                        </span>
+                        <span className={styles.email}>{user.email}</span>
+                      </div>
+                      <button
+                        className={styles.addBtn}
+                        onClick={() =>
+                          addJuryMutation.mutate({
+                            userId: user.id,
+                            tournamentId: Number(selectedTournament),
+                          })
+                        }
+                        disabled={addJuryMutation.isPending}
+                      >
+                        {addJuryMutation.isPending &&
+                        addJuryMutation.variables?.userId === user.id
+                          ? "Adding…"
+                          : "Add to Jury"}
+                      </button>
                     </div>
-                    <div className={styles.info}>
-                      <span className={styles.name}>
-                        {user.first_name} {user.last_name}
-                      </span>
-                      <span className={styles.email}>{user.email}</span>
+                  ))}
+                </div>
+
+                {filteredUsers.length > 15 && (
+                  <div className={styles.pagination}>
+                    <div className={styles.paginationInfo}>
+                      Showing <b>{usersPagination.startIndex + 1}</b>–<b>{usersPagination.endIndex}</b> of <b>{usersPagination.totalItems}</b>
+                      <select
+                        className={styles.perPageSelect}
+                        value={usersPagination.itemsPerPage}
+                        onChange={(e) => usersPagination.setItemsPerPage(Number(e.target.value))}
+                      >
+                        <option value={5}>5 / page</option>
+                        <option value={10}>10 / page</option>
+                        <option value={15}>15 / page</option>
+                      </select>
                     </div>
-                    <button
-                      className={styles.addBtn}
-                      onClick={() =>
-                        addJuryMutation.mutate({
-                          userId: user.id,
-                          tournamentId: Number(selectedTournament),
-                        })
-                      }
-                      disabled={addJuryMutation.isPending}
-                    >
-                      {addJuryMutation.isPending &&
-                      addJuryMutation.variables?.userId === user.id
-                        ? "Adding…"
-                        : "Add to Jury"}
-                    </button>
+
+                    <div className={styles.paginationControls}>
+                      <button
+                        className={styles.pageBtn}
+                        disabled={usersPagination.currentPage === 1}
+                        onClick={() => usersPagination.goToPage(usersPagination.currentPage - 1)}
+                      >
+                        ← Prev
+                      </button>
+
+                      {getPageNumbers(usersPagination.currentPage, usersPagination.totalPages).map((p, i) =>
+                        p === "..." ? (
+                          <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                        ) : (
+                          <button
+                            key={p}
+                            className={`${styles.pageBtn} ${
+                              usersPagination.currentPage === p ? styles.pageBtnActive : ""
+                            }`}
+                            onClick={() => usersPagination.goToPage(p as number)}
+                          >
+                            {p}
+                          </button>
+                        )
+                      )}
+
+                      <button
+                        className={styles.pageBtn}
+                        disabled={usersPagination.currentPage === usersPagination.totalPages}
+                        onClick={() => usersPagination.goToPage(usersPagination.currentPage + 1)}
+                      >
+                        Next →
+                      </button>
+                    </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         </>

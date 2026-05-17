@@ -129,10 +129,9 @@
 
 .btnPrimary,
 .btnSecondary {
-  padding: 12px 20px;
+  padding: 12px 24px;
   border-radius: 12px;
   font-size: 14px;
-  margin-right: 19px;
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
