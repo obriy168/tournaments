@@ -61,10 +61,21 @@ function getTournamentRoles(
     .map((r) => normalizeRole(r.role));
 }
 
+function isGlobalAdmin(data: BackendUserResponse): boolean {
+  if (!data.roles) return false;
+  return data.roles.some(
+    (r) => !r.tournament_id && normalizeRole(r.role) === "admin"
+  );
+}
+
 function resolveActiveState(data: BackendUserResponse): {
   activeId: number | null;
   activeRole: string | null;
 } {
+  if (isGlobalAdmin(data)) {
+    return { activeId: null, activeRole: "admin" };
+  }
+
   const tournamentRoles = (data.roles || []).filter(
     (r): r is BackendUserRole & { tournament_id: number } => !!r.tournament_id
   );
@@ -75,7 +86,7 @@ function resolveActiveState(data: BackendUserResponse): {
   let activeId: number | null = null;
   let activeRole: string | null = null;
 
-  if (savedTournamentId) {
+  if (savedTournamentId && savedTournamentId !== "null" && savedTournamentId !== "0") {
     const savedId = Number(savedTournamentId);
     const rolesForSavedTournament = getTournamentRoles(data, savedId);
 
@@ -125,7 +136,7 @@ export const useAuthStore = create<AuthState>()(
 
       _setInternal: (patch) => set((s) => ({ ...s, ...patch })),
 
-            fetchMe: async () => {
+      fetchMe: async () => {
         const state = get();
         if (state.initialized && state.user) {
           return;
@@ -147,15 +158,15 @@ export const useAuthStore = create<AuthState>()(
           try {
             const { data } = await api.get<BackendUserResponse>("/auth/me");
             const user = normalizeUser(data);
-            
+
             let effectiveRoles = data.roles || [];
-            
-            if (!effectiveRoles.some(r => r.tournament_id)) {
+
+            if (!effectiveRoles.some((r) => r.tournament_id)) {
               try {
                 const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
                 if (Array.isArray(teams) && teams.length > 0) {
-                  const tournamentIds = [...new Set(teams.map(t => t.tournament_id).filter(Boolean))];
-                  effectiveRoles = tournamentIds.map(tid => ({
+                  const tournamentIds = [...new Set(teams.map((t) => t.tournament_id).filter(Boolean))];
+                  effectiveRoles = tournamentIds.map((tid) => ({
                     role: "participant",
                     tournament_id: tid,
                   }));
@@ -172,21 +183,19 @@ export const useAuthStore = create<AuthState>()(
 
             const savedTournamentId = localStorage.getItem(ACTIVE_TOURNAMENT_KEY);
             const savedRole = localStorage.getItem(ACTIVE_ROLE_KEY);
-            
+
             let finalActiveId = activeId;
             let finalActiveRole = activeRole;
-            
-            if (savedTournamentId) {
+
+            if (activeRole !== "admin" && savedTournamentId && savedTournamentId !== "null" && savedTournamentId !== "0") {
               const savedId = Number(savedTournamentId);
               const hasRoleForSavedTournament = effectiveRoles.some(
                 (r) => r.tournament_id === savedId
               );
-              
+
               if (hasRoleForSavedTournament) {
                 finalActiveId = savedId;
-                finalActiveRole = savedRole 
-                  ? normalizeRole(savedRole) 
-                  : activeRole;
+                finalActiveRole = savedRole ? normalizeRole(savedRole) : activeRole;
               }
             }
 
@@ -197,7 +206,7 @@ export const useAuthStore = create<AuthState>()(
               activeTournamentId: finalActiveId,
               activeRole: finalActiveRole,
             });
-            
+
             await get().checkTeam();
           } catch (err: unknown) {
             if (axios.isAxiosError(err)) {
@@ -241,22 +250,27 @@ export const useAuthStore = create<AuthState>()(
         await attemptFetch(0);
       },
 
-            checkTeam: async () => {
+      checkTeam: async () => {
         const user = get().user;
         const activeTournamentId = get().activeTournamentId;
-        
+
         if (!user) {
           set({ hasTeam: false });
           return;
         }
-        
+
+        if (activeTournamentId === null) {
+          set({ hasTeam: false });
+          return;
+        }
+
         try {
           const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
-          
-          const hasTeamForActiveTournament = Array.isArray(teams) && teams.some(
-            (t) => t.tournament_id === activeTournamentId
-          );
-          
+
+          const hasTeamForActiveTournament =
+            Array.isArray(teams) &&
+            teams.some((t) => t.tournament_id === activeTournamentId);
+
           set({ hasTeam: hasTeamForActiveTournament });
         } catch {
           set({ hasTeam: false });
@@ -270,15 +284,15 @@ export const useAuthStore = create<AuthState>()(
           await api.post("/auth/login", { email, password });
           const { data } = await api.get<BackendUserResponse>("/auth/me");
           const user = normalizeUser(data);
-          
+
           let effectiveRoles = data.roles || [];
-          
-          if (!effectiveRoles.some(r => r.tournament_id)) {
+
+          if (!effectiveRoles.some((r) => r.tournament_id)) {
             try {
               const { data: teams } = await api.get<Team[]>(`/users_team/${user.id}`);
               if (Array.isArray(teams) && teams.length > 0) {
-                const tournamentIds = [...new Set(teams.map(t => t.tournament_id).filter(Boolean))];
-                effectiveRoles = tournamentIds.map(tid => ({
+                const tournamentIds = [...new Set(teams.map((t) => t.tournament_id).filter(Boolean))];
+                effectiveRoles = tournamentIds.map((tid) => ({
                   role: "participant",
                   tournament_id: tid,
                 }));
@@ -334,6 +348,19 @@ export const useAuthStore = create<AuthState>()(
 
       setActiveTournament: (tournamentId: number, explicitRole?: string) => {
         const state = get();
+
+        if (tournamentId === 0 && explicitRole === "admin") {
+          localStorage.removeItem(ACTIVE_TOURNAMENT_KEY);
+          localStorage.setItem(ACTIVE_ROLE_KEY, "admin");
+          set({ activeTournamentId: null, activeRole: "admin" });
+          queryClient.invalidateQueries({ queryKey: ["tasks"] });
+          queryClient.invalidateQueries({ queryKey: ["teams"] });
+          queryClient.invalidateQueries({ queryKey: ["rounds"] });
+          queryClient.invalidateQueries({ queryKey: ["submissions"] });
+          queryClient.invalidateQueries({ queryKey: ["organizer-stats"] });
+          return;
+        }
+
         const tournamentRoles = getTournamentRoles(
           { roles: state.user?.roles || [] } as BackendUserResponse,
           tournamentId
@@ -350,11 +377,11 @@ export const useAuthStore = create<AuthState>()(
 
         localStorage.setItem(ACTIVE_TOURNAMENT_KEY, String(tournamentId));
         localStorage.setItem(ACTIVE_ROLE_KEY, newRole);
-        
+
         set({ activeTournamentId: tournamentId, activeRole: newRole });
-        
+
         get().checkTeam();
-        
+
         queryClient.invalidateQueries({ queryKey: ["tasks"] });
         queryClient.invalidateQueries({ queryKey: ["teams"] });
         queryClient.invalidateQueries({ queryKey: ["rounds"] });
