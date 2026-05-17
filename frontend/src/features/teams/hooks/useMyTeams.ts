@@ -14,5 +14,7 @@ export function useMyTeams() {
     queryKey: myTeamsKeys.list(user?.id ?? 0),
     queryFn: () => getMyTeams(user!.id),
     enabled: !!user,
+    staleTime: 0,
+    gcTime: 1000 * 60 * 5,
   });
 }

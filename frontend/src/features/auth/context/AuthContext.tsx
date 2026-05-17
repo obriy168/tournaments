@@ -15,6 +15,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (!store.initializing && store.user && store.initialized) {
+      store.checkTeam();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [store.initializing, store.user, store.initialized, store.activeTournamentId]);
+
+  useEffect(() => {
     const handleVisibility = () => {
       if (document.visibilityState === "visible") {
         const state = useAuthStore.getState();
