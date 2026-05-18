@@ -11,7 +11,6 @@ import {
   changeTeamLeader,
   addUserToTeam,
   getAllUsers,
-  getMyTeams,
   getTournament,
   removeUserFromTeamByIds,
   type Team,
@@ -72,18 +71,6 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
       ) {
         throw new Error(
           `Team is full. Maximum ${tournament.max_user_count} members allowed.`
-        );
-      }
-
-      let userTeams: Team[] = [];
-      try {
-        userTeams = await getMyTeams(found.id);
-      } catch {
-        userTeams = [];
-      }
-      if (userTeams.length > 0) {
-        throw new Error(
-          `${found.first_name} ${found.last_name} is already a member of another team.`
         );
       }
 
