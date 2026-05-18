@@ -6,6 +6,7 @@ from enums.role_enum import RoleEnum
 from util.access.role_required import RoleRequired
 from util.access.submission_access import SubmissionAccess
 from routes.models.user_session import UserSession
+from util.auth import validate_session
 
 submissions_router = APIRouter(prefix="/submissions", tags=["submissions"])
 
@@ -16,7 +17,7 @@ async def get_submission_by_id(submission_id: int, submission_service: Annotated
 
 @submissions_router.get("/task/{task_id}")
 async def get_submissions_by_task_id(task_id: int, submission_service: Annotated[SubmissionService, Depends(SubmissionService)],
-                                     user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN, RoleEnum.ORGANIZER, RoleEnum.JURY]))]):
+                                     user_session: Annotated[UserSession, Depends(validate_session)]):
     return await submission_service.get_submissions_by_task_id(task_id)
 
 @submissions_router.post("/")
