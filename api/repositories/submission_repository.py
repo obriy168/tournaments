@@ -1,10 +1,10 @@
 from util.database import get_db
 from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Submission, Team, UserTeam
+from database.schemas.schema import Submission, Team, UserTeam, Task, TaskAssignment, Evaluation, Requirement, RequirementGroup
 from typing import Annotated
 from fastapi import Depends
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from repositories.base_repository import BaseRepository
 
 class SubmissionRepository(BaseRepository[Submission]):
@@ -31,7 +31,25 @@ class SubmissionRepository(BaseRepository[Submission]):
         result = await self.db.execute(query)
         return result.scalar_one_or_none() is not None
     
-    async def get_tournament_id_by_team(self, team_id: int):
-        query = select(Team.tournament_id).where(Team.id == team_id)
+    async def get_submission_by_id_with_details(self, submission_id):
+        query = (select(Submission)
+                                            .options(joinedload(Submission.task), 
+                                                     joinedload(Submission.team), 
+                                                     selectinload(Submission.assignments)
+                                                       .selectinload(TaskAssignment.evaluations))
+                                            .where(Submission.id == submission_id))
+
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
+    
+    async def get_all_submissions_paginated_with_details(self, limit: int, offset: int):
+        query = (select(Submission)
+                                            .options(joinedload(Submission.task), 
+                                                     joinedload(Submission.team), 
+                                                     selectinload(Submission.assignments)
+                                                       .selectinload(TaskAssignment.evaluations))
+                                            .limit(limit)
+                                            .offset(offset))
+                                                       
+        result = await self.db.execute(query)
+        return result.scalars().all()

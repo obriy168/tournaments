@@ -13,6 +13,9 @@ class SubmissionService:
     async def get_submission_by_id_custom(self, submission_id: int):
         return await self.submission_repository.get_submission_by_id(submission_id)
     
+    async def get_submission_by_id_with_details(self, submission_id: int):
+        return await self.submission_repository.get_submission_by_id_with_details(submission_id)
+    
     async def get_submissions_by_task_id(self, task_id: int):
         return await self.submission_repository.get_submissions_by_task_id(task_id)
     
@@ -34,6 +37,20 @@ class SubmissionService:
                 "pages": math.ceil(total_count / pagination.limit)
             }
         }
+    
+    async def get_all_submissions_paginated_with_details(self, pagination: PaginationModel):
+        total_count = await self.submission_repository.count()
+        submissions = await self.submission_repository.get_all_submissions_paginated_with_details(limit=pagination.limit, offset=pagination.offset)
+        return {
+            "items": submissions,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+
     
     async def search_submissions(self, text: str, pagination: PaginationModel):
         submissions, total_count = await self.submission_repository.get_filtered_paginated(
@@ -71,5 +88,3 @@ class SubmissionService:
     async def check_user_in_team(self, user_id: int, team_id: int) -> bool:
         return await self.submission_repository.check_user_in_team(user_id, team_id)
     
-    async def get_tournament_id_by_team(self, team_id: int):
-        return await self.submission_repository.get_tournament_id_by_team(team_id)
