@@ -1,21 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Optional
-from fastapi import Query
+from typing import Annotated, Optional
 
-from util.auth import validate_session
-from util.access.role_required import RoleRequired
-from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from enums.role_enum import RoleEnum
-
-from services.user_service import UserService
-
-from services.models.user_model import UserModel
+from routes.models.login_response import LoginResponse
+from routes.models.pagination_response import PaginatedResponse
+from routes.models.user_response import UserResponse
 from routes.models.user_session import UserSession
 from routes.models.user_team_response import UserTeamResponse
-from routes.models.login_response import LoginResponse
-from routes.models.user_response import UserResponse
 from services.models.pagination_model import PaginationModel
-from routes.models.pagination_response import PaginatedResponse
+from services.models.user_model import UserModel
+from services.user_service import UserService
+from util.access.role_required import RoleRequired
+from util.auth import validate_session
 
 user_router = APIRouter(prefix="/users", tags=["users"])
 

@@ -1,13 +1,17 @@
+import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from pwdlib import PasswordHash
+
+from database.schemas.schema import User
+from repositories.user_repository import UserRepository
 from repositories.user_role_repository import UserRoleRepository
 from services.errors.user_existed import UserExistedException
-from repositories.user_repository import UserRepository
-from database.schemas.schema import User
-from services.models.user_model import UserModel
 from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
-from pwdlib import PasswordHash
-import math
+from services.models.user_model import UserModel
 
 class UserService:
     def __init__(self, user_repository: Annotated[UserRepository, Depends(UserRepository)], user_role_repository: Annotated[UserRoleRepository, Depends(UserRoleRepository)]):

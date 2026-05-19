@@ -1,11 +1,14 @@
-from repositories.team_repository import TeamRepository
-from services.user_team_service import UserTeamService
-from database.schemas.schema import Team, UserTeam, Tournament
-from services.models.team_model import TeamModel, TeamRegistrationModel
-from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
 import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Team, UserTeam, Tournament
+from repositories.team_repository import TeamRepository
+from services.models.pagination_model import PaginationModel
+from services.models.team_model import TeamModel, TeamRegistrationModel
+from services.user_team_service import UserTeamService
 
 class TeamsService:
     def __init__(self, team_repository: Annotated[TeamRepository, Depends(TeamRepository)],

@@ -1,16 +1,16 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.submission_service import SubmissionService
-from typing import Annotated
-from services.models.submission_model import SubmissionModel
-from services.models.pagination_model import PaginationModel
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from enums.role_enum import RoleEnum
+from routes.models.pagination_response import PaginatedResponse
+from routes.models.submission_full_response import SubmissionDetailedResponse
+from routes.models.user_session import UserSession
+from services.models.pagination_model import PaginationModel
+from services.models.submission_model import SubmissionModel
+from services.submission_service import SubmissionService
 from util.access.role_required import RoleRequired
 from util.access.submission_access import SubmissionAccess
-from routes.models.user_session import UserSession
-from typing import Optional
-from fastapi import Query
-from routes.models.submission_full_response import SubmissionDetailedResponse
-from routes.models.pagination_response import PaginatedResponse
 
 submissions_router = APIRouter(prefix="/submissions", tags=["submissions"])
 

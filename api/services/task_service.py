@@ -1,10 +1,13 @@
-from repositories.task_repository import TaskRepository
+import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
 from database.schemas.schema import Task, TaskStatus
+from repositories.task_repository import TaskRepository
 from services.models.pagination_model import PaginationModel
 from services.models.task_model import TaskModel
-from typing import Annotated
-from fastapi import Depends
-import math
 
 class TaskService:
     def __init__(self, task_repository: Annotated[TaskRepository, Depends(TaskRepository)]):

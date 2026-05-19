@@ -1,11 +1,13 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Submission, Team, UserTeam, Task, TaskAssignment, Evaluation, Requirement, RequirementGroup
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import selectinload, joinedload
+
+from database.schemas.schema import Submission, Team, UserTeam, TaskAssignment
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class SubmissionRepository(BaseRepository[Submission]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):

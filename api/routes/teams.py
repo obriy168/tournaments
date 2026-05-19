@@ -1,13 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.teams_service import TeamsService
-from typing import Annotated
-from services.models.team_model import TeamModel, TeamRegistrationModel
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from routes.models.user_session import UserSession
 from services.models.pagination_model import PaginationModel
+from services.models.team_model import TeamModel, TeamRegistrationModel
+from services.teams_service import TeamsService
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
-from typing import Optional
-from fastapi import Query
 
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 

@@ -1,15 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from enums.role_enum import RoleEnum
+from enums.tournament_status_enum import TournamentStatus
 from routes.models.user_session import UserSession
-from services.models.tournament_model import TournamentModel
 from services.models.pagination_model import PaginationModel
+from services.models.tournament_model import TournamentModel
 from services.tournaments_service import TournamentsService
-from typing import Annotated
 from util.access.role_required import RoleRequired
 from util.access.tournament_access import TournamentAccess
-from enums.tournament_status_enum import TournamentStatus
-from typing import Optional
-from fastapi import Query
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
     

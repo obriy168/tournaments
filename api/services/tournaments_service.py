@@ -1,10 +1,13 @@
-from repositories.tournament_repository import TournamentRepository
-from database.schemas.schema import Tournament, TournamentStatus
-from services.models.tournament_model import TournamentModel
-from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
 import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Tournament, TournamentStatus
+from repositories.tournament_repository import TournamentRepository
+from services.models.pagination_model import PaginationModel
+from services.models.tournament_model import TournamentModel
 
 class TournamentsService:
     def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)]):

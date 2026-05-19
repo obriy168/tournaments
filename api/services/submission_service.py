@@ -1,10 +1,13 @@
-from repositories.submission_repository import SubmissionRepository
-from database.schemas.schema import Submission, Task, Team
-from services.models.submission_model import SubmissionModel
-from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
 import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Submission, Task, Team
+from repositories.submission_repository import SubmissionRepository
+from services.models.pagination_model import PaginationModel
+from services.models.submission_model import SubmissionModel
 
 class SubmissionService:
     def __init__(self, submission_repository: Annotated[SubmissionRepository, Depends(SubmissionRepository)]):

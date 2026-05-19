@@ -1,10 +1,12 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Evaluation, TaskAssignment, Submission
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.schemas.schema import Evaluation, TaskAssignment, Submission
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class EvaluationRepository(BaseRepository[Evaluation]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
