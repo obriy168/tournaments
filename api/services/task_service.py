@@ -1,8 +1,10 @@
 from repositories.task_repository import TaskRepository
 from database.schemas.schema import Task, TaskStatus
+from services.models.pagination_model import PaginationModel
 from services.models.task_model import TaskModel
 from typing import Annotated
 from fastapi import Depends
+import math
 
 class TaskService:
     def __init__(self, task_repository: Annotated[TaskRepository, Depends(TaskRepository)]):
@@ -10,6 +12,20 @@ class TaskService:
 
     async def get_task_by_id(self, task_id: int):
         return await self.task_repository.get_by_id(task_id)
+    
+    async def search_task(self, text: str | None, status: str | None, pagination: PaginationModel):
+        tasks, total_count = await self.task_repository.get_filtered_paginated(
+            search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Task.name, Task.description, Task.specifications])
+        
+        return {
+            "items": tasks,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
     
     async def create_task(self, task: TaskModel) -> Task:
         data = task.model_dump(exclude={"id"})

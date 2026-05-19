@@ -1,4 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import Query
 
 from util.auth import validate_session
 from util.access.role_required import RoleRequired
@@ -40,6 +42,12 @@ async def get_all_users_pagination(users_service: Annotated[UserService, Depends
                                    pagination: Annotated[PaginationModel, Depends()],
                                    user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN]))]):
     return await users_service.get_all_users_pagination(pagination)
+
+@user_router.get("/search", response_model=PaginatedResponse[UserResponse])
+async def search_tournament(users_service: Annotated[UserService, Depends(UserService)],
+                            pagination: Annotated[PaginationModel, Depends()],
+                            text: Optional[str] = Query(None)):
+    return await users_service.search_users(text=text, pagination=pagination)
 
 @user_router.post("/")
 async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):

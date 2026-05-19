@@ -28,6 +28,20 @@ class TournamentsService:
                 "pages": math.ceil(total_count / pagination.limit)
             }
         }
+    
+    async def search_tournament(self, text: str | None, status: str | None, pagination: PaginationModel):
+        tournament, total_count = await self.tournament_repository.get_filtered_paginated(
+            search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Tournament.name, Tournament.description])
+        
+        return {
+            "items": tournament,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
 
     async def create_tournament(self, tournament: TournamentModel) -> Tournament:
         data = tournament.model_dump(exclude={"id"})

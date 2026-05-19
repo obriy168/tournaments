@@ -1,5 +1,5 @@
 from repositories.submission_repository import SubmissionRepository
-from database.schemas.schema import Submission
+from database.schemas.schema import Submission, Task, Team
 from services.models.submission_model import SubmissionModel
 from services.models.pagination_model import PaginationModel
 from typing import Annotated
@@ -35,6 +35,20 @@ class SubmissionService:
             }
         }
     
+    async def search_submissions(self, text: str, pagination: PaginationModel):
+        submissions, total_count = await self.submission_repository.get_filtered_paginated(
+            search_text=text, limit=pagination.limit, offset=pagination.offset, search_fields=[Task.name, Team.name, Submission.description, Submission.github_url])
+
+        return {
+            "items": submissions,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+
     async def create_submission(self, submission: SubmissionModel) -> Submission:
         data = submission.model_dump(exclude={"id"})
         submission_entity = Submission(**data)

@@ -7,6 +7,8 @@ from enums.role_enum import RoleEnum
 from util.access.role_required import RoleRequired
 from util.access.submission_access import SubmissionAccess
 from routes.models.user_session import UserSession
+from typing import Optional
+from fastapi import Query
 
 submissions_router = APIRouter(prefix="/submissions", tags=["submissions"])
 
@@ -30,6 +32,13 @@ async def get_all_submissions_paginated(submission_service: Annotated[Submission
                                         pagination: Annotated[PaginationModel, Depends()],
                                         user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN, RoleEnum.ORGANIZER, RoleEnum.JURY]))]):
     return await submission_service.get_all_submissions_paginated(pagination)
+
+@submissions_router.get("/search")
+async def search_submissions(submission_service: Annotated[SubmissionService, Depends(SubmissionService)],
+                             pagination: Annotated[PaginationModel, Depends()],
+                             user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN, RoleEnum.ORGANIZER, RoleEnum.JURY]))],
+                             text: Optional[str] = Query(None)):
+    return await submission_service.search_submissions(text, pagination)
 
 @submissions_router.post("/")
 async def create_submission(submission: SubmissionModel, submission_service: Annotated[SubmissionService, Depends(SubmissionService)],

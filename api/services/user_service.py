@@ -36,6 +36,20 @@ class UserService:
             }
         }
     
+    async def search_users(self, text: str | None, pagination: PaginationModel):
+        users, total_count = await self.user_repository.get_filtered_paginated(
+            search_text=text, limit=pagination.limit, offset=pagination.offset, search_fields=[User.first_name, User.last_name, User.email])
+        
+        return {
+            "items": users,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
     async def create_user(self, user: UserModel) -> User:
 
         existing_user = await self.user_repository.get_user_by_email(user.email)

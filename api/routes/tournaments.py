@@ -7,6 +7,9 @@ from services.tournaments_service import TournamentsService
 from typing import Annotated
 from util.access.role_required import RoleRequired
 from util.access.tournament_access import TournamentAccess
+from enums.tournament_status_enum import TournamentStatus
+from typing import Optional
+from fastapi import Query
 
 tournament_router = APIRouter(prefix="/tournaments", tags=["tournaments"])
     
@@ -27,6 +30,12 @@ async def get_all_tournaments_pagination(tournaments_service: Annotated[Tourname
                                          pagination: Annotated[PaginationModel, Depends()]):
     return await tournaments_service.get_all_tournaments_pagination(pagination)
 
+@tournament_router.get("/search")
+async def search_tournament(tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)],
+                            pagination: Annotated[PaginationModel, Depends()],
+                            text: Optional[str] = Query(None), status: Optional[TournamentStatus] = Query(None)):
+    return await tournaments_service.search_tournament(text=text, status=status, pagination=pagination)
+    
 @tournament_router.post("/")
 async def create_tournament(tournament: TournamentModel, tournaments_service: Annotated[TournamentsService, Depends(TournamentsService)], 
                             user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN, RoleEnum.ORGANIZER]))]):

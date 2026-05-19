@@ -6,6 +6,8 @@ from services.models.pagination_model import PaginationModel
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
 from routes.models.user_session import UserSession
+from typing import Optional
+from fastapi import Query
 
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 
@@ -28,6 +30,12 @@ async def get_all_teams_pagination(teams_service: Annotated[TeamsService, Depend
                                    pagination: Annotated[PaginationModel, Depends()],
                                    user_session: Annotated[UserSession, Depends(validate_session)]):
     return await teams_service.get_all_teams_pagination(pagination)
+
+@team_router.get("/search")
+async def search_tournament(teams_service: Annotated[TeamsService, Depends(TeamsService)],
+                            pagination: Annotated[PaginationModel, Depends()],
+                            text: Optional[str] = Query(None)):
+    return await teams_service.search_teams(text=text, pagination=pagination)
 
 @team_router.post("/")
 async def create_team(team: TeamRegistrationModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],
