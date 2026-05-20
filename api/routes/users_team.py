@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.user_team_service import UserTeamService
-from routes.models.user_team_response import UserTeamResponse
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from routes.models.user_session import UserSession
+from routes.models.user_team_response import UserTeamResponse
+from services.user_team_service import UserTeamService
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
 
 user_team_router = APIRouter(prefix="/users_team", tags=["users_team"])
 

@@ -1,13 +1,17 @@
+import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from pwdlib import PasswordHash
+
+from database.schemas.schema import User
+from repositories.user_repository import UserRepository
 from repositories.user_role_repository import UserRoleRepository
 from services.errors.user_existed import UserExistedException
-from repositories.user_repository import UserRepository
-from database.schemas.schema import User
-from services.models.user_model import UserModel
 from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
-from pwdlib import PasswordHash
-import math
+from services.models.user_model import UserModel
 
 class UserService:
     def __init__(self, user_repository: Annotated[UserRepository, Depends(UserRepository)], user_role_repository: Annotated[UserRoleRepository, Depends(UserRoleRepository)]):
@@ -25,6 +29,20 @@ class UserService:
     
     async def get_all_users_pagination(self, pagination: PaginationModel):
         users, total_count = await self.user_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": users,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
+    async def search_users(self, text: str | None, pagination: PaginationModel):
+        users, total_count = await self.user_repository.get_filtered_paginated(
+            search_text=text, limit=pagination.limit, offset=pagination.offset, search_fields=[User.first_name, User.last_name, User.email])
         
         return {
             "items": users,

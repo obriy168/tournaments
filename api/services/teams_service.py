@@ -1,11 +1,14 @@
-from repositories.team_repository import TeamRepository
-from services.user_team_service import UserTeamService
-from database.schemas.schema import Team, UserTeam
-from services.models.team_model import TeamModel, TeamRegistrationModel
-from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
 import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Team, UserTeam, Tournament
+from repositories.team_repository import TeamRepository
+from services.models.pagination_model import PaginationModel
+from services.models.team_model import TeamModel, TeamRegistrationModel
+from services.user_team_service import UserTeamService
 
 class TeamsService:
     def __init__(self, team_repository: Annotated[TeamRepository, Depends(TeamRepository)],
@@ -21,6 +24,20 @@ class TeamsService:
     
     async def get_all_teams_pagination(self, pagination: PaginationModel):
         teams, total_count = await self.team_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": teams,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
+    async def search_teams(self, text: str | None, pagination: PaginationModel):
+        teams, total_count = await self.team_repository.get_filtered_paginated(
+            search_text=text, limit=pagination.limit, offset=pagination.offset, search_fields=[Team.name, Team.organization, Team.city, Tournament.name])
         
         return {
             "items": teams,

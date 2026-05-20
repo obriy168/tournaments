@@ -1,11 +1,13 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, HTTPException
+
+from routes.models.user_session import UserSession
+from services.models.requirement_group_model import RequirementGroupModel
 from services.requirement_group_service import RequirementGroupService
 from services.task_service import TaskService
-from typing import Annotated
-from services.models.requirement_group_model import RequirementGroupModel
 from util.access.requirement_group_access import RequirementGroupAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
 
 requirement_group_router = APIRouter(prefix="/requirement_groups", tags=["requirement_groups"])
     

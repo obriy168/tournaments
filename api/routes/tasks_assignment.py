@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.task_assigment_service import TaskAssignmentService
-from services.submission_service import SubmissionService
-from services.models.task_assigment_model import TaskAssigmentModel
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException
+
+from routes.models.user_session import UserSession
+from services.models.task_assigment_model import TaskAssigmentModel
+from services.submission_service import SubmissionService
+from services.task_assigment_service import TaskAssignmentService
 from util.access.assignment_access import AssignmentAccess
 from util.access.task_access import TaskAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
 
 task_assignment_router = APIRouter(prefix="/task_assignment", tags=["task_assignment"])
 

@@ -2,7 +2,6 @@ from fastapi import HTTPException
 from routes.models.user_session import UserSession
 from enums.role_enum import RoleEnum
 
-
 def is_tournament_organizer(user: UserSession, tournament_id: int) -> bool:
     return any(
         role.tournament_id == tournament_id

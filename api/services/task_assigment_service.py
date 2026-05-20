@@ -1,13 +1,14 @@
-from repositories.task_assigment_repository import TaskAssignmentRepository
-from repositories.user_role_repository import UserRoleRepository
-from repositories.submission_repository import SubmissionRepository
-from repositories.task_repository import TaskRepository
-from database.schemas.schema import TaskAssignment
-from services.models.task_assigment_model import TaskAssigmentModel
 from typing import Annotated
-from fastapi import Depends
 
+from fastapi import Depends
 from random import shuffle
+
+from database.schemas.schema import TaskAssignment
+from repositories.submission_repository import SubmissionRepository
+from repositories.task_assigment_repository import TaskAssignmentRepository
+from repositories.task_repository import TaskRepository
+from repositories.user_role_repository import UserRoleRepository
+from services.models.task_assigment_model import TaskAssigmentModel
 
 class TaskAssignmentService:
     def __init__(self, task_assigment_repository: Annotated[TaskAssignmentRepository, Depends(TaskAssignmentRepository)],

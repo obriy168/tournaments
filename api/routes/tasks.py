@@ -1,10 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.task_service import TaskService
-from typing import Annotated
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from enums.task_status_enum import TaskStatus
+from routes.models.user_session import UserSession
+from services.models.pagination_model import PaginationModel
 from services.models.task_model import TaskModel
+from services.task_service import TaskService
 from util.access.task_access import TaskAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
 
 task_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
@@ -16,6 +20,13 @@ async def get_task_by_id(task_id: int,
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@task_router.get("/")
+async def search_task(tasks_service: Annotated[TaskService, Depends(TaskService)],
+                      pagination: Annotated[PaginationModel, Depends()],
+                      user_session: Annotated[UserSession, Depends(validate_session)],
+                      text: Optional[str] = Query(None), status: Optional[TaskStatus] = Query(None)):
+    return await tasks_service.search_task(text=text, status=status, pagination=pagination)
 
 @task_router.post("/")
 async def create_task(task: TaskModel, 

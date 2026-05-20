@@ -1,10 +1,13 @@
-from repositories.tournament_repository import TournamentRepository
-from database.schemas.schema import Tournament, TournamentStatus
-from services.models.tournament_model import TournamentModel
-from services.models.pagination_model import PaginationModel
-from typing import Annotated
-from fastapi import Depends
 import math
+
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Tournament, TournamentStatus
+from repositories.tournament_repository import TournamentRepository
+from services.models.pagination_model import PaginationModel
+from services.models.tournament_model import TournamentModel
 
 class TournamentsService:
     def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)]):
@@ -21,6 +24,20 @@ class TournamentsService:
         
         return {
             "items": tournaments,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
+    async def search_tournament(self, text: str | None, status: str | None, pagination: PaginationModel):
+        tournament, total_count = await self.tournament_repository.get_filtered_paginated(
+            search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Tournament.name, Tournament.description])
+        
+        return {
+            "items": tournament,
             "meta": {
                 "page": pagination.page,
                 "page_size": pagination.limit,
