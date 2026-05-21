@@ -110,7 +110,7 @@ export default function AdminTasks() {
             value={selectedTournament}
             onChange={(e) => {
               const value = e.target.value;
-              setSelectedTournament(value as "all" | string);
+              setSelectedTournament(value === "all" ? "all" : Number(value));
               setSearch("");
               setFilter("All");
             }}
