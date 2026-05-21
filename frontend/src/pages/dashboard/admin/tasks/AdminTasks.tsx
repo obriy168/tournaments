@@ -5,158 +5,99 @@ import {
   useDeleteTask,
   useUpdateTaskStatus,
 } from "@/features/admin/hooks/useTasks";
-import { getTasks } from "@/services/api";
 import TaskFormModal from "@/features/admin/components/TaskFormModal/TaskFormModal";
 import type { Task } from "@/services/api";
 import styles from "./AdminTasks.module.css";
 
 type FilterStatus = "All" | Task["status"];
 
-interface TaskWithTournament extends Task {
-  tournamentName: string;
-}
+const STATUS_TRANSITIONS: Record<Task["status"], Task["status"] | null> = {
+  Draft: "Active",
+  Active: "SubmissionClosed",
+  SubmissionClosed: "Evaluated",
+  Evaluated: null,
+};
 
 export default function AdminTasks() {
-  const { data: tournaments } = useTournaments();
+  const { data: tournaments, isLoading: tournamentsLoading } = useTournaments();
   const [selectedTournament, setSelectedTournament] = useState<number | "all">("all");
   const [filter, setFilter] = useState<FilterStatus>("All");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [allTournamentsTasks, setAllTournamentsTasks] = useState<Map<number, Task[]>>(new Map());
-  const [loadingAll, setLoadingAll] = useState(false);
 
-  const { data: singleTournamentTasks, isLoading } = useTasksByTournament(
+  const { data: tasks, isLoading } = useTasksByTournament(
     selectedTournament !== "all" ? Number(selectedTournament) : null
   );
 
   const deleteMutation = useDeleteTask();
   const statusMutation = useUpdateTaskStatus();
 
-  const loadAllTasks = useCallback(async () => {
-    if (!tournaments || tournaments.length === 0) {
-      setAllTournamentsTasks(new Map());
-      return;
-    }
-
-    setLoadingAll(true);
-    const map = new Map<number, Task[]>();
-    for (const tournament of tournaments) {
-      try {
-        const tasks = await getTasks(tournament.id);
-        map.set(tournament.id, tasks);
-      } catch {
-        map.set(tournament.id, []);
-      }
-    }
-    setAllTournamentsTasks(map);
-    setLoadingAll(false);
-  }, [tournaments]);
-
-  const handleTournamentChange = (value: string) => {
-    if (value === "all") {
-      setSelectedTournament("all");
-      loadAllTasks();
-    } else {
-      setSelectedTournament(Number(value));
-      setAllTournamentsTasks(new Map());
-    }
-  };
-
   const filteredTasks = useMemo(() => {
-    let tasks: TaskWithTournament[] = [];
-
-    if (selectedTournament === "all") {
-      if (allTournamentsTasks.size === 0 && tournaments && tournaments.length > 0) {
-        loadAllTasks();
-      }
-      allTournamentsTasks.forEach((taskList, tournamentId) => {
-        const tournamentName = tournaments?.find((t) => t.id === tournamentId)?.name || `Tournament #${tournamentId}`;
-        taskList.forEach((task) => {
-          tasks.push({ ...task, tournamentName });
-        });
-      });
-    } else if (singleTournamentTasks) {
-      const tournamentName = tournaments?.find((t) => t.id === Number(selectedTournament))?.name || "";
-      tasks = singleTournamentTasks.map((task) => ({ ...task, tournamentName }));
-    }
+    if (!tasks) return [];
+    let res = [...tasks];
 
     if (filter !== "All") {
-      tasks = tasks.filter((t) => t.status === filter);
+      res = res.filter((t) => t.status === filter);
     }
 
     if (search.trim()) {
       const q = search.toLowerCase();
-      tasks = tasks.filter(
+      res = res.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
           t.description.toLowerCase().includes(q)
       );
     }
 
-    tasks.sort((a, b) => {
-      if (a.tournament_id !== b.tournament_id) {
-        return a.tournament_id - b.tournament_id;
-      }
-      return new Date(b.start_date).getTime() - new Date(a.start_date).getTime();
-    });
+    res.sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
-    return tasks;
-  }, [selectedTournament, allTournamentsTasks, singleTournamentTasks, tournaments, filter, search, loadAllTasks]);
+    return res;
+  }, [tasks, filter, search]);
 
-  const groupedTasks = useMemo(() => {
-    const groups = new Map<string, TaskWithTournament[]>();
-    filteredTasks.forEach((task) => {
-      const key = `${task.tournament_id}-${task.tournamentName}`;
-      if (!groups.has(key)) {
-        groups.set(key, []);
-      }
-      groups.get(key)!.push(task);
-    });
-    return groups;
-  }, [filteredTasks]);
-
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = useCallback((id: number, name: string) => {
     if (!window.confirm(`Are you sure you want to delete task "${name}"?`)) return;
     deleteMutation.mutate(id);
-  };
+  }, [deleteMutation]);
 
-  const handleStatusChange = (id: number, status: Task["status"]) => {
+  const handleStatusChange = useCallback((id: number, status: Task["status"]) => {
     statusMutation.mutate({ id, status });
-  };
+  }, [statusMutation]);
 
-  const getNextStatus = (current: Task["status"]): Task["status"] | null => {
-    const transitions: Record<Task["status"], Task["status"] | null> = {
-      Draft: "Active",
-      Active: "SubmissionClosed",
-      SubmissionClosed: "Evaluated",
-      Evaluated: null,
-    };
-    return transitions[current];
-  };
+  const getNextStatus = useCallback((current: Task["status"]): Task["status"] | null => {
+    return STATUS_TRANSITIONS[current] ?? null;
+  }, []);
 
-  const openCreate = () => {
+  const openCreate = useCallback(() => {
     setEditingTask(null);
     setModalOpen(true);
-  };
+  }, []);
 
-  const openEdit = (t: Task) => {
+  const openEdit = useCallback((t: Task) => {
     setEditingTask(t);
     setModalOpen(true);
-  };
+  }, []);
 
-  const isTasksLoading = selectedTournament === "all" ? loadingAll : isLoading;
+  const selectedTournamentName = useMemo(() => {
+    if (selectedTournament === "all") return null;
+    return tournaments?.find(t => t.id === Number(selectedTournament))?.name;
+  }, [selectedTournament, tournaments]);
 
   return (
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
           <h1 className={styles.title}>Tasks</h1>
-          <p className={styles.subtitle}>Manage tournament tasks</p>
+          <p className={styles.subtitle}>
+            {selectedTournament === "all" 
+              ? "Select a tournament to manage tasks" 
+              : `Manage tasks for ${selectedTournamentName || "selected tournament"}`}
+          </p>
         </div>
-        <button
-          className={styles.createBtn}
-          onClick={openCreate}
+        <button 
+          className={styles.createBtn} 
+          onClick={openCreate} 
+          disabled={selectedTournament === "all"}
         >
           + New Task
         </button>
@@ -167,9 +108,14 @@ export default function AdminTasks() {
           <select
             className={styles.select}
             value={selectedTournament}
-            onChange={(e) => handleTournamentChange(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSelectedTournament(value as "all" | string);
+              setSearch("");
+              setFilter("All");
+            }}
           >
-            <option value="all">All Tournaments</option>
+            <option value="all">Select a tournament</option>
             {(tournaments || []).map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
@@ -178,124 +124,41 @@ export default function AdminTasks() {
           </select>
         </div>
 
-        <div className={styles.filterGroup}>
-          {(["All", "Draft", "Active", "SubmissionClosed", "Evaluated"] as FilterStatus[]).map(
-            (f) => (
-              <button
-                key={f}
-                className={`${styles.filterBtn} ${
-                  filter === f ? styles.filterBtnActive : ""
-                }`}
-                onClick={() => setFilter(f)}
-              >
-                {f === "SubmissionClosed" ? "Closed" : f}
-              </button>
-            )
-          )}
-        </div>
+        {selectedTournament !== "all" && (
+          <>
+            <div className={styles.filterGroup}>
+              {(["All", "Draft", "Active", "SubmissionClosed", "Evaluated"] as FilterStatus[]).map(
+                (f) => (
+                  <button
+                    key={f}
+                    className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ""}`}
+                    onClick={() => setFilter(f)}
+                  >
+                    {f === "SubmissionClosed" ? "Closed" : f}
+                  </button>
+                )
+              )}
+            </div>
 
-        <input
-          type="text"
-          placeholder="Search tasks..."
-          className={styles.searchInput}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+            <input
+              type="text"
+              placeholder="Search tasks..."
+              className={styles.searchInput}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </>
+        )}
       </div>
 
-      {isTasksLoading ? (
+      {selectedTournament === "all" ? (
+        <div className={styles.empty}>
+          Please select a tournament to view and manage tasks
+        </div>
+      ) : tournamentsLoading || isLoading ? (
         <div className={styles.loading}>Loading tasks…</div>
       ) : filteredTasks.length === 0 ? (
-        <div className={styles.empty}>No tasks found</div>
-      ) : selectedTournament === "all" ? (
-        <div className={styles.groupsList}>
-          {Array.from(groupedTasks.entries()).map(([key, tasks]) => {
-            const [, tournamentName] = key.split("-", 2);
-            return (
-              <div key={key} className={styles.tournamentGroup}>
-                <div className={styles.tournamentGroupHeader}>
-                  <h3 className={styles.tournamentGroupTitle}>{tournamentName}</h3>
-                  <span className={styles.tournamentGroupCount}>
-                    {tasks.length} task{tasks.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-                <div className={styles.tableWrapper}>
-                  <table className={styles.table}>
-                    <thead>
-                      <tr>
-                        <th>Name</th>
-                        <th>Status</th>
-                        <th>Period</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {tasks.map((t) => {
-                        const nextStatus = getNextStatus(t.status);
-                        return (
-                          <tr key={t.id}>
-                            <td>
-                              <div className={styles.cellName}>{t.name}</div>
-                              <div className={styles.cellDesc}>{t.description}</div>
-                            </td>
-                            <td>
-                              <span
-                                className={`${styles.status} ${
-                                  styles[`status${t.status}`]
-                                }`}
-                              >
-                                {t.status === "SubmissionClosed" ? "Closed" : t.status}
-                              </span>
-                            </td>
-                            <td>
-                              {new Date(t.start_date).toLocaleDateString()} —{" "}
-                              {new Date(t.end_date).toLocaleDateString()}
-                            </td>
-                            <td>
-                              <div className={styles.actions}>
-                                <button
-                                  className={styles.actionBtn}
-                                  onClick={() => openEdit(t)}
-                                  title="Edit"
-                                >
-                                  Edit
-                                </button>
-                                {nextStatus && (
-                                  <button
-                                    className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                                    onClick={() =>
-                                      handleStatusChange(t.id, nextStatus)
-                                    }
-                                    disabled={statusMutation.isPending}
-                                    title={`Change to ${nextStatus}`}
-                                  >
-                                    {nextStatus === "Active"
-                                      ? "Start"
-                                      : nextStatus === "SubmissionClosed"
-                                      ? "Close"
-                                      : "Finish"}
-                                  </button>
-                                )}
-                                  <button
-                                    className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                                    onClick={() => handleDelete(t.id, t.name)}
-                                    disabled={deleteMutation.isPending}
-                                    title="Delete"
-                                  >
-                                    Delete
-                                  </button>
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <div className={styles.empty}>No tasks found for this tournament</div>
       ) : (
         <div className={styles.tableWrapper}>
           <table className={styles.table}>
@@ -317,11 +180,7 @@ export default function AdminTasks() {
                       <div className={styles.cellDesc}>{t.description}</div>
                     </td>
                     <td>
-                      <span
-                        className={`${styles.status} ${
-                          styles[`status${t.status}`]
-                        }`}
-                      >
+                      <span className={`${styles.status} ${styles[`status${t.status}`]}`}>
                         {t.status === "SubmissionClosed" ? "Closed" : t.status}
                       </span>
                     </td>
@@ -331,27 +190,17 @@ export default function AdminTasks() {
                     </td>
                     <td>
                       <div className={styles.actions}>
-                        <button
-                          className={styles.actionBtn}
-                          onClick={() => openEdit(t)}
-                          title="Edit"
-                        >
+                        <button className={styles.actionBtn} onClick={() => openEdit(t)} title="Edit">
                           Edit
                         </button>
                         {nextStatus && (
                           <button
                             className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                            onClick={() =>
-                              handleStatusChange(t.id, nextStatus)
-                            }
+                            onClick={() => handleStatusChange(t.id, nextStatus)}
                             disabled={statusMutation.isPending}
                             title={`Change to ${nextStatus}`}
                           >
-                            {nextStatus === "Active"
-                              ? "Start"
-                              : nextStatus === "SubmissionClosed"
-                              ? "Close"
-                              : "Finish"}
+                            {nextStatus === "Active" ? "Start" : nextStatus === "SubmissionClosed" ? "Close" : "Finish"}
                           </button>
                         )}
                         {t.status === "Draft" && (
@@ -374,13 +223,13 @@ export default function AdminTasks() {
         </div>
       )}
 
-      {modalOpen && (
+      {modalOpen && selectedTournament !== "all" && (
         <TaskFormModal
-            task={editingTask}
-            defaultTournamentId={selectedTournament !== "all" ? Number(selectedTournament) : 0}
-            onClose={() => setModalOpen(false)}
+          task={editingTask}
+          defaultTournamentId={Number(selectedTournament)}
+          onClose={() => setModalOpen(false)}
         />
-        )}
+      )}
     </div>
   );
 }

@@ -1,17 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   getUsersByRole,
   setUserRole,
-  getAllUsers,
+  searchUsers,
   type User,
 } from "@/services/api";
+import { usePagination } from "@/hooks/usePagination";
+import Pagination from "@/components/Pagination/Pagination";
 import styles from "./AdminJury.module.css";
-
-interface JuryMember extends User {
-  assignmentId?: number;
-}
 
 interface JuryIdResponse {
   user_id?: number;
@@ -22,12 +20,37 @@ export default function AdminJury() {
   const queryClient = useQueryClient();
   const { data: tournaments } = useTournaments();
   const [selectedTournament, setSelectedTournament] = useState<number | "">("");
-  const [searchJury, setSearchJury] = useState("");
-  const [searchUsers, setSearchUsers] = useState("");
+  const [jurySearch, setJurySearch] = useState("");
+  const [usersSearch, setUsersSearch] = useState("");
 
-  const { data: allUsers, isLoading: usersLoading } = useQuery({
-    queryKey: ["all-users"],
-    queryFn: getAllUsers,
+  const {
+    data: juryData,
+    meta: juryMeta,
+    isLoading: juryLoading,
+    page: juryCurrentPage,
+    setPage: setJuryPage,
+    pageSize: juryPageSize,
+    setPageSize: setJuryPageSize,
+  } = usePagination<User>({
+    queryKey: ["jury-users", selectedTournament],
+    fetchFn: (params) => searchUsers(jurySearch, params),
+    enabled: !!selectedTournament,
+    extraDeps: [jurySearch],
+  });
+
+  const {
+    data: usersData,
+    meta: usersMeta,
+    isLoading: usersLoading,
+    page: usersCurrentPage,
+    setPage: setUsersPage,
+    pageSize: usersPageSize,
+    setPageSize: setUsersPageSize,
+  } = usePagination<User>({
+    queryKey: ["available-users"],
+    fetchFn: (params) => searchUsers(usersSearch, params),
+    enabled: !!selectedTournament,
+    extraDeps: [usersSearch],
   });
 
   const {
@@ -43,19 +66,23 @@ export default function AdminJury() {
     enabled: !!selectedTournament,
   });
 
-  const juryMembers = useMemo(() => {
-    if (!juryUserIds || !allUsers) return [];
-    
-    const juryIds = juryUserIds
+  const juryIdsSet = useMemo(() => {
+    if (!juryUserIds) return new Set<number>();
+    const ids = juryUserIds
       .map((j: JuryIdResponse | number) => 
         typeof j === "number" ? j : (j.user_id ?? j.id ?? 0)
       )
       .filter((id): id is number => id !== 0);
+    return new Set(ids);
+  }, [juryUserIds]);
 
-    return allUsers
-      .filter((u) => juryIds.includes(u.id))
-      .map((u) => ({ ...u } as JuryMember));
-  }, [juryUserIds, allUsers]);
+  const filteredJury = useMemo(() => {
+    return (juryData || []).filter((u) => juryIdsSet.has(u.id));
+  }, [juryData, juryIdsSet]);
+
+  const filteredUsers = useMemo(() => {
+    return (usersData || []).filter((u) => !juryIdsSet.has(u.id));
+  }, [usersData, juryIdsSet]);
 
   const addJuryMutation = useMutation({
     mutationFn: ({
@@ -69,7 +96,12 @@ export default function AdminJury() {
       queryClient.invalidateQueries({
         queryKey: ["jury-ids", selectedTournament],
       });
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({
+        queryKey: ["jury-users", selectedTournament],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["available-users"],
+      });
     },
   });
 
@@ -87,52 +119,25 @@ export default function AdminJury() {
       queryClient.invalidateQueries({
         queryKey: ["jury-ids", selectedTournament],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["jury-users", selectedTournament],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["available-users"],
+      });
     },
   });
 
-  const nonJuryUsers = useMemo(() => {
-    if (!allUsers || !juryMembers) return [];
-    const juryIds = new Set(juryMembers.map((j) => j.id));
-    return allUsers.filter((u) => !juryIds.has(u.id));
-  }, [allUsers, juryMembers]);
-
-  const filteredJury = useMemo(() => {
-    if (!searchJury.trim()) return juryMembers;
-    const q = searchJury.toLowerCase();
-    return juryMembers.filter(
-      (j) =>
-        j.first_name?.toLowerCase().includes(q) ||
-        j.last_name?.toLowerCase().includes(q) ||
-        j.email?.toLowerCase().includes(q)
-    );
-  }, [juryMembers, searchJury]);
-
-  const filteredUsers = useMemo(() => {
-    if (!searchUsers.trim()) return nonJuryUsers;
-    const q = searchUsers.toLowerCase();
-    return nonJuryUsers.filter(
-      (u) =>
-        u.first_name?.toLowerCase().includes(q) ||
-        u.last_name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-    );
-  }, [nonJuryUsers, searchUsers]);
-
-  const handleRemoveJury = (userId: number) => {
+  const handleRemoveJury = useCallback((userId: number) => {
     if (!selectedTournament) return;
-    if (
-      !window.confirm(
-        "Are you sure you want to remove this jury member?"
-      )
-    )
-      return;
+    if (!window.confirm("Are you sure you want to remove this jury member?")) return;
     removeJuryMutation.mutate({
       userId,
       tournamentId: Number(selectedTournament),
     });
-  };
+  }, [selectedTournament, removeJuryMutation]);
 
-  const isLoading = juryIdsLoading || usersLoading;
+  const isLoading = juryIdsLoading || juryLoading;
 
   return (
     <div className={styles.container}>
@@ -151,9 +156,10 @@ export default function AdminJury() {
           className={styles.select}
           value={selectedTournament}
           onChange={(e) => {
-            setSelectedTournament(Number(e.target.value) || "");
-            setSearchJury("");
-            setSearchUsers("");
+            const value = e.target.value;
+            setSelectedTournament(value ? Number(value) : "");
+            setJurySearch("");
+            setUsersSearch("");
           }}
         >
           <option value="">Choose a tournament...</option>
@@ -170,50 +176,65 @@ export default function AdminJury() {
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>
-                Current Jury ({juryMembers.length})
+                Current Jury
               </h2>
               <input
                 type="text"
                 placeholder="Search jury members..."
                 className={styles.searchInput}
-                value={searchJury}
-                onChange={(e) => setSearchJury(e.target.value)}
+                value={jurySearch}
+                onChange={(e) => {
+                  setJurySearch(e.target.value);
+                  setJuryPage(1);
+                }}
               />
             </div>
 
             {isLoading ? (
               <div className={styles.loading}>Loading jury members…</div>
             ) : filteredJury.length > 0 ? (
-              <div className={styles.list}>
-                {filteredJury.map((member) => (
-                  <div key={member.id} className={styles.card}>
-                    <div className={styles.avatar}>
-                      {(member.first_name?.[0] || "") +
-                        (member.last_name?.[0] || "")}
+              <>
+                <div className={styles.list}>
+                  {filteredJury.map((member) => (
+                    <div key={member.id} className={styles.card}>
+                      <div className={styles.avatar}>
+                        {(member.first_name?.[0] || "") +
+                          (member.last_name?.[0] || "")}
+                      </div>
+                      <div className={styles.info}>
+                        <span className={styles.name}>
+                          {member.first_name} {member.last_name}
+                        </span>
+                        <span className={styles.email}>{member.email}</span>
+                      </div>
+                      <button
+                        className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                        onClick={() => handleRemoveJury(member.id)}
+                        disabled={removeJuryMutation.isPending}
+                        title="Remove from jury"
+                      >
+                        {removeJuryMutation.isPending &&
+                        removeJuryMutation.variables?.userId === member.id
+                          ? "Removing…"
+                          : "Remove"}
+                      </button>
                     </div>
-                    <div className={styles.info}>
-                      <span className={styles.name}>
-                        {member.first_name} {member.last_name}
-                      </span>
-                      <span className={styles.email}>{member.email}</span>
-                    </div>
-                    <button
-                      className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                      onClick={() => handleRemoveJury(member.id)}
-                      disabled={removeJuryMutation.isPending}
-                      title="Remove from jury"
-                    >
-                      {removeJuryMutation.isPending &&
-                      removeJuryMutation.variables?.userId === member.id
-                        ? "Removing…"
-                        : "Remove"}
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                {juryMeta && (
+                  <Pagination
+                    page={juryCurrentPage}
+                    totalPages={juryMeta.pages}
+                    onPageChange={setJuryPage}
+                    pageSize={juryPageSize}
+                    onPageSizeChange={setJuryPageSize}
+                    totalItems={juryMeta.total}
+                  />
+                )}
+              </>
             ) : (
               <div className={styles.empty}>
-                {searchJury.trim()
+                {jurySearch.trim()
                   ? "No jury members match your search"
                   : "No jury assigned yet"}
               </div>
@@ -223,14 +244,17 @@ export default function AdminJury() {
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>
-                Available Users ({nonJuryUsers.length})
+                Available Users
               </h2>
               <input
                 type="text"
                 placeholder="Search users..."
                 className={styles.searchInput}
-                value={searchUsers}
-                onChange={(e) => setSearchUsers(e.target.value)}
+                value={usersSearch}
+                onChange={(e) => {
+                  setUsersSearch(e.target.value);
+                  setUsersPage(1);
+                }}
               />
             </div>
 
@@ -238,42 +262,54 @@ export default function AdminJury() {
               <div className={styles.loading}>Loading users…</div>
             ) : filteredUsers.length === 0 ? (
               <div className={styles.empty}>
-                {searchUsers.trim()
+                {usersSearch.trim()
                   ? "No users match your search"
                   : "No available users"}
               </div>
             ) : (
-              <div className={styles.list}>
-                {filteredUsers.map((user) => (
-                  <div key={user.id} className={styles.card}>
-                    <div className={styles.avatar}>
-                      {(user.first_name?.[0] || "") +
-                        (user.last_name?.[0] || "")}
+              <>
+                <div className={styles.list}>
+                  {filteredUsers.map((user) => (
+                    <div key={user.id} className={styles.card}>
+                      <div className={styles.avatar}>
+                        {(user.first_name?.[0] || "") +
+                          (user.last_name?.[0] || "")}
+                      </div>
+                      <div className={styles.info}>
+                        <span className={styles.name}>
+                          {user.first_name} {user.last_name}
+                        </span>
+                        <span className={styles.email}>{user.email}</span>
+                      </div>
+                      <button
+                        className={styles.addBtn}
+                        onClick={() =>
+                          addJuryMutation.mutate({
+                            userId: user.id,
+                            tournamentId: Number(selectedTournament),
+                          })
+                        }
+                        disabled={addJuryMutation.isPending}
+                      >
+                        {addJuryMutation.isPending &&
+                        addJuryMutation.variables?.userId === user.id
+                          ? "Adding…"
+                          : "Add to Jury"}
+                      </button>
                     </div>
-                    <div className={styles.info}>
-                      <span className={styles.name}>
-                        {user.first_name} {user.last_name}
-                      </span>
-                      <span className={styles.email}>{user.email}</span>
-                    </div>
-                    <button
-                      className={styles.addBtn}
-                      onClick={() =>
-                        addJuryMutation.mutate({
-                          userId: user.id,
-                          tournamentId: Number(selectedTournament),
-                        })
-                      }
-                      disabled={addJuryMutation.isPending}
-                    >
-                      {addJuryMutation.isPending &&
-                      addJuryMutation.variables?.userId === user.id
-                        ? "Adding…"
-                        : "Add to Jury"}
-                    </button>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                {usersMeta && (
+                  <Pagination
+                    page={usersCurrentPage}
+                    totalPages={usersMeta.pages}
+                    onPageChange={setUsersPage}
+                    pageSize={usersPageSize}
+                    onPageSizeChange={setUsersPageSize}
+                    totalItems={usersMeta.total}
+                  />
+                )}
+              </>
             )}
           </div>
         </>

@@ -107,7 +107,6 @@ const AdminTournaments = lazy(() => import("@/pages/dashboard/admin/tournaments/
 const AdminTeams = lazy(() => import("@/pages/dashboard/admin/teams/AdminTeams"));
 const AdminJury = lazy(() => import("@/pages/dashboard/admin/jury/AdminJury"));
 const AdminTasks = lazy(() => import("@/pages/dashboard/admin/tasks/AdminTasks"));
-const AdminRounds = lazy(() => import("@/pages/dashboard/admin/rounds/AdminRounds"));
 const AdminSubmissions = lazy(() => import("@/pages/dashboard/admin/submissions/AdminSubmissions"));
 
 const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
@@ -125,7 +124,7 @@ const CreateTeamSuccess = lazy(() => import("@/pages/dashboard/participant/Creat
 
 const OrganizerDashboard = lazy(() => import("@/pages/dashboard/organizer/dashboard/OrganizerDashboard"));
 const OrganizerTournaments = lazy(() => import("@/pages/dashboard/organizer/tournaments/OrganizerTournaments"));
-const OrganizerTasks = lazy(() => import("@/pages/dashboard/organizer/tasks/OrganizerTasks"))
+const OrganizerTasks = lazy(() => import("@/pages/dashboard/organizer/tasks/OrganizerTasks"));
 const OrganizerTeams = lazy(() => import("@/pages/dashboard/organizer/teams/OrganizerTeams"));
 
 const wrap = (node: ReactNode) => (
@@ -173,10 +172,9 @@ const router = createBrowserRouter([
                       { path: "/app/admin", element: wrap(<AdminDashboard />) },
                       { path: "/app/admin/tournaments", element: wrap(<AdminTournaments />) },
                       { path: "/app/admin/teams", element: wrap(<AdminTeams />) },
-                      { path: "/app/admin/rounds", element: wrap(<AdminRounds />) },
-                      { path: "/app/admin/jury", element: wrap(<AdminJury />) },
                       { path: "/app/admin/tasks", element: wrap(<AdminTasks />) },
                       { path: "/app/admin/submissions", element: wrap(<AdminSubmissions />) },
+                      { path: "/app/admin/jury", element: wrap(<AdminJury />) },
                       { path: "/app/admin/*", element: <Navigate to="/app/admin" replace /> },
                     ],
                   },
@@ -185,8 +183,8 @@ const router = createBrowserRouter([
                     children: [
                       { path: "/app/organizer", element: wrap(<OrganizerDashboard />) },
                       { path: "/app/organizer/tournaments", element: wrap(<OrganizerTournaments />) },
-                      { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />)},
-                      { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />)},
+                      { path: "/app/organizer/tasks", element: wrap(<OrganizerTasks />) },
+                      { path: "/app/organizer/teams", element: wrap(<OrganizerTeams />) },
                       { path: "/app/organizer/*", element: <Navigate to="/app/organizer" replace /> },
                     ],
                   },

@@ -73,15 +73,15 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   className={styles.actionCard}
-                  onClick={() => navigate("/app/admin/rounds")}
+                  onClick={() => navigate("/app/admin/tasks")}
                 >
                   <div className={styles.actionIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
+                      <path d="M9 11l3 3L22 4" />
+                      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
                     </svg>
                   </div>
-                  <span className={styles.actionLabel}>Manage Rounds</span>
+                  <span className={styles.actionLabel}>Manage Tasks</span>
                 </button>
                 <button
                   className={styles.actionCard}
@@ -93,18 +93,6 @@ export default function AdminDashboard() {
                     </svg>
                   </div>
                   <span className={styles.actionLabel}>Manage Jury</span>
-                </button>
-                <button
-                  className={styles.actionCard}
-                  onClick={() => navigate("/app/admin/tasks")}
-                >
-                  <div className={styles.actionIcon}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 11l3 3L22 4" />
-                      <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
-                    </svg>
-                  </div>
-                  <span className={styles.actionLabel}>Manage Tasks</span>
                 </button>
                 <button
                   className={styles.actionCard}
