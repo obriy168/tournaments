@@ -2,17 +2,20 @@ from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
+from enums.role_enum import RoleEnum
 from enums.task_status_enum import TaskStatus
 from routes.models.user_session import UserSession
+from routes.models.pagination_response import PaginatedResponse
 from services.models.pagination_model import PaginationModel
 from services.models.task_model import TaskModel
 from services.task_service import TaskService
 from util.access.task_access import TaskAccess
+from util.access.role_required import RoleRequired
 from util.auth import validate_session
 
 task_router = APIRouter(prefix="/tasks", tags=["tasks"])
 
-@task_router.get("/{task_id}")
+@task_router.get("/task/{task_id}")
 async def get_task_by_id(task_id: int, 
                          tasks_service: Annotated[TaskService, Depends(TaskService)],
                          user_session: Annotated[UserSession, Depends(validate_session)]):
@@ -21,12 +24,18 @@ async def get_task_by_id(task_id: int,
         raise HTTPException(status_code=404, detail="Task not found")
     return task
 
-@task_router.get("/")
+@task_router.get("/search")
 async def search_task(tasks_service: Annotated[TaskService, Depends(TaskService)],
                       pagination: Annotated[PaginationModel, Depends()],
                       user_session: Annotated[UserSession, Depends(validate_session)],
                       text: Optional[str] = Query(None), status: Optional[TaskStatus] = Query(None)):
     return await tasks_service.search_task(text=text, status=status, pagination=pagination)
+
+@task_router.get("/pagination")
+async def get_all_tasks_pagination(tasks_service: Annotated[TaskService, Depends(TaskService)],
+                                   pagination: Annotated[PaginationModel, Depends()],
+                                   user_session: Annotated[UserSession, Depends(RoleRequired([RoleEnum.ADMIN]))]):
+    return await tasks_service.get_all_tasks_pagination(pagination)
 
 @task_router.post("/")
 async def create_task(task: TaskModel, 

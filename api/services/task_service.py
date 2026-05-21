@@ -30,6 +30,19 @@ class TaskService:
             }
         }
     
+    async def get_all_tasks_pagination(self, pagination: PaginationModel):
+        task, total_count = await self.task_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": task,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+
     async def create_task(self, task: TaskModel) -> Task:
         data = task.model_dump(exclude={"id"})
         Task_entity = Task(**data)
