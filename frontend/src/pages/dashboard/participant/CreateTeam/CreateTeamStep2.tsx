@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useUserLookup } from "@/features/users/hooks/useUserLookup";
+import { useUserLookup, useInvalidateUserLookup } from "@/features/users/hooks/useUserLookup";
 import styles from "./CreateTeam.module.css";
 
 const memberSchema = z.object({
@@ -39,6 +39,7 @@ function getNextId(members: TeamMember[]): number {
 export default function CreateTeamStep2() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const invalidateLookup = useInvalidateUserLookup();
 
   const initialMembers = getInitialMembers();
   const [members, setMembers] = useState<TeamMember[]>(initialMembers);
@@ -98,12 +99,13 @@ export default function CreateTeamStep2() {
         setError(
           `User ${lookupEmail} is not registered. Ask them to sign up first, then add them again.`
         );
+        invalidateLookup(lookupEmail);
       }
 
       setLookupEmail(null);
       setPendingData(null);
     }
-  }, [lookupEmail, isLookingUp, foundUser, pendingData, reset]);
+  }, [lookupEmail, isLookingUp, foundUser, pendingData, reset, invalidateLookup]);
 
   const onAddMember = useCallback(
     (data: MemberData) => {
@@ -121,6 +123,8 @@ export default function CreateTeamStep2() {
         setError("You are already the team lead.");
         return;
       }
+
+      processedEmail.current = null;
 
       setPendingData(data);
       setLookupEmail(data.email);

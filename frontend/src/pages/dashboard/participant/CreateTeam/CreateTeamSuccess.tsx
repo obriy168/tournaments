@@ -1,10 +1,30 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { myTeamsKeys } from "@/features/teams/hooks/useMyTeams";
 import styles from "./CreateTeam.module.css";
 
 export default function CreateTeamSuccess() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const checkTeam = useAuthStore((s) => s.checkTeam);
+
+  useEffect(() => {
+    const refresh = async () => {
+      await queryClient.invalidateQueries({ queryKey: myTeamsKeys.all });
+      if (user) {
+        await queryClient.refetchQueries({ 
+          queryKey: myTeamsKeys.list(user.id),
+          exact: true
+        });
+      }
+      await checkTeam();
+    };
+    refresh();
+  }, [queryClient, user, checkTeam]);
 
   return (
     <div className={styles.container}>

@@ -24,6 +24,7 @@ from services.models.task_assigment_model import TaskAssigmentModel
 
 from pwdlib import PasswordHash
 from sqlalchemy import select
+import itertools
 
 fake = Faker()
 
@@ -53,11 +54,13 @@ class TeamFactory(ModelFactory[TeamModel]):
     city = Use(fake.city)
     organization = Use(fake.company)
 
+email_counter = itertools.count(1)
+
 class UserFactory(ModelFactory[UserModel]):
     __model__ = UserModel
     first_name = Use(fake.first_name)
     last_name = Use(fake.last_name)
-    email = Use(fake.unique.email)
+    email = Use(lambda: f"{fake.first_name().lower()}.{fake.last_name().lower()}{next(email_counter)}@skyline.com")
     password = Use(lambda: hash_password("12345678"))
 
 class TaskFactory(ModelFactory[TaskModel]):

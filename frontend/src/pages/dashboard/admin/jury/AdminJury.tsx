@@ -1,5 +1,6 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { usePagination } from "@/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   getUsersByRole,
@@ -7,7 +8,6 @@ import {
   searchUsers,
   type User,
 } from "@/services/api";
-import { usePagination } from "@/hooks/usePagination";
 import Pagination from "@/components/Pagination/Pagination";
 import styles from "./AdminJury.module.css";
 
@@ -160,6 +160,8 @@ export default function AdminJury() {
             setSelectedTournament(value ? Number(value) : "");
             setJurySearch("");
             setUsersSearch("");
+            setJuryPage(1);
+            setUsersPage(1);
           }}
         >
           <option value="">Choose a tournament...</option>

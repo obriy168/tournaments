@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.schemas.schema import User
@@ -12,8 +12,12 @@ class UserRepository(BaseRepository[User]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
         super().__init__(model=User, db=db)
 
-    async def get_user_by_email(self, email: str):
+    async def get_user_by_email(self, email: str) -> User | None:
         query = select(User).where(User.email == email)
         result = await self.db.execute(query)
-        return result.scalars().first()
+        return result.scalar_one_or_none()
     
+    async def users_count(self):
+        query = select(func.count(User.id))
+        result = await self.db.execute(query)
+        return result.scalar_one()

@@ -26,6 +26,7 @@ export default function CreateTeamStep3() {
   const [validationError, setValidationError] = useState<string | null>(
     null
   );
+  const [search, setSearch] = useState("");
 
   const tournaments = useMemo(() => {
     if (!allTournaments) return [];
@@ -41,6 +42,16 @@ export default function CreateTeamStep3() {
           new Date(b.registration_end_date).getTime()
       );
   }, [allTournaments]);
+
+  const filteredTournaments = useMemo(() => {
+    if (!search.trim()) return tournaments;
+    const q = search.toLowerCase();
+    return tournaments.filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        t.description.toLowerCase().includes(q)
+    );
+  }, [tournaments, search]);
 
   const selectedTournament = useMemo(
     () => tournaments.find((t) => t.id === selectedTournamentId),
@@ -130,19 +141,42 @@ export default function CreateTeamStep3() {
                 </p>
               </div>
             ) : (
-              <div className={styles.tournamentList}>
-                {tournaments.map((t) => (
-                  <TournamentOption
-                    key={t.id}
-                    tournament={t}
-                    selected={selectedTournamentId === t.id}
-                    onSelect={() => {
-                      setSelectedTournamentId(t.id);
+              <>
+                <div className={styles.searchField}>
+                  <input
+                    type="text"
+                    placeholder="Search tournaments by name or description..."
+                    className={styles.input}
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setSelectedTournamentId(null);
                       setValidationError(null);
                     }}
+                    autoComplete="off"
                   />
-                ))}
-              </div>
+                </div>
+
+                <div className={styles.tournamentList}>
+                  {filteredTournaments.map((t) => (
+                    <TournamentOption
+                      key={t.id}
+                      tournament={t}
+                      selected={selectedTournamentId === t.id}
+                      onSelect={() => {
+                        setSelectedTournamentId(t.id);
+                        setValidationError(null);
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {search.trim() && filteredTournaments.length === 0 && (
+                  <p className={styles.emptyText} style={{ marginTop: 16 }}>
+                    No tournaments match your search.
+                  </p>
+                )}
+              </>
             )}
 
             {selectedTournament && (

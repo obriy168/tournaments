@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { usePagination } from "@/features/Pagination/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   useTasksByTournament,
@@ -55,6 +56,19 @@ export default function AdminTasks() {
     return res;
   }, [tasks, filter, search]);
 
+  const {
+    currentPage,
+    itemsPerPage,
+    totalItems,
+    totalPages,
+    startIndex,
+    endIndex,
+    paginatedData,
+    goToPage,
+    setItemsPerPage,
+    resetPage,
+  } = usePagination({ data: filteredTasks, defaultPerPage: 15, maxPerPage: 15 });
+
   const handleDelete = useCallback((id: number, name: string) => {
     if (!window.confirm(`Are you sure you want to delete task "${name}"?`)) return;
     deleteMutation.mutate(id);
@@ -82,6 +96,22 @@ export default function AdminTasks() {
     if (selectedTournament === "all") return null;
     return tournaments?.find(t => t.id === Number(selectedTournament))?.name;
   }, [selectedTournament, tournaments]);
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    for (let i = 1; i <= totalPages; i++) {
+      if (
+        i === 1 ||
+        i === totalPages ||
+        (i >= currentPage - 2 && i <= currentPage + 2)
+      ) {
+        pages.push(i);
+      } else if (pages[pages.length - 1] !== "...") {
+        pages.push("...");
+      }
+    }
+    return pages;
+  };
 
   return (
     <div className={styles.container}>
@@ -113,6 +143,7 @@ export default function AdminTasks() {
               setSelectedTournament(value === "all" ? "all" : Number(value));
               setSearch("");
               setFilter("All");
+              resetPage();
             }}
           >
             <option value="all">Select a tournament</option>
@@ -132,7 +163,10 @@ export default function AdminTasks() {
                   <button
                     key={f}
                     className={`${styles.filterBtn} ${filter === f ? styles.filterBtnActive : ""}`}
-                    onClick={() => setFilter(f)}
+                    onClick={() => {
+                      setFilter(f);
+                      resetPage();
+                    }}
                   >
                     {f === "SubmissionClosed" ? "Closed" : f}
                   </button>
@@ -145,7 +179,10 @@ export default function AdminTasks() {
               placeholder="Search tasks..."
               className={styles.searchInput}
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                resetPage();
+              }}
             />
           </>
         )}
@@ -157,70 +194,135 @@ export default function AdminTasks() {
         </div>
       ) : tournamentsLoading || isLoading ? (
         <div className={styles.loading}>Loading tasks…</div>
-      ) : filteredTasks.length === 0 ? (
-        <div className={styles.empty}>No tasks found for this tournament</div>
+      ) : paginatedData.length === 0 ? (
+        <div className={styles.empty}>No tasks found</div>
       ) : (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Period</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTasks.map((t) => {
-                const nextStatus = getNextStatus(t.status);
-                return (
-                  <tr key={t.id}>
-                    <td>
-                      <div className={styles.cellName}>{t.name}</div>
-                      <div className={styles.cellDesc}>{t.description}</div>
-                    </td>
-                    <td>
-                      <span className={`${styles.status} ${styles[`status${t.status}`]}`}>
-                        {t.status === "SubmissionClosed" ? "Closed" : t.status}
-                      </span>
-                    </td>
-                    <td>
-                      {new Date(t.start_date).toLocaleDateString()} —{" "}
-                      {new Date(t.end_date).toLocaleDateString()}
-                    </td>
-                    <td>
-                      <div className={styles.actions}>
-                        <button className={styles.actionBtn} onClick={() => openEdit(t)} title="Edit">
-                          Edit
-                        </button>
-                        {nextStatus && (
+        <>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Status</th>
+                  <th>Period</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedData.map((t) => {
+                  const nextStatus = getNextStatus(t.status);
+                  return (
+                    <tr key={t.id}>
+                      <td>
+                        <div className={styles.cellName}>{t.name}</div>
+                        <div className={styles.cellDesc}>{t.description}</div>
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.status} ${
+                            styles[`status${t.status}`]
+                          }`}
+                        >
+                          {t.status === "SubmissionClosed" ? "Closed" : t.status}
+                        </span>
+                      </td>
+                      <td>
+                        {new Date(t.start_date).toLocaleDateString()} —{" "}
+                        {new Date(t.end_date).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <div className={styles.actions}>
                           <button
-                            className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
-                            onClick={() => handleStatusChange(t.id, nextStatus)}
-                            disabled={statusMutation.isPending}
-                            title={`Change to ${nextStatus}`}
+                            className={styles.actionBtn}
+                            onClick={() => openEdit(t)}
+                            title="Edit"
                           >
-                            {nextStatus === "Active" ? "Start" : nextStatus === "SubmissionClosed" ? "Close" : "Finish"}
+                            Edit
                           </button>
-                        )}
-                        {t.status === "Draft" && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                            onClick={() => handleDelete(t.id, t.name)}
-                            disabled={deleteMutation.isPending}
-                            title="Delete"
-                          >
-                            Delete
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                          {nextStatus && (
+                            <button
+                              className={`${styles.actionBtn} ${styles.actionBtnSuccess}`}
+                              onClick={() =>
+                                handleStatusChange(t.id, nextStatus)
+                              }
+                              disabled={statusMutation.isPending}
+                              title={`Change to ${nextStatus}`}
+                            >
+                              {nextStatus === "Active"
+                                ? "Start"
+                                : nextStatus === "SubmissionClosed"
+                                ? "Close"
+                                : "Finish"}
+                            </button>
+                          )}
+                          {t.status === "Draft" && (
+                            <button
+                              className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                              onClick={() => handleDelete(t.id, t.name)}
+                              disabled={deleteMutation.isPending}
+                              title="Delete"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <div className={styles.pagination}>
+            <div className={styles.paginationInfo}>
+              Showing <b>{startIndex + 1}</b>–<b>{endIndex}</b> of <b>{totalItems}</b>
+              <select
+                className={styles.perPageSelect}
+                value={itemsPerPage}
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              >
+                <option value={5}>5 / page</option>
+                <option value={10}>10 / page</option>
+                <option value={15}>15 / page</option>
+              </select>
+            </div>
+
+            <div className={styles.paginationControls}>
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === 1}
+                onClick={() => goToPage(currentPage - 1)}
+              >
+                ← Prev
+              </button>
+
+              {getPageNumbers().map((p, i) =>
+                p === "..." ? (
+                  <span key={`dots-${i}`} className={styles.pageDots}>…</span>
+                ) : (
+                  <button
+                    key={p}
+                    className={`${styles.pageBtn} ${
+                      currentPage === p ? styles.pageBtnActive : ""
+                    }`}
+                    onClick={() => goToPage(p as number)}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                className={styles.pageBtn}
+                disabled={currentPage === totalPages}
+                onClick={() => goToPage(currentPage + 1)}
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {modalOpen && selectedTournament !== "all" && (

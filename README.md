@@ -17,16 +17,22 @@ Ensure you have the following tools installed on your system:
 
 Follow these steps to set up the project environment:
 
-### 1. Prepare configuration
+### 1. Open folder where project was cloned in terminal
+
+Please, note that:
+- all commands should be run in the same terminal window one-by-one
+- all commands should be run from the root folder of the project where `.env.example` file is located.
+
+### 2. Prepare configuration
 Initialize your environment variables by copying the example file:
 ```bash
 cp .env.example .env
 ```
 
-### 2. Configuration
+### 3. Configuration
 Open the newly created `.env` file and set a secure password for the `POSTGRES_PASSWORD` variable.
 
-### 3. Deployment
+### 4. Deployment
 Build and launch the application services:
 ```bash
 docker compose up --build

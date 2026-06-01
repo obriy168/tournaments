@@ -101,8 +101,8 @@ function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
       return [
         { to: "/app/organizer", label: "Dashboard", end: true },
         { to: "/app/organizer/tournaments", label: "Tournament", end: false },
-        { to: "/app/organizer/tasks", label: "Tasks", end: false },
-        { to: "/app/organizer/submissions", label: "Submissions", end: false },
+        { to: "/app/organizer/tasks", label: "Tasks", end: false},
+      //  { to: "/app/organizer/submissions", label: "Submissions", end: false },
         { to: "/app/organizer/teams", label: "Teams", end: false },
       ];
     case "jury":

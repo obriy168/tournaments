@@ -24,10 +24,11 @@ async def get_user(user_id: int, users_service: Annotated[UserService, Depends(U
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@user_router.get("/email/", response_model=UserTeamResponse)
+@user_router.get("/email/", response_model=UserTeamResponse | None)
 async def get_user_by_email(email: str, users_service: Annotated[UserService, Depends(UserService)],
                             user_session: Annotated[UserSession, Depends(validate_session)]):
-    return await users_service.get_user_by_email(email)
+    user = await users_service.get_user_by_email(email)
+    return user
 
 @user_router.get("/", response_model=list[LoginResponse])
 async def get_all_users(users_service: Annotated[UserService, Depends(UserService)],
@@ -50,7 +51,7 @@ async def search_tournament(users_service: Annotated[UserService, Depends(UserSe
 async def create_user(user: UserModel, users_service: Annotated[UserService, Depends(UserService)]):
     return await users_service.create_user(user)
 
-@user_router.delete("")
+@user_router.delete("/")
 async def delete_user(user_id: int, users_service: Annotated[UserService, Depends(UserService)],
                       user_session: Annotated[UserSession, Depends(validate_session)]):
     if not user_session.is_admin and user_session.user_id != user_id:

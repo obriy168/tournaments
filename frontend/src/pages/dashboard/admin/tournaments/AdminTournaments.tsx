@@ -38,13 +38,18 @@ export default function AdminTournaments() {
   }, [setPage]);
 
   const handleDelete = useCallback((id: number) => {
-    if (!window.confirm("Delete this tournament?")) return;
+    if (!window.confirm("Are you sure you want to delete this tournament?")) return;
     deleteMutation.mutate(id);
   }, [deleteMutation]);
 
   const handleStatusChange = useCallback((id: number, status: Tournament["status"]) => {
     statusMutation.mutate({ id, status });
   }, [statusMutation]);
+
+  const openEdit = useCallback((t: Tournament) => {
+    setEditingTournament(t);
+    setModalOpen(true);
+  }, []);
 
   return (
     <div className={styles.container}>
@@ -128,10 +133,8 @@ export default function AdminTournaments() {
                       <div className={styles.actions}>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => {
-                            setEditingTournament(t);
-                            setModalOpen(true);
-                          }}
+                          onClick={() => openEdit(t)}
+                          title="Edit"
                         >
                           Edit
                         </button>
@@ -141,6 +144,7 @@ export default function AdminTournaments() {
                           onChange={(e) =>
                             handleStatusChange(t.id, e.target.value as Tournament["status"])
                           }
+                          title="Change status"
                         >
                           <option value="Draft">Draft</option>
                           <option value="Registration">Registration</option>
@@ -150,6 +154,7 @@ export default function AdminTournaments() {
                         <button
                           className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                           onClick={() => handleDelete(t.id)}
+                          title="Delete"
                         >
                           Delete
                         </button>

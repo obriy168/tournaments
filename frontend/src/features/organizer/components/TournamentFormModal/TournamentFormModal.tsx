@@ -214,7 +214,7 @@ export default function TournamentFormModal({ tournament, onClose }: Props) {
             </div>
           </div>
 
-          <div className={styles.footer}>
+          <div className={styles.actions}>
             <button type="button" className={styles.btnSecondary} onClick={onClose}>
               Cancel
             </button>

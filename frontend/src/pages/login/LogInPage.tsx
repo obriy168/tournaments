@@ -4,6 +4,7 @@ import { z } from "zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
 import { resetSessionExpired } from "@/services/api";
 import styles from "@/features/auth/components/Auth.module.css";
@@ -42,10 +43,20 @@ export default function LogInPage() {
     clearErrors("root");
     try {
       const user = await login(data.email, data.password);
-      const rolePath = user.role === "captain" ? "participant" : user.role;
+      
       const state = location.state as LocationState | null;
-      const from = state?.from?.pathname || `/app/${rolePath}`;
-      navigate(from, { replace: true });
+      const from = state?.from?.pathname;
+      
+      if (from) {
+        navigate(from, { replace: true });
+        return;
+      }
+
+      const { activeRole } = useAuthStore.getState();
+      const effectiveRole = activeRole || user.role;
+      const rolePath = effectiveRole === "captain" ? "participant" : effectiveRole;
+      
+      navigate(`/app/${rolePath}`, { replace: true });
     } catch (err: unknown) {
       setError("root", { type: "manual", message: getAuthErrorMessage(err) });
     }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useTeamsPaginated } from "@/features/teams/hooks/useTeams";
 import { useDeleteTeam } from "@/features/teams/hooks/useDeleteTeam";
 import TeamViewModal from "@/features/admin/components/TeamViewModal/TeamViewModal";
@@ -20,10 +20,10 @@ export default function AdminTeams() {
     setPageSize,
   } = useTeamsPaginated(search);
 
-  const handleDelete = (id: number, name: string) => {
+  const handleDelete = useCallback((id: number, name: string) => {
     if (!window.confirm(`Delete team "${name}"?`)) return;
     deleteMutation.mutate(id);
-  };
+  }, [deleteMutation]);
 
   return (
     <div className={styles.container}>
@@ -71,19 +71,17 @@ export default function AdminTeams() {
                         <button
                           className={styles.actionBtn}
                           onClick={() => setViewingTeamId(team.id)}
+                          title="View team details"
                         >
                           View
                         </button>
                         <button
                           className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
                           onClick={() => handleDelete(team.id, team.name)}
-                          disabled={
-                            deleteMutation.isPending &&
-                            deleteMutation.variables === team.id
-                          }
+                          disabled={deleteMutation.isPending && deleteMutation.variables === team.id}
+                          title="Delete team"
                         >
-                          {deleteMutation.isPending &&
-                          deleteMutation.variables === team.id
+                          {deleteMutation.isPending && deleteMutation.variables === team.id
                             ? "Deleting…"
                             : "Delete"}
                         </button>
