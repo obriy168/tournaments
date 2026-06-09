@@ -2,6 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import EyeToggle from "@/components/EyeToggle/EyeToggle";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { registerUser } from "@/services/api";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
@@ -11,7 +13,7 @@ const registerSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   accepted_terms: z.boolean().refine((val) => val === true, {
     message: "You must accept the Terms of Use and Privacy Policy",
   }),
@@ -20,6 +22,7 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function SignUpPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -49,7 +52,8 @@ export default function SignUpPage() {
       navigate(`/app/${rolePath}`, { replace: true });
     } catch {
       setError("root", {
-        message: "Account created, but automatic login failed. Please log in manually.",
+        message:
+          "Account created, but automatic login failed. Please log in manually.",
       });
     }
   };
@@ -65,7 +69,11 @@ export default function SignUpPage() {
           </p>
         )}
 
-        <form className={styles.auth__form} onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form
+          className={styles.auth__form}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div className={styles.auth__field__row}>
             <div style={{ flex: 1 }}>
               <input
@@ -76,12 +84,18 @@ export default function SignUpPage() {
                 disabled={isSubmitting}
                 aria-label="First name"
                 aria-invalid={!!errors.first_name}
-                aria-describedby={errors.first_name ? "first_name-error" : undefined}
+                aria-describedby={
+                  errors.first_name ? "first_name-error" : undefined
+                }
                 className={`${styles.auth__input} ${errors.first_name ? styles.auth__inputError : ""}`}
                 {...register("first_name")}
               />
               {errors.first_name && (
-                <span id="first_name-error" role="alert" className={styles.fieldError}>
+                <span
+                  id="first_name-error"
+                  role="alert"
+                  className={styles.fieldError}
+                >
                   {errors.first_name.message}
                 </span>
               )}
@@ -94,12 +108,18 @@ export default function SignUpPage() {
                 disabled={isSubmitting}
                 aria-label="Last name"
                 aria-invalid={!!errors.last_name}
-                aria-describedby={errors.last_name ? "last_name-error" : undefined}
+                aria-describedby={
+                  errors.last_name ? "last_name-error" : undefined
+                }
                 className={`${styles.auth__input} ${errors.last_name ? styles.auth__inputError : ""}`}
                 {...register("last_name")}
               />
               {errors.last_name && (
-                <span id="last_name-error" role="alert" className={styles.fieldError}>
+                <span
+                  id="last_name-error"
+                  role="alert"
+                  className={styles.fieldError}
+                >
                   {errors.last_name.message}
                 </span>
               )}
@@ -126,19 +146,37 @@ export default function SignUpPage() {
           </div>
 
           <div className={styles.auth__field}>
-            <input
-              id="password"
-              type="password"
-              placeholder="Password"
-              disabled={isSubmitting}
-              aria-label="Password"
-              aria-invalid={!!errors.password}
-              aria-describedby={errors.password ? "password-error" : undefined}
-              className={`${styles.auth__input} ${errors.password ? styles.auth__inputError : ""}`}
-              {...register("password")}
-            />
+            <div className={styles.passwordWrapper}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                disabled={isSubmitting}
+                aria-label="Password"
+                aria-invalid={!!errors.password}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
+                className={`${styles.auth__input} ${styles.auth__inputPassword} ${errors.password ? styles.auth__inputError : ""}`}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                disabled={isSubmitting}
+                className={styles.eyeButton}
+              >
+                <EyeToggle visible={showPassword} />
+              </button>
+            </div>
             {errors.password && (
-              <span id="password-error" role="alert" className={styles.fieldError}>
+              <span
+                id="password-error"
+                role="alert"
+                className={styles.fieldError}
+              >
                 {errors.password.message}
               </span>
             )}
@@ -152,7 +190,9 @@ export default function SignUpPage() {
                 type="checkbox"
                 disabled={isSubmitting}
                 aria-invalid={!!errors.accepted_terms}
-                aria-describedby={errors.accepted_terms ? "terms-error" : undefined}
+                aria-describedby={
+                  errors.accepted_terms ? "terms-error" : undefined
+                }
                 {...register("accepted_terms")}
               />
               <span>
@@ -161,7 +201,11 @@ export default function SignUpPage() {
                   Terms of Use
                 </Link>{" "}
                 and{" "}
-                <Link to="/privacy" target="_blank" className={styles.auth__link}>
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  className={styles.auth__link}
+                >
                   Privacy and Cookie Policy
                 </Link>
               </span>
