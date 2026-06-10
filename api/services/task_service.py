@@ -16,6 +16,9 @@ class TaskService:
     async def get_task_by_id(self, task_id: int):
         return await self.task_repository.get_by_id(task_id)
     
+    async def get_tasks_with_details(self, tournament_id: int, team_id: int):
+        return await self.task_repository.get_tasks_with_details(tournament_id, team_id)
+    
     async def search_task(self, text: str | None, status: str | None, pagination: PaginationModel):
         tasks, total_count = await self.task_repository.get_filtered_paginated(
             search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Task.name, Task.description, Task.specifications])

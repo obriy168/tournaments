@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from enums.role_enum import RoleEnum
 from enums.task_status_enum import TaskStatus
 from routes.models.user_session import UserSession
-from routes.models.pagination_response import PaginatedResponse
+from routes.models.tasks_full_response import TasksDetailedResponse
 from services.models.pagination_model import PaginationModel
 from services.models.task_model import TaskModel
 from services.task_service import TaskService
@@ -23,6 +23,12 @@ async def get_task_by_id(task_id: int,
     if task is None:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
+
+@task_router.get("/tournament/{tournament_id}/team/{team_id}", response_model=list[TasksDetailedResponse])
+async def get_tasks_with_details(tournament_id: int, team_id: int, 
+                                 tasks_service: Annotated[TaskService, Depends(TaskService)],
+                                 user_session: Annotated[UserSession, Depends(validate_session)]):
+    return await tasks_service.get_tasks_with_details(tournament_id, team_id)
 
 @task_router.get("/search")
 async def search_task(tasks_service: Annotated[TaskService, Depends(TaskService)],
