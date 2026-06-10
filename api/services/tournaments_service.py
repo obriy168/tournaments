@@ -1,8 +1,13 @@
-from repositories.tournament_repository import TournamentRepository
-from database.schemas.schema import Tournament, TournamentStatus
-from services.models.tournament_model import TournamentModel
+import math
+
 from typing import Annotated
+
 from fastapi import Depends
+
+from database.schemas.schema import Tournament, TournamentStatus
+from repositories.tournament_repository import TournamentRepository
+from services.models.pagination_model import PaginationModel
+from services.models.tournament_model import TournamentModel
 
 class TournamentsService:
     def __init__(self, tournament_repository: Annotated[TournamentRepository, Depends(TournamentRepository)]):
@@ -13,6 +18,33 @@ class TournamentsService:
     
     async def get_tournament_by_id(self, tournament_id: int):
         return await self.tournament_repository.get_by_id(tournament_id)
+
+    async def get_all_tournaments_pagination(self, pagination: PaginationModel):
+        tournaments, total_count = await self.tournament_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": tournaments,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
+    async def search_tournament(self, text: str | None, status: str | None, pagination: PaginationModel):
+        tournament, total_count = await self.tournament_repository.get_filtered_paginated(
+            search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Tournament.name, Tournament.description])
+        
+        return {
+            "items": tournament,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
 
     async def create_tournament(self, tournament: TournamentModel) -> Tournament:
         data = tournament.model_dump(exclude={"id"})

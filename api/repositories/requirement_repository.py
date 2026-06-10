@@ -1,10 +1,12 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Requirement, RequirementGroup, Task
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import select, delete
+from sqlalchemy.ext.asyncio.session import AsyncSession
+
+from database.schemas.schema import Requirement, RequirementGroup, Task
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class RequirementRepository(BaseRepository[Requirement]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):

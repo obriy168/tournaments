@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
-from services import user_role_service
-from services.errors.user_existed import UserExistedException
-from services.models.user_model import UserModel
-from services.user_service import UserService
-from services.user_role_service import UserRoleService
 from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Response
+
 from routes.models.login_model import LoginModel
 from routes.models.login_response import LoginResponse
-from util.auth import validate_session
-from routes.models.user_session import UserSession
 from routes.models.user_role_model import UserRoleModel
+from routes.models.user_session import UserSession
 
+from services.errors.user_existed import UserExistedException
+from services.models.user_model import UserModel
+from services.user_role_service import UserRoleService
+from services.user_service import UserService
+
+from util.auth import validate_session
 
 auth_router = APIRouter(prefix="/auth", tags=["auth"])
 

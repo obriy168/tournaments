@@ -1,9 +1,11 @@
+from typing import Annotated
+
+from fastapi import Depends
+
+from database.schemas.schema import Evaluation
 from repositories.evaluation_repository import EvaluationRepository
 from repositories.requirement_repository import RequirementRepository
-from database.schemas.schema import Evaluation
 from services.models.evaluation_model import EvaluationModel
-from typing import Annotated
-from fastapi import Depends
 
 class EvaluationService:
     def __init__(self, evaluation_repository: Annotated[EvaluationRepository, Depends(EvaluationRepository)], requirement_repository: Annotated[RequirementRepository, Depends(RequirementRepository)]):

@@ -1,11 +1,13 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import Team
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio.session import AsyncSession
+
+from database.schemas.schema import Team
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class TeamRepository(BaseRepository[Team]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):

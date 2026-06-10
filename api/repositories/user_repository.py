@@ -1,10 +1,12 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from sqlalchemy import select
-from database.schemas.schema import User
 from typing import Annotated
+
 from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.schemas.schema import User
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class UserRepository(BaseRepository[User]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):
@@ -14,7 +16,7 @@ class UserRepository(BaseRepository[User]):
         query = select(User).where(User.email == email)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
-    
+
     async def users_count(self):
         query = select(User)
         result = await self.db.execute(query)

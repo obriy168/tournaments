@@ -1,6 +1,6 @@
-from typing import Annotated
+from fastapi import HTTPException, Security
 from fastapi.security import APIKeyCookie
-from fastapi import Depends, HTTPException, Security
+
 from routes.models.user_session import UserSession
 
 cookie_scheme = APIKeyCookie(name="session_id", auto_error=False)

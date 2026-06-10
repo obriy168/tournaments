@@ -1,14 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException
-from services.teams_service import TeamsService
-from typing import Annotated
+from typing import Annotated, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from routes.models.user_session import UserSession
+from services.models.pagination_model import PaginationModel
 from services.models.team_model import TeamModel, TeamRegistrationModel
+from services.teams_service import TeamsService
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
-from routes.models.user_session import UserSession
 
 team_router = APIRouter(prefix="/teams", tags=["teams"])
 
-@team_router.get("/{team_id}")
+@team_router.get("/team/{team_id}")
 async def get_team_by_id(team_id: int, teams_service: Annotated[TeamsService, Depends(TeamsService)],
                          user_session: Annotated[UserSession, Depends(validate_session)]):
     team = await teams_service.get_team_by_id(team_id)
@@ -18,10 +21,21 @@ async def get_team_by_id(team_id: int, teams_service: Annotated[TeamsService, De
 
 @team_router.get("/")
 async def get_all_teams(teams_service: Annotated[TeamsService, Depends(TeamsService)],
-                         user_session: Annotated[UserSession, Depends(validate_session)]):
+                        user_session: Annotated[UserSession, Depends(validate_session)]):
     teams = await teams_service.get_all_teams()
     return teams
 
+@team_router.get("/pagination")
+async def get_all_teams_pagination(teams_service: Annotated[TeamsService, Depends(TeamsService)],
+                                   pagination: Annotated[PaginationModel, Depends()],
+                                   user_session: Annotated[UserSession, Depends(validate_session)]):
+    return await teams_service.get_all_teams_pagination(pagination)
+
+@team_router.get("/search")
+async def search_tournament(teams_service: Annotated[TeamsService, Depends(TeamsService)],
+                            pagination: Annotated[PaginationModel, Depends()],
+                            text: Optional[str] = Query(None)):
+    return await teams_service.search_teams(text=text, pagination=pagination)
 
 @team_router.post("/")
 async def create_team(team: TeamRegistrationModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],

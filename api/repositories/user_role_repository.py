@@ -1,11 +1,12 @@
-from util.database import get_db
-from sqlalchemy.ext.asyncio.session import AsyncSession
-from database.schemas.schema import UserRole
 from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.schemas.schema import UserRole
 from repositories.base_repository import BaseRepository
+from util.database import get_db
 
 class UserRoleRepository(BaseRepository[UserRole]):
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]):

@@ -1,7 +1,9 @@
-from repositories.user_team_repository import UserTeamRepository
-from database.schemas.schema import UserTeam
 from typing import Annotated
+
 from fastapi import Depends
+
+from database.schemas.schema import UserTeam
+from repositories.user_team_repository import UserTeamRepository
 
 class UserTeamService:
     def __init__(self, user_team_repository: Annotated[UserTeamRepository, Depends(UserTeamRepository)]):

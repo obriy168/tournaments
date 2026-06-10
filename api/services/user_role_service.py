@@ -1,8 +1,10 @@
-from repositories.user_role_repository import UserRoleRepository
-from database.schemas.schema import UserRole
-from services.models.user_role_model import UserRoleModel
 from typing import Annotated
+
 from fastapi import Depends
+
+from database.schemas.schema import UserRole
+from repositories.user_role_repository import UserRoleRepository
+from services.models.user_role_model import UserRoleModel
 
 class UserRoleService:
     def __init__(self, user_role_repository: Annotated[UserRoleRepository, Depends(UserRoleRepository)]):

@@ -1,8 +1,13 @@
-from repositories.task_repository import TaskRepository
-from database.schemas.schema import Task, TaskStatus
-from services.models.task_model import TaskModel
+import math
+
 from typing import Annotated
+
 from fastapi import Depends
+
+from database.schemas.schema import Task, TaskStatus
+from repositories.task_repository import TaskRepository
+from services.models.pagination_model import PaginationModel
+from services.models.task_model import TaskModel
 
 class TaskService:
     def __init__(self, task_repository: Annotated[TaskRepository, Depends(TaskRepository)]):
@@ -11,6 +16,33 @@ class TaskService:
     async def get_task_by_id(self, task_id: int):
         return await self.task_repository.get_by_id(task_id)
     
+    async def search_task(self, text: str | None, status: str | None, pagination: PaginationModel):
+        tasks, total_count = await self.task_repository.get_filtered_paginated(
+            search_text=text, status=status, limit=pagination.limit, offset=pagination.offset, search_fields=[Task.name, Task.description, Task.specifications])
+        
+        return {
+            "items": tasks,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+    
+    async def get_all_tasks_pagination(self, pagination: PaginationModel):
+        task, total_count = await self.task_repository.get_all_paginated(limit=pagination.limit, offset=pagination.offset)
+        
+        return {
+            "items": task,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
+
     async def create_task(self, task: TaskModel) -> Task:
         data = task.model_dump(exclude={"id"})
         Task_entity = Task(**data)

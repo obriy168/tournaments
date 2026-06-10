@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, Query, HTTPException
-from services.requirement_service import RequirementService
-from services.requirement_group_service import RequirementGroupService
-from services.task_service import TaskService
 from typing import Annotated
-from services.models.requirement_model import RequirementModel
-from util.access.tournament_access import TournamentAccess
-from util.access.requirement_access import RequirementAccess
-from util.auth import validate_session
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from routes.models.user_session import UserSession
+from services.models.requirement_model import RequirementModel
+from services.requirement_group_service import RequirementGroupService
+from services.requirement_service import RequirementService
+from services.task_service import TaskService
+from util.access.requirement_access import RequirementAccess
+from util.access.tournament_access import TournamentAccess
+from util.auth import validate_session
 
 requirement_router = APIRouter(prefix="/requirements", tags=["requirements"])
 
