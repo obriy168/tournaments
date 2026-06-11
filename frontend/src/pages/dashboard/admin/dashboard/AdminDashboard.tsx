@@ -1,10 +1,27 @@
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAdminStats } from "@/features/admin/hooks/useAdminStats";
+import { StatCard } from "@/components/StatCard/StatCard";
 import styles from "./AdminDashboard.module.css";
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const { data: stats, isLoading } = useAdminStats();
+
+  const [isReady, setIsReady] = useState(() => window.__skyline_splash_complete !== false);
+
+  useEffect(() => {
+    if (isReady) return;
+
+    const handleReady = () => {
+      setIsReady(true);
+    };
+
+    window.addEventListener("skyline:splash-complete", handleReady);
+    return () => {
+      window.removeEventListener("skyline:splash-complete", handleReady);
+    };
+  }, [isReady]);
 
   return (
     <div className={styles.container}>
@@ -21,34 +38,45 @@ export default function AdminDashboard() {
         ) : (
           <>
             <div className={styles.statsGrid}>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{stats?.totalTournaments ?? 0}</span>
-                <span className={styles.statLabel}>Total Tournaments</span>
-              </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{stats?.activeTournaments ?? 0}</span>
-                <span className={styles.statLabel}>Active Now</span>
-              </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{stats?.registrationOpen ?? 0}</span>
-                <span className={styles.statLabel}>Open Registration</span>
-              </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{stats?.totalTeams ?? 0}</span>
-                <span className={styles.statLabel}>Total Teams</span>
-              </div>
-              <div className={styles.statCard}>
-                <span className={styles.statValue}>{stats?.totalUsers ?? 0}</span>
-                <span className={styles.statLabel}>Total Users</span>
-              </div>
+              <StatCard
+                value={stats?.totalTournaments ?? 0}
+                label="Total Tournaments"
+                delay={50}
+                duration={2000}
+              />
+              <StatCard
+                value={stats?.activeTournaments ?? 0}
+                label="Active Now"
+                delay={100}
+                duration={2000}
+              />
+              <StatCard
+                value={stats?.registrationOpen ?? 0}
+                label="Open Registration"
+                delay={75}
+                duration={2000}
+              />
+              <StatCard
+                value={stats?.totalTeams ?? 0}
+                label="Total Teams"
+                delay={0}
+                duration={2000}
+              />
+              <StatCard
+                value={stats?.totalUsers ?? 0}
+                label="Total Users"
+                delay={0}
+                duration={2000}
+              />
             </div>
 
             <div className={styles.actionsSection}>
               <h2 className={styles.sectionTitle}>Quick Actions</h2>
-              <div className={styles.actionsGrid}>
+              <div className={`${styles.actionsGrid} ${isReady ? styles.animate : ""}`}>
                 <button
                   className={styles.actionCard}
                   onClick={() => navigate("/app/admin/tournaments")}
+                  type="button"
                 >
                   <div className={styles.actionIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -60,6 +88,7 @@ export default function AdminDashboard() {
                 <button
                   className={styles.actionCard}
                   onClick={() => navigate("/app/admin/teams")}
+                  type="button"
                 >
                   <div className={styles.actionIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -73,30 +102,8 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   className={styles.actionCard}
-                  onClick={() => navigate("/app/admin/rounds")}
-                >
-                  <div className={styles.actionIcon}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10" />
-                      <path d="M12 6v6l4 2" />
-                    </svg>
-                  </div>
-                  <span className={styles.actionLabel}>Manage Rounds</span>
-                </button>
-                <button
-                  className={styles.actionCard}
-                  onClick={() => navigate("/app/admin/jury")}
-                >
-                  <div className={styles.actionIcon}>
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-                    </svg>
-                  </div>
-                  <span className={styles.actionLabel}>Manage Jury</span>
-                </button>
-                <button
-                  className={styles.actionCard}
                   onClick={() => navigate("/app/admin/tasks")}
+                  type="button"
                 >
                   <div className={styles.actionIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -108,7 +115,20 @@ export default function AdminDashboard() {
                 </button>
                 <button
                   className={styles.actionCard}
+                  onClick={() => navigate("/app/admin/jury")}
+                  type="button"
+                >
+                  <div className={styles.actionIcon}>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                    </svg>
+                  </div>
+                  <span className={styles.actionLabel}>Manage Jury</span>
+                </button>
+                <button
+                  className={styles.actionCard}
                   onClick={() => navigate("/app/admin/submissions")}
+                  type="button"
                 >
                   <div className={styles.actionIcon}>
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

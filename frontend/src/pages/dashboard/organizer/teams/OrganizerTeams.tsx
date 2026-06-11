@@ -1,32 +1,34 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getTeams } from "@/services/api";
+import { useState, useCallback } from "react";
+import { useTeamsPaginated } from "@/features/teams/hooks/useTeams";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import TeamViewModal from "@/features/organizer/components/TeamViewModel/TeamViewModal";
+import Pagination from "@/components/Pagination/Pagination";
 import styles from "./OrganizerTeams.module.css";
 
 export default function OrganizerTeams() {
   const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [viewingTeamId, setViewingTeamId] = useState<number | null>(null);
 
-  const { data: allTeams, isLoading } = useQuery({
-    queryKey: ["teams", activeTournamentId],
-    queryFn: getTeams,
-    enabled: !!activeTournamentId,
-  });
+  const {
+    data: teams,
+    meta,
+    isLoading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+  } = useTeamsPaginated(debouncedSearch, activeTournamentId);
 
-  const filtered = useMemo(() => {
-    if (!allTeams || !activeTournamentId) return [];
-    
-    let res = allTeams.filter(t => t.tournament_id === activeTournamentId);
-
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      res = res.filter((t) => t.name.toLowerCase().includes(q));
-    }
-    return res;
-  }, [allTeams, activeTournamentId, search]);
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(value);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [setPage]);
 
   if (!activeTournamentId) {
     return <div className={styles.empty}>Please select a tournament first.</div>;
@@ -44,46 +46,65 @@ export default function OrganizerTeams() {
           placeholder="Search teams..."
           className={styles.searchInput}
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearch(e.target.value)}
         />
       </header>
 
       {isLoading ? (
         <div className={styles.loading}>Loading teams…</div>
-      ) : filtered.length === 0 ? (
+      ) : teams.length === 0 ? (
         <div className={styles.empty}>No teams found for this tournament.</div>
       ) : (
-        <div className={styles.tableWrapper}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Team Name</th>
-                <th>City</th>
-                <th>Organization</th>
-                <th style={{ textAlign: "right" }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((team) => (
-                <tr key={team.id}>
-                  <td className={styles.cellName}>{team.name}</td>
-                  <td>{team.city}</td>
-                  <td>{team.organization}</td>
-                  <td>
-                    <div style={{ display: "flex", gap: "8px", justifyContent: "flex-end" }}>
-                      <button
-                        className={styles.actionBtn}
-                        onClick={() => setViewingTeamId(team.id)}
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </td>
+        <>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Team Name</th>
+                  <th>City</th>
+                  <th>Organization</th>
+                  <th style={{ textAlign: "right" }}>Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {teams.map((team) => (
+                  <tr key={team.id}>
+                    <td className={styles.cellName}>{team.name}</td>
+                    <td>{team.city}</td>
+                    <td>{team.organization}</td>
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          justifyContent: "flex-end",
+                        }}
+                      >
+                        <button
+                          className={styles.actionBtn}
+                          onClick={() => setViewingTeamId(team.id)}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {meta && (
+            <Pagination
+              page={page}
+              totalPages={meta.pages}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+              totalItems={meta.total}
+            />
+          )}
+        </>
       )}
 
       <TeamViewModal

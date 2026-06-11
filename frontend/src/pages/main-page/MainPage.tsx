@@ -8,10 +8,10 @@ import styles from "./MainPage.module.css";
 type FilterStatus = "All" | "Registration" | "Running" | "Finished";
 
 const STATUS_ORDER: Record<string, number> = {
-  Running: 0,
-  Registration: 1,
-  Draft: 2,
-  Finished: 3,
+  Registration: 0,
+  Running: 1,
+  Finished: 2,
+  Draft: 3,
 };
 
 export default function MainPage() {

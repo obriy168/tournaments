@@ -1,6 +1,12 @@
 import { useEffect, useRef } from "react";
 import styles from "./SplashScreen.module.css";
 
+declare global {
+  interface Window {
+    __skyline_splash_complete?: boolean;
+  }
+}
+
 interface Props {
   visible: boolean;
 }
@@ -22,6 +28,7 @@ export default function SplashScreen({ visible }: Props) {
     timersRef.current = [];
 
     if (visible) {
+      window.__skyline_splash_complete = false;
       everShownRef.current = true;
       startTimeRef.current = performance.now();
       overlay.style.display = "flex";
@@ -32,12 +39,22 @@ export default function SplashScreen({ visible }: Props) {
 
       const t1 = setTimeout(() => {
         overlay.classList.add(styles.exit);
+        
+        const tHalf = setTimeout(() => {
+          window.__skyline_splash_complete = true;
+          window.dispatchEvent(new CustomEvent("skyline:splash-complete"));
+        }, EXIT_ANIMATION_MS / 2);
+        timersRef.current.push(tHalf);
+
         const t2 = setTimeout(() => {
           overlay.style.display = "none";
         }, EXIT_ANIMATION_MS);
         timersRef.current.push(t2);
       }, remaining);
+      
       timersRef.current.push(t1);
+    } else {
+      window.__skyline_splash_complete = true;
     }
 
     return () => {

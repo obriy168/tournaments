@@ -10,7 +10,7 @@ import {
   updateTeam,
   changeTeamLeader,
   addUserToTeam,
-  getAllUsers,
+  getUserByEmail,
   getTournament,
   removeUserFromTeamByIds,
   type Team,
@@ -53,10 +53,7 @@ function TeamCard({ team, user }: { team: Team; user: User }) {
 
   const inviteMut = useMutation({
     mutationFn: async (email: string) => {
-      const allUsers = await getAllUsers();
-      const found = allUsers.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase().trim()
-      );
+      const found = await getUserByEmail(email.toLowerCase().trim());
       if (!found)
         throw new Error("User not found. Ask them to sign up first.");
       if (found.id === user.id) throw new Error("You are already in the team.");

@@ -2,7 +2,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import EyeToggle from "@/components/EyeToggle/EyeToggle";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
@@ -21,6 +22,7 @@ interface LocationState {
 }
 
 export default function LogInPage() {
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,10 +45,10 @@ export default function LogInPage() {
     clearErrors("root");
     try {
       const user = await login(data.email, data.password);
-      
+
       const state = location.state as LocationState | null;
       const from = state?.from?.pathname;
-      
+
       if (from) {
         navigate(from, { replace: true });
         return;
@@ -54,8 +56,9 @@ export default function LogInPage() {
 
       const { activeRole } = useAuthStore.getState();
       const effectiveRole = activeRole || user.role;
-      const rolePath = effectiveRole === "captain" ? "participant" : effectiveRole;
-      
+      const rolePath =
+        effectiveRole === "captain" ? "participant" : effectiveRole;
+
       navigate(`/app/${rolePath}`, { replace: true });
     } catch (err: unknown) {
       setError("root", { type: "manual", message: getAuthErrorMessage(err) });
@@ -73,7 +76,11 @@ export default function LogInPage() {
           </p>
         )}
 
-        <form className={styles.auth__form} onSubmit={handleSubmit(onSubmit)} noValidate>
+        <form
+          className={styles.auth__form}
+          onSubmit={handleSubmit(onSubmit)}
+          noValidate
+        >
           <div className={styles.auth__field}>
             <input
               id="email"
@@ -95,22 +102,40 @@ export default function LogInPage() {
           </div>
 
           <div className={styles.auth__field}>
-            <input
-              id="password"
-              type="password"
-              placeholder="Password"
-              disabled={isSubmitting}
-              aria-label="Password"
-              aria-invalid={!!errors.password}
-              aria-describedby={errors.password ? "password-error" : undefined}
-              className={`${styles.auth__input} ${errors.password ? styles.auth__inputError : ""}`}
-              {...register("password")}
-            />
-            {errors.password && (
-              <span id="password-error" role="alert" className={styles.fieldError}>
-                {errors.password.message}
-              </span>
-            )}
+            <div className={styles.passwordWrapper}>
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                disabled={isSubmitting}
+                aria-label="Password"
+                aria-invalid={!!errors.password}
+                aria-describedby={
+                  errors.password ? "password-error" : undefined
+                }
+                className={`${styles.auth__input} ${styles.auth__inputPassword} ${errors.password ? styles.auth__inputError : ""}`}
+                {...register("password")}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                disabled={isSubmitting}
+                className={styles.eyeButton}
+              >
+                <EyeToggle visible={showPassword} />
+              </button>
+              {errors.password && (
+                <span
+                  id="password-error"
+                  role="alert"
+                  className={styles.fieldError}
+                >
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
           </div>
 
           <button

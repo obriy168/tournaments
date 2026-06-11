@@ -5,12 +5,13 @@ import styles from "./OrganizerDashboard.module.css";
 
 export default function OrganizerDashboard() {
   const navigate = useNavigate();
-  
   const activeTournamentId = useAuthStore((s) => s.activeTournamentId);
+  
+  const { data: stats, isLoading } = useOrganizerStats(activeTournamentId ?? 0);
+
   if (!activeTournamentId) {
     return <div className={styles.loading}>Please select a tournament to see statistics.</div>;
   }
-  const { data: stats, isLoading } = useOrganizerStats(activeTournamentId);
 
   if (isLoading) return <div className={styles.loading}>Loading tournament data...</div>;
 

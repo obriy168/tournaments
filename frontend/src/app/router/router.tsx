@@ -110,7 +110,6 @@ const AdminTournaments = lazy(() => import("@/pages/dashboard/admin/tournaments/
 const AdminTeams = lazy(() => import("@/pages/dashboard/admin/teams/AdminTeams"));
 const AdminJury = lazy(() => import("@/pages/dashboard/admin/jury/AdminJury"));
 const AdminTasks = lazy(() => import("@/pages/dashboard/admin/tasks/AdminTasks"));
-const AdminRounds = lazy(() => import("@/pages/dashboard/admin/rounds/AdminRounds"));
 const AdminSubmissions = lazy(() => import("@/pages/dashboard/admin/submissions/AdminSubmissions"));
 
 const JuryDashboard = lazy(() => import("@/pages/dashboard/jury/JuryDashboard"));
@@ -178,10 +177,9 @@ const router = createBrowserRouter([
                       { path: "/app/admin", element: wrap(<AdminDashboard />) },
                       { path: "/app/admin/tournaments", element: wrap(<AdminTournaments />) },
                       { path: "/app/admin/teams", element: wrap(<AdminTeams />) },
-                      { path: "/app/admin/rounds", element: wrap(<AdminRounds />) },
-                      { path: "/app/admin/jury", element: wrap(<AdminJury />) },
                       { path: "/app/admin/tasks", element: wrap(<AdminTasks />) },
                       { path: "/app/admin/submissions", element: wrap(<AdminSubmissions />) },
+                      { path: "/app/admin/jury", element: wrap(<AdminJury />) },
                       { path: "/app/admin/*", element: <Navigate to="/app/admin" replace /> },
                     ],
                   },

@@ -5,6 +5,7 @@ import {
   getTeamMembers,
   getTournament,
   updateTeam,
+  changeTeamLeader,
   removeUserFromTeamByIds,
   type Team,
   type TeamMemberFull,
@@ -56,6 +57,18 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
     },
   });
 
+  const captainMut = useMutation({
+    mutationFn: (memberUserId: number) => {
+      if (!team) throw new Error("No team");
+      return changeTeamLeader(team.id, memberUserId);
+    },
+    onSuccess: () => {
+      if (!team) return;
+      queryClient.invalidateQueries({ queryKey: ["team-members", team.id] });
+      queryClient.invalidateQueries({ queryKey: ["is-team-lead", team.id] });
+    },
+  });
+
   const removeMemberMut = useMutation({
     mutationFn: ({ userId, teamId }: { userId: number; teamId: number }) =>
       removeUserFromTeamByIds(userId, teamId),
@@ -65,7 +78,8 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
   });
 
   const handleSave = () => {
-    if (!form.name.trim() || !form.city.trim() || !form.organization.trim()) return;
+    if (!form.name.trim() || !form.city.trim() || !form.organization.trim())
+      return;
     updateMut.mutate({
       name: form.name,
       city: form.city,
@@ -75,7 +89,12 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
 
   const handleRemoveMember = (member: TeamMemberFull) => {
     if (!teamId) return;
-    if (!window.confirm(`Remove ${member.first_name} ${member.last_name} from the team?`)) return;
+    if (
+      !window.confirm(
+        `Remove ${member.first_name} ${member.last_name} from the team?`,
+      )
+    )
+      return;
     removeMemberMut.mutate({ userId: member.id, teamId });
   };
 
@@ -118,13 +137,21 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
               <div className={styles.section}>
                 <h3 className={styles.sectionTitle}>Team Information</h3>
                 {isEditing ? (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "16px",
+                    }}
+                  >
                     <div className={styles.field}>
                       <label className={styles.label}>Team Name</label>
                       <input
                         className={styles.input}
                         value={form.name}
-                        onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, name: e.target.value }))
+                        }
                         autoComplete="off"
                       />
                     </div>
@@ -133,7 +160,9 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                       <input
                         className={styles.input}
                         value={form.city}
-                        onChange={(e) => setForm((f) => ({ ...f, city: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((f) => ({ ...f, city: e.target.value }))
+                        }
                         autoComplete="off"
                       />
                     </div>
@@ -142,7 +171,12 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                       <input
                         className={styles.input}
                         value={form.organization}
-                        onChange={(e) => setForm((f) => ({ ...f, organization: e.target.value }))}
+                        onChange={(e) =>
+                          setForm((f) => ({
+                            ...f,
+                            organization: e.target.value,
+                          }))
+                        }
                         autoComplete="off"
                       />
                     </div>
@@ -159,19 +193,27 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                     </div>
                     <div className={styles.metaItem}>
                       <span className={styles.metaLabel}>Organization</span>
-                      <span className={styles.metaValue}>{team?.organization}</span>
+                      <span className={styles.metaValue}>
+                        {team?.organization}
+                      </span>
                     </div>
                     <div className={styles.metaItem}>
                       <span className={styles.metaLabel}>Tournament</span>
                       <span className={styles.metaValue}>
                         {team?.tournament_id ? (
                           tournament ? (
-                            <span className={styles.registered}>{tournament.name}</span>
+                            <span className={styles.registered}>
+                              {tournament.name}
+                            </span>
                           ) : (
-                            <span className={styles.registered}>Registered</span>
+                            <span className={styles.registered}>
+                              Registered
+                            </span>
                           )
                         ) : (
-                          <span className={styles.notRegistered}>Not registered</span>
+                          <span className={styles.notRegistered}>
+                            Not registered
+                          </span>
                         )}
                       </span>
                     </div>
@@ -188,28 +230,45 @@ export default function TeamViewModal({ teamId, onClose }: Props) {
                     {members.map((member: TeamMemberFull) => (
                       <li key={member.id} className={styles.memberItem}>
                         <div className={styles.memberAvatar}>
-                          {(member.first_name?.[0] || "") + (member.last_name?.[0] || "")}
+                          {(member.first_name?.[0] || "") +
+                            (member.last_name?.[0] || "")}
                         </div>
                         <div className={styles.memberInfo}>
                           <span className={styles.memberName}>
                             {member.first_name} {member.last_name}
                           </span>
-                          <span className={styles.memberEmail}>{member.email}</span>
+                          <span className={styles.memberEmail}>
+                            {member.email}
+                          </span>
                         </div>
                         {member.is_lead && (
                           <span className={styles.badgeLead}>Captain</span>
                         )}
                         {!member.is_lead && (
-                          <button
-                            className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.btnSmall}`}
-                            onClick={() => handleRemoveMember(member)}
-                            disabled={removeMemberMut.isPending && removeMemberMut.variables?.userId === member.id}
-                            title="Remove member"
-                          >
-                            {removeMemberMut.isPending && removeMemberMut.variables?.userId === member.id
-                              ? "Removing…"
-                              : "Remove"}
-                          </button>
+                          <div className={styles.memberActions}>
+                            <button
+                              className={`${styles.btn} ${styles.btnSmall__primary}`}
+                              onClick={() => captainMut.mutate(member.id)}
+                              disabled={captainMut.isPending}
+                              title="Make captain"
+                            >
+                              Make Captain
+                            </button>
+                            <button
+                              className={`${styles.actionBtn} ${styles.actionBtnDanger} ${styles.btnSmall}`}
+                              onClick={() => handleRemoveMember(member)}
+                              disabled={
+                                removeMemberMut.isPending &&
+                                removeMemberMut.variables?.userId === member.id
+                              }
+                              title="Remove member"
+                            >
+                              {removeMemberMut.isPending &&
+                              removeMemberMut.variables?.userId === member.id
+                                ? "Removing…"
+                                : "Remove"}
+                            </button>
+                          </div>
                         )}
                       </li>
                     ))}

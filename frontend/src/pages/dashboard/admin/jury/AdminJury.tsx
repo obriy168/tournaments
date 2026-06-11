@@ -1,18 +1,15 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { usePagination } from "@/features/Pagination/hooks/usePagination";
+import { usePagination } from "@/hooks/usePagination";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import {
   getUsersByRole,
   setUserRole,
-  getAllUsers,
+  searchUsers,
   type User,
 } from "@/services/api";
+import Pagination from "@/components/Pagination/Pagination";
 import styles from "./AdminJury.module.css";
-
-interface JuryMember extends User {
-  assignmentId?: number;
-}
 
 interface JuryIdResponse {
   user_id?: number;
@@ -23,12 +20,37 @@ export default function AdminJury() {
   const queryClient = useQueryClient();
   const { data: tournaments } = useTournaments();
   const [selectedTournament, setSelectedTournament] = useState<number | "">("");
-  const [searchJury, setSearchJury] = useState("");
-  const [searchUsers, setSearchUsers] = useState("");
+  const [jurySearch, setJurySearch] = useState("");
+  const [usersSearch, setUsersSearch] = useState("");
 
-  const { data: allUsers, isLoading: usersLoading } = useQuery({
-    queryKey: ["all-users"],
-    queryFn: getAllUsers,
+  const {
+    data: juryData,
+    meta: juryMeta,
+    isLoading: juryLoading,
+    page: juryCurrentPage,
+    setPage: setJuryPage,
+    pageSize: juryPageSize,
+    setPageSize: setJuryPageSize,
+  } = usePagination<User>({
+    queryKey: ["jury-users", selectedTournament],
+    fetchFn: (params) => searchUsers(jurySearch, params),
+    enabled: !!selectedTournament,
+    extraDeps: [jurySearch],
+  });
+
+  const {
+    data: usersData,
+    meta: usersMeta,
+    isLoading: usersLoading,
+    page: usersCurrentPage,
+    setPage: setUsersPage,
+    pageSize: usersPageSize,
+    setPageSize: setUsersPageSize,
+  } = usePagination<User>({
+    queryKey: ["available-users"],
+    fetchFn: (params) => searchUsers(usersSearch, params),
+    enabled: !!selectedTournament,
+    extraDeps: [usersSearch],
   });
 
   const {
@@ -44,19 +66,23 @@ export default function AdminJury() {
     enabled: !!selectedTournament,
   });
 
-  const juryMembers = useMemo(() => {
-    if (!juryUserIds || !allUsers) return [];
-    
-    const juryIds = juryUserIds
+  const juryIdsSet = useMemo(() => {
+    if (!juryUserIds) return new Set<number>();
+    const ids = juryUserIds
       .map((j: JuryIdResponse | number) => 
         typeof j === "number" ? j : (j.user_id ?? j.id ?? 0)
       )
       .filter((id): id is number => id !== 0);
+    return new Set(ids);
+  }, [juryUserIds]);
 
-    return allUsers
-      .filter((u) => juryIds.includes(u.id))
-      .map((u) => ({ ...u } as JuryMember));
-  }, [juryUserIds, allUsers]);
+  const filteredJury = useMemo(() => {
+    return (juryData || []).filter((u) => juryIdsSet.has(u.id));
+  }, [juryData, juryIdsSet]);
+
+  const filteredUsers = useMemo(() => {
+    return (usersData || []).filter((u) => !juryIdsSet.has(u.id));
+  }, [usersData, juryIdsSet]);
 
   const addJuryMutation = useMutation({
     mutationFn: ({
@@ -70,7 +96,12 @@ export default function AdminJury() {
       queryClient.invalidateQueries({
         queryKey: ["jury-ids", selectedTournament],
       });
-      queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      queryClient.invalidateQueries({
+        queryKey: ["jury-users", selectedTournament],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["available-users"],
+      });
     },
   });
 
@@ -88,80 +119,25 @@ export default function AdminJury() {
       queryClient.invalidateQueries({
         queryKey: ["jury-ids", selectedTournament],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["jury-users", selectedTournament],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["available-users"],
+      });
     },
   });
 
-  const nonJuryUsers = useMemo(() => {
-    if (!allUsers || !juryMembers) return [];
-    const juryIds = new Set(juryMembers.map((j) => j.id));
-    return allUsers.filter((u) => !juryIds.has(u.id));
-  }, [allUsers, juryMembers]);
-
-  const filteredJury = useMemo(() => {
-    if (!searchJury.trim()) return juryMembers;
-    const q = searchJury.toLowerCase();
-    return juryMembers.filter(
-      (j) =>
-        j.first_name?.toLowerCase().includes(q) ||
-        j.last_name?.toLowerCase().includes(q) ||
-        j.email?.toLowerCase().includes(q)
-    );
-  }, [juryMembers, searchJury]);
-
-  const filteredUsers = useMemo(() => {
-    if (!searchUsers.trim()) return nonJuryUsers;
-    const q = searchUsers.toLowerCase();
-    return nonJuryUsers.filter(
-      (u) =>
-        u.first_name?.toLowerCase().includes(q) ||
-        u.last_name?.toLowerCase().includes(q) ||
-        u.email?.toLowerCase().includes(q)
-    );
-  }, [nonJuryUsers, searchUsers]);
-
-  const juryPagination = usePagination({
-    data: filteredJury,
-    defaultPerPage: 15,
-    maxPerPage: 15,
-  });
-
-  const usersPagination = usePagination({
-    data: filteredUsers,
-    defaultPerPage: 15,
-    maxPerPage: 15,
-  });
-
-  const getPageNumbers = (page: number, pages: number) => {
-    const nums: (number | string)[] = [];
-    for (let i = 1; i <= pages; i++) {
-      if (
-        i === 1 ||
-        i === pages ||
-        (i >= page - 2 && i <= page + 2)
-      ) {
-        nums.push(i);
-      } else if (nums[nums.length - 1] !== "...") {
-        nums.push("...");
-      }
-    }
-    return nums;
-  };
-
-  const handleRemoveJury = (userId: number) => {
+  const handleRemoveJury = useCallback((userId: number) => {
     if (!selectedTournament) return;
-    if (
-      !window.confirm(
-        "Are you sure you want to remove this jury member?"
-      )
-    )
-      return;
+    if (!window.confirm("Are you sure you want to remove this jury member?")) return;
     removeJuryMutation.mutate({
       userId,
       tournamentId: Number(selectedTournament),
     });
-  };
+  }, [selectedTournament, removeJuryMutation]);
 
-  const isLoading = juryIdsLoading || usersLoading;
+  const isLoading = juryIdsLoading || juryLoading;
 
   return (
     <div className={styles.container}>
@@ -180,11 +156,12 @@ export default function AdminJury() {
           className={styles.select}
           value={selectedTournament}
           onChange={(e) => {
-            setSelectedTournament(Number(e.target.value) || "");
-            setSearchJury("");
-            setSearchUsers("");
-            juryPagination.resetPage();
-            usersPagination.resetPage();
+            const value = e.target.value;
+            setSelectedTournament(value ? Number(value) : "");
+            setJurySearch("");
+            setUsersSearch("");
+            setJuryPage(1);
+            setUsersPage(1);
           }}
         >
           <option value="">Choose a tournament...</option>
@@ -201,26 +178,26 @@ export default function AdminJury() {
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>
-                Current Jury ({juryMembers.length})
+                Current Jury
               </h2>
               <input
                 type="text"
                 placeholder="Search jury members..."
                 className={styles.searchInput}
-                value={searchJury}
+                value={jurySearch}
                 onChange={(e) => {
-                  setSearchJury(e.target.value);
-                  juryPagination.resetPage();
+                  setJurySearch(e.target.value);
+                  setJuryPage(1);
                 }}
               />
             </div>
 
             {isLoading ? (
               <div className={styles.loading}>Loading jury members…</div>
-            ) : juryPagination.paginatedData.length > 0 ? (
+            ) : filteredJury.length > 0 ? (
               <>
                 <div className={styles.list}>
-                  {juryPagination.paginatedData.map((member) => (
+                  {filteredJury.map((member) => (
                     <div key={member.id} className={styles.card}>
                       <div className={styles.avatar}>
                         {(member.first_name?.[0] || "") +
@@ -246,61 +223,20 @@ export default function AdminJury() {
                     </div>
                   ))}
                 </div>
-
-                {filteredJury.length > 15 && (
-                  <div className={styles.pagination}>
-                    <div className={styles.paginationInfo}>
-                      Showing <b>{juryPagination.startIndex + 1}</b>–<b>{juryPagination.endIndex}</b> of <b>{juryPagination.totalItems}</b>
-                      <select
-                        className={styles.perPageSelect}
-                        value={juryPagination.itemsPerPage}
-                        onChange={(e) => juryPagination.setItemsPerPage(Number(e.target.value))}
-                      >
-                        <option value={5}>5 / page</option>
-                        <option value={10}>10 / page</option>
-                        <option value={15}>15 / page</option>
-                      </select>
-                    </div>
-
-                    <div className={styles.paginationControls}>
-                      <button
-                        className={styles.pageBtn}
-                        disabled={juryPagination.currentPage === 1}
-                        onClick={() => juryPagination.goToPage(juryPagination.currentPage - 1)}
-                      >
-                        ← Prev
-                      </button>
-
-                      {getPageNumbers(juryPagination.currentPage, juryPagination.totalPages).map((p, i) =>
-                        p === "..." ? (
-                          <span key={`dots-${i}`} className={styles.pageDots}>…</span>
-                        ) : (
-                          <button
-                            key={p}
-                            className={`${styles.pageBtn} ${
-                              juryPagination.currentPage === p ? styles.pageBtnActive : ""
-                            }`}
-                            onClick={() => juryPagination.goToPage(p as number)}
-                          >
-                            {p}
-                          </button>
-                        )
-                      )}
-
-                      <button
-                        className={styles.pageBtn}
-                        disabled={juryPagination.currentPage === juryPagination.totalPages}
-                        onClick={() => juryPagination.goToPage(juryPagination.currentPage + 1)}
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  </div>
+                {juryMeta && (
+                  <Pagination
+                    page={juryCurrentPage}
+                    totalPages={juryMeta.pages}
+                    onPageChange={setJuryPage}
+                    pageSize={juryPageSize}
+                    onPageSizeChange={setJuryPageSize}
+                    totalItems={juryMeta.total}
+                  />
                 )}
               </>
             ) : (
               <div className={styles.empty}>
-                {searchJury.trim()
+                {jurySearch.trim()
                   ? "No jury members match your search"
                   : "No jury assigned yet"}
               </div>
@@ -310,32 +246,32 @@ export default function AdminJury() {
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               <h2 className={styles.sectionTitle}>
-                Available Users ({nonJuryUsers.length})
+                Available Users
               </h2>
               <input
                 type="text"
                 placeholder="Search users..."
                 className={styles.searchInput}
-                value={searchUsers}
+                value={usersSearch}
                 onChange={(e) => {
-                  setSearchUsers(e.target.value);
-                  usersPagination.resetPage();
+                  setUsersSearch(e.target.value);
+                  setUsersPage(1);
                 }}
               />
             </div>
 
             {usersLoading ? (
               <div className={styles.loading}>Loading users…</div>
-            ) : usersPagination.paginatedData.length === 0 ? (
+            ) : filteredUsers.length === 0 ? (
               <div className={styles.empty}>
-                {searchUsers.trim()
+                {usersSearch.trim()
                   ? "No users match your search"
                   : "No available users"}
               </div>
             ) : (
               <>
                 <div className={styles.list}>
-                  {usersPagination.paginatedData.map((user) => (
+                  {filteredUsers.map((user) => (
                     <div key={user.id} className={styles.card}>
                       <div className={styles.avatar}>
                         {(user.first_name?.[0] || "") +
@@ -365,56 +301,15 @@ export default function AdminJury() {
                     </div>
                   ))}
                 </div>
-
-                {filteredUsers.length > 15 && (
-                  <div className={styles.pagination}>
-                    <div className={styles.paginationInfo}>
-                      Showing <b>{usersPagination.startIndex + 1}</b>–<b>{usersPagination.endIndex}</b> of <b>{usersPagination.totalItems}</b>
-                      <select
-                        className={styles.perPageSelect}
-                        value={usersPagination.itemsPerPage}
-                        onChange={(e) => usersPagination.setItemsPerPage(Number(e.target.value))}
-                      >
-                        <option value={5}>5 / page</option>
-                        <option value={10}>10 / page</option>
-                        <option value={15}>15 / page</option>
-                      </select>
-                    </div>
-
-                    <div className={styles.paginationControls}>
-                      <button
-                        className={styles.pageBtn}
-                        disabled={usersPagination.currentPage === 1}
-                        onClick={() => usersPagination.goToPage(usersPagination.currentPage - 1)}
-                      >
-                        ← Prev
-                      </button>
-
-                      {getPageNumbers(usersPagination.currentPage, usersPagination.totalPages).map((p, i) =>
-                        p === "..." ? (
-                          <span key={`dots-${i}`} className={styles.pageDots}>…</span>
-                        ) : (
-                          <button
-                            key={p}
-                            className={`${styles.pageBtn} ${
-                              usersPagination.currentPage === p ? styles.pageBtnActive : ""
-                            }`}
-                            onClick={() => usersPagination.goToPage(p as number)}
-                          >
-                            {p}
-                          </button>
-                        )
-                      )}
-
-                      <button
-                        className={styles.pageBtn}
-                        disabled={usersPagination.currentPage === usersPagination.totalPages}
-                        onClick={() => usersPagination.goToPage(usersPagination.currentPage + 1)}
-                      >
-                        Next →
-                      </button>
-                    </div>
-                  </div>
+                {usersMeta && (
+                  <Pagination
+                    page={usersCurrentPage}
+                    totalPages={usersMeta.pages}
+                    onPageChange={setUsersPage}
+                    pageSize={usersPageSize}
+                    onPageSizeChange={setUsersPageSize}
+                    totalItems={usersMeta.total}
+                  />
                 )}
               </>
             )}

@@ -1,9 +1,8 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { usePagination } from "@/features/Pagination/hooks/usePagination";
-import { getTeams, getTournament } from "@/services/api";
+import { useState, useCallback } from "react";
+import { useTeamsPaginated } from "@/features/teams/hooks/useTeams";
 import { useDeleteTeam } from "@/features/teams/hooks/useDeleteTeam";
 import TeamViewModal from "@/features/admin/components/TeamViewModal/TeamViewModal";
+import Pagination from "@/components/Pagination/Pagination";
 import styles from "./AdminTeams.module.css";
 
 export default function AdminTeams() {
@@ -11,77 +10,20 @@ export default function AdminTeams() {
   const [viewingTeamId, setViewingTeamId] = useState<number | null>(null);
   const deleteMutation = useDeleteTeam();
 
-  const { data: teams, isLoading } = useQuery({
-    queryKey: ["all-teams"],
-    queryFn: getTeams,
-  });
-
-  const tournamentIds = useMemo(
-    () => [...new Set((teams || []).map((t) => t.tournament_id).filter(Boolean))],
-    [teams]
-  );
-
-  const tournamentQueries = useQuery({
-    queryKey: ["tournament-names", tournamentIds],
-    queryFn: async () => {
-      const results = await Promise.all(
-        tournamentIds.map((id) => getTournament(id!))
-      );
-      return Object.fromEntries(results.map((t) => [t.id, t.name]));
-    },
-    enabled: tournamentIds.length > 0,
-  });
-
-  const tournamentNames = tournamentQueries.data || {};
-
-  const filtered = useMemo(() => {
-    if (!teams) return [];
-    let res = [...teams];
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      res = res.filter((t) => t.name.toLowerCase().includes(q));
-    }
-    return res;
-  }, [teams, search]);
-
   const {
-    currentPage,
-    itemsPerPage,
-    totalItems,
-    totalPages,
-    startIndex,
-    endIndex,
-    paginatedData,
-    goToPage,
-    setItemsPerPage,
-    resetPage,
-  } = usePagination({ data: filtered, defaultPerPage: 15, maxPerPage: 15 });
+    data: teams,
+    meta,
+    isLoading,
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+  } = useTeamsPaginated(search);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-    resetPage();
-  };
-
-  const handleDelete = (id: number, name: string) => {
-    if (!window.confirm(`Are you sure you want to delete team "${name}"?`)) return;
+  const handleDelete = useCallback((id: number, name: string) => {
+    if (!window.confirm(`Delete team "${name}"?`)) return;
     deleteMutation.mutate(id);
-  };
-
-  const getPageNumbers = () => {
-    const pages: (number | string)[] = [];
-    for (let i = 1; i <= totalPages; i++) {
-      if (
-        i === 1 ||
-        i === totalPages ||
-        (i >= currentPage - 2 && i <= currentPage + 2)
-      ) {
-        pages.push(i);
-      } else if (pages[pages.length - 1] !== "...") {
-        pages.push("...");
-      }
-    }
-    return pages;
-  };
+  }, [deleteMutation]);
 
   return (
     <div className={styles.container}>
@@ -95,13 +37,16 @@ export default function AdminTeams() {
           placeholder="Search teams..."
           className={styles.searchInput}
           value={search}
-          onChange={handleSearchChange}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
         />
       </header>
 
       {isLoading ? (
         <div className={styles.loading}>Loading teams…</div>
-      ) : filtered.length === 0 ? (
+      ) : teams.length === 0 ? (
         <div className={styles.empty}>No teams found</div>
       ) : (
         <>
@@ -110,21 +55,15 @@ export default function AdminTeams() {
               <thead>
                 <tr>
                   <th>Team Name</th>
-                  <th>Tournament</th>
                   <th>City</th>
                   <th>Organization</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {paginatedData.map((team) => (
+                {teams.map((team) => (
                   <tr key={team.id}>
                     <td className={styles.cellName}>{team.name}</td>
-                    <td>
-                      {team.tournament_id
-                        ? tournamentNames[team.tournament_id] || `Tournament #${team.tournament_id}`
-                        : "Not registered"}
-                    </td>
                     <td>{team.city}</td>
                     <td>{team.organization}</td>
                     <td>
@@ -154,54 +93,16 @@ export default function AdminTeams() {
             </table>
           </div>
 
-          <div className={styles.pagination}>
-            <div className={styles.paginationInfo}>
-              Showing <b>{startIndex + 1}</b>–<b>{endIndex}</b> of <b>{totalItems}</b>
-              <select
-                className={styles.perPageSelect}
-                value={itemsPerPage}
-                onChange={(e) => setItemsPerPage(Number(e.target.value))}
-              >
-                <option value={5}>5 / page</option>
-                <option value={10}>10 / page</option>
-                <option value={15}>15 / page</option>
-              </select>
-            </div>
-
-            <div className={styles.paginationControls}>
-              <button
-                className={styles.pageBtn}
-                disabled={currentPage === 1}
-                onClick={() => goToPage(currentPage - 1)}
-              >
-                ← Prev
-              </button>
-
-              {getPageNumbers().map((p, i) =>
-                p === "..." ? (
-                  <span key={`dots-${i}`} className={styles.pageDots}>…</span>
-                ) : (
-                  <button
-                    key={p}
-                    className={`${styles.pageBtn} ${
-                      currentPage === p ? styles.pageBtnActive : ""
-                    }`}
-                    onClick={() => goToPage(p as number)}
-                  >
-                    {p}
-                  </button>
-                )
-              )}
-
-              <button
-                className={styles.pageBtn}
-                disabled={currentPage === totalPages}
-                onClick={() => goToPage(currentPage + 1)}
-              >
-                Next →
-              </button>
-            </div>
-          </div>
+          {meta && (
+            <Pagination
+              page={page}
+              totalPages={meta.pages}
+              onPageChange={setPage}
+              pageSize={pageSize}
+              onPageSizeChange={setPageSize}
+              totalItems={meta.total}
+            />
+          )}
         </>
       )}
 

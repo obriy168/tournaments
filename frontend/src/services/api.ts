@@ -142,6 +142,42 @@ export interface Submission {
   description?: string;
 }
 
+export interface SubmissionDetailedResponse {
+  id: number;
+  created_on: string;
+  github_url: string;
+  video_url: string;
+  live_demo_url: string;
+  description: string;
+  task: TaskShortModel;
+  team: TeamShortModel;
+  assignments: TaskAssignmentModel[];
+}
+
+export interface TaskShortModel {
+  id: number;
+  tournament_id: number;
+  name: string;
+}
+
+export interface TeamShortModel {
+  id: number;
+  tournament_id: number;
+  name: string;
+}
+
+export interface EvaluationModel {
+  id: number;
+  scores: number;
+  comment?: string;
+}
+
+export interface TaskAssignmentModel {
+  id: number;
+  evaluator_id: number;
+  evaluations: EvaluationModel[];
+}
+
 export interface Score {
   id: number;
   submission_id: number;
@@ -215,6 +251,24 @@ export interface CreateTeamData {
   user_teams: UserTeamRegistration[];
 }
 
+export interface PaginationMeta {
+  page: number;
+  page_size: number;
+  total: number;
+  pages: number;
+}
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  tournament_id?: number;
+}
+
 export async function registerUser(data: RegisterData): Promise<{ id: number }> {
   const { data: res } = await api.post("/auth/register", data);
   return res;
@@ -225,8 +279,30 @@ export async function getTournaments(): Promise<Tournament[]> {
   return data;
 }
 
+export async function getTournamentsPaginated(
+  params?: PaginationParams
+): Promise<PaginatedResponse<Tournament>> {
+  const { data } = await api.get<PaginatedResponse<Tournament>>(
+    "/tournaments/pagination",
+    { params }
+  );
+  return data;
+}
+
+export async function searchTournaments(
+  text?: string,
+  status?: Tournament["status"],
+  params?: PaginationParams
+): Promise<PaginatedResponse<Tournament>> {
+  const { data } = await api.get<PaginatedResponse<Tournament>>(
+    "/tournaments/search",
+    { params: { ...params, text, status } }
+  );
+  return data;
+}
+
 export async function getTournament(id: number): Promise<Tournament> {
-  const { data } = await api.get<Tournament>(`/tournaments/${id}`);
+  const { data } = await api.get<Tournament>(`/tournaments/tournament/${id}`);
   return data;
 }
 
@@ -255,7 +331,7 @@ export async function createTeam(data: CreateTeamData): Promise<Team> {
 }
 
 export async function getTeam(id: number): Promise<Team> {
-  const { data } = await api.get<Team>(`/teams/${id}`);
+  const { data } = await api.get<Team>(`/teams/team/${id}`);
   return data;
 }
 
@@ -309,13 +385,31 @@ export async function getTasks(tournamentId: number): Promise<Task[]> {
   return data;
 }
 
+export async function searchTasks(
+  text?: string,
+  status?: Task["status"],
+  params?: PaginationParams
+): Promise<PaginatedResponse<Task>> {
+  const { data } = await api.get<PaginatedResponse<Task>>("/tasks/search", {
+    params: { ...params, text, status },
+  });
+  return data;
+}
+
+export async function getAllTasksPaginated(
+  params?: PaginationParams
+): Promise<PaginatedResponse<Task>> {
+  const { data } = await api.get<PaginatedResponse<Task>>("/tasks/", { params });
+  return data;
+}
+
 export async function createTask(taskData: Partial<Task>): Promise<Task> {
   const { data } = await api.post<Task>("/tasks/", taskData);
   return data;
 }
 
 export async function getTask(id: number): Promise<Task> {
-  const { data } = await api.get<Task>(`/tasks/${id}`);
+  const { data } = await api.get<Task>(`/tasks/task/${id}`);
   return data;
 }
 
@@ -343,6 +437,16 @@ export async function getSubmission(id: number): Promise<Submission> {
   return data;
 }
 
+export async function getSubmissionsPaginated(
+  params?: PaginationParams
+): Promise<PaginatedResponse<SubmissionDetailedResponse>> {
+  const { data } = await api.get<PaginatedResponse<SubmissionDetailedResponse>>(
+    "/submissions/paginated/details",
+    { params }
+  );
+  return data;
+}
+
 export async function updateSubmission(id: number, submissionData: Partial<Submission>): Promise<Submission> {
   const { data } = await api.put<Submission>(`/submissions/${id}`, submissionData);
   return data;
@@ -354,6 +458,17 @@ export async function deleteSubmission(id: number): Promise<void> {
 
 export async function getSubmissionsByTask(taskId: number): Promise<Submission[]> {
   const { data } = await api.get<Submission[]>(`/submissions/task/${taskId}`);
+  return data;
+}
+
+export async function searchSubmissions(
+  text: string,
+  params?: PaginationParams
+): Promise<PaginatedResponse<SubmissionDetailedResponse>> {
+  const { data } = await api.get<PaginatedResponse<SubmissionDetailedResponse>>(
+    "/submissions/search",
+    { params: { ...params, text } }
+  );
   return data;
 }
 
@@ -443,34 +558,66 @@ export async function getUsers(): Promise<User[]> {
   return data;
 }
 
+export async function getUsersPaginated(
+  params?: PaginationParams
+): Promise<PaginatedResponse<User>> {
+  const { data } = await api.get<PaginatedResponse<User>>("/users/pagination", {
+    params,
+  });
+  return data;
+}
+
+export async function searchUsers(
+  text: string,
+  params?: PaginationParams
+): Promise<PaginatedResponse<User>> {
+  const { data } = await api.get<PaginatedResponse<User>>("/users/search", {
+    params: { ...params, text },
+  });
+  return data;
+}
+
 export async function getTeams(): Promise<Team[]> {
   const { data } = await api.get<Team[]>("/teams/");
   return data;
 }
 
-export async function getUserByEmail(email: string): Promise<User | null> {
-  const { data } = await api.get<User>(`/users/email/`, { params: { email } });
+export async function getTeamsPaginated(
+  params?: PaginationParams
+): Promise<PaginatedResponse<Team>> {
+  const { data } = await api.get<PaginatedResponse<Team>>("/teams/pagination", {
+    params,
+  });
   return data;
 }
 
-export async function getAllSubmissionsWithDetails(): Promise<Array<Submission & { task: Task; team: Team }>> {
-  const tournaments = await getTournaments();
-  const result = [];
-  
-  for (const tournament of tournaments) {
-    const tasks = await getTasks(tournament.id);
-    for (const task of tasks) {
-      const submissions = await getSubmissionsByTask(task.id);
-      for (const submission of submissions) {
-        const team = await getTeam(submission.team_id);
-        result.push({
-          ...submission,
-          task,
-          team,
-        });
-      }
-    }
-  }
-  
-  return result;
+export async function searchTeams(
+  text: string,
+  params?: PaginationParams
+): Promise<PaginatedResponse<Team>> {
+  const { data } = await api.get<PaginatedResponse<Team>>("/teams/search", {
+    params: { ...params, text },
+  });
+  return data;
+}
+
+export async function getTeamsByTournamentPaginated(
+  tournamentId: number,
+  params?: PaginationParams
+): Promise<PaginatedResponse<Team>> {
+  const { data } = await api.get<Team[]>(`/teams/tournament/${tournamentId}`);
+  return {
+    items: data,
+    meta: {
+      page: params?.page || 1,
+      page_size: params?.limit || data.length,
+      total: data.length,
+      pages: 1,
+    },
+  };
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const { data } = await api.get<User>(`/users/email/`, { params: { email } });
+  return data;
 }
