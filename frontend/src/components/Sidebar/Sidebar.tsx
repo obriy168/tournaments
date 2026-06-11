@@ -1,15 +1,10 @@
-import { NavLink } from "react-router-dom";
+import React, { useState, useRef, useLayoutEffect } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import TournamentSwitcher from "@/components/TournamentSwitcher/TournamentSwitcher";
-import type { UserRole } from "@/features/auth/context/authContextValue";
+import type { LinkItem, SafeUserRole } from "./Sidebar.types";
 import styles from "./Sidebar.module.css";
-
-interface LinkItem {
-  to: string;
-  label: string;
-  end: boolean;
-}
 
 export default function Sidebar() {
   const user = useAuthStore((s) => s.user);
@@ -17,10 +12,87 @@ export default function Sidebar() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const initializing = useAuthStore((s) => s.initializing);
   const logout = useLogout();
+  const location = useLocation();
+
+  const navRef = useRef<HTMLElement>(null);
+  const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({
+    opacity: 0,
+  });
+
+  useLayoutEffect(() => {
+    const navElement = navRef.current;
+    if (!navElement) return;
+
+    const updateIndicator = () => {
+      const activeLinks = navElement.querySelectorAll(`.${styles.linkCurrent}`);
+      let activeLink: HTMLElement | null = null;
+
+      for (const link of activeLinks) {
+        const htmlLink = link as HTMLElement;
+        
+        const isVisible = document.hidden || htmlLink.offsetParent !== null;
+        
+        if (isVisible) {
+          activeLink = htmlLink;
+          break;
+        }
+      }
+
+      if (!activeLink) {
+        setIndicatorStyle((prev) => ({ ...prev, opacity: 0 }));
+        return;
+      }
+
+      const containerRect = navElement.getBoundingClientRect();
+      const activeRect = activeLink.getBoundingClientRect();
+
+      if (activeRect.width === 0 && activeRect.height === 0) {
+        return;
+      }
+
+      const top = activeRect.top - containerRect.top + navElement.scrollTop;
+      const left = activeRect.left - containerRect.left + navElement.scrollLeft;
+      const borderRadius = window.getComputedStyle(activeLink).borderRadius;
+
+      setIndicatorStyle({
+        transform: `translate(${left}px, ${top}px)`,
+        width: `${activeRect.width}px`,
+        height: `${activeRect.height}px`,
+        borderRadius,
+        opacity: 1,
+      });
+    };
+
+    updateIndicator();
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateIndicator();
+    });
+
+    resizeObserver.observe(navElement);
+    const children = navElement.querySelectorAll(`.${styles.link}`);
+    children.forEach((child) => resizeObserver.observe(child));
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        requestAnimationFrame(updateIndicator);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", updateIndicator);
+
+    return () => {
+      resizeObserver.disconnect();
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", updateIndicator);
+    };
+  }, [location.pathname, initializing, user, activeRole, hasTeam]);
 
   if (initializing || !user) return null;
 
-  const effectiveRole = (activeRole || user.role || "participant") as UserRole;
+  const rawRole = activeRole || user.role || "participant";
+  const effectiveRole: SafeUserRole = rawRole as SafeUserRole;
   const links = getLinksByRole(effectiveRole, hasTeam);
 
   return (
@@ -31,7 +103,13 @@ export default function Sidebar() {
         </NavLink>
       </div>
 
-      <nav className={styles.nav}>
+      <nav ref={navRef} className={styles.nav}>
+        <div
+          className={styles.indicator}
+          style={indicatorStyle}
+          aria-hidden="true"
+        />
+
         {links.map((link) => (
           <NavLink
             key={link.to}
@@ -44,6 +122,7 @@ export default function Sidebar() {
             {link.label}
           </NavLink>
         ))}
+
         <NavLink
           to="/app/profile"
           className={({ isActive }) =>
@@ -86,7 +165,7 @@ export default function Sidebar() {
   );
 }
 
-function getLinksByRole(role: UserRole, hasTeam: boolean): LinkItem[] {
+function getLinksByRole(role: SafeUserRole, hasTeam: boolean): LinkItem[] {
   switch (role) {
     case "admin":
       return [
