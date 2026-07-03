@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import "./index.css";
 import App from "./app/App.tsx";
 import { queryClient } from "./queryClient";
+import './services/i18n.ts';
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {

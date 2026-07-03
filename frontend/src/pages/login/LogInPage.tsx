@@ -9,13 +9,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
 import { resetSessionExpired } from "@/services/api";
 import styles from "@/features/auth/components/Auth.module.css";
-
-const loginSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(1, "Password is required"),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
+import { useTranslation } from "react-i18next";
 
 interface LocationState {
   from?: { pathname: string };
@@ -26,10 +20,18 @@ export default function LogInPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     resetSessionExpired();
   }, []);
+
+  const loginSchema = z.object({
+    email: z.string().email(t("loginpage.errors.invalidEmail")),
+    password: z.string().min(1, t("loginpage.errors.passwordRequired")),
+  });
+
+  type LoginForm = z.infer<typeof loginSchema>;
 
   const {
     register,
@@ -68,7 +70,7 @@ export default function LogInPage() {
   return (
     <section className={styles.auth}>
       <div className={styles.auth__container}>
-        <h1 className={styles.auth__title}>Welcome back</h1>
+        <h1 className={styles.auth__title}>{t("loginpage.title")}</h1>
 
         {errors.root && (
           <p role="alert" className={styles.rootError}>
@@ -85,10 +87,10 @@ export default function LogInPage() {
             <input
               id="email"
               type="email"
-              placeholder="Email"
+              placeholder={t("loginpage.email")}
               autoFocus
               disabled={isSubmitting}
-              aria-label="Email"
+              aria-label={t("loginpage.email")}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email-error" : undefined}
               className={`${styles.auth__input} ${errors.email ? styles.auth__inputError : ""}`}
@@ -106,9 +108,9 @@ export default function LogInPage() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder={t("loginpage.password")}
                 disabled={isSubmitting}
-                aria-label="Password"
+                aria-label={t("loginpage.password")}
                 aria-invalid={!!errors.password}
                 aria-describedby={
                   errors.password ? "password-error" : undefined
@@ -119,7 +121,11 @@ export default function LogInPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showPassword
+                    ? t("loginpage.hidePassword")
+                    : t("loginpage.showPassword")
+                }
                 aria-pressed={showPassword}
                 disabled={isSubmitting}
                 className={styles.eyeButton}
@@ -144,14 +150,14 @@ export default function LogInPage() {
             disabled={isSubmitting}
             aria-busy={isSubmitting}
           >
-            {isSubmitting ? "Logging in…" : "Log in"}
+            {isSubmitting ? t("loginpage.submitting") : t("loginpage.submit")}
           </button>
         </form>
 
         <p className={styles.auth__footer}>
-          Don't have an account?{" "}
+          {t("loginpage.signupPrompt")}{" "}
           <Link to="/signup" className={styles.auth__link}>
-            Sign up
+            {t("loginpage.signupLink")}
           </Link>
         </p>
       </div>

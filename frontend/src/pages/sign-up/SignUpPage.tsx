@@ -8,23 +8,25 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { registerUser } from "@/services/api";
 import { getAuthErrorMessage } from "@/features/auth/utils/errors";
 import styles from "@/features/auth/components/Auth.module.css";
-
-const registerSchema = z.object({
-  first_name: z.string().min(1, "First name is required"),
-  last_name: z.string().min(1, "Last name is required"),
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  accepted_terms: z.boolean().refine((val) => val === true, {
-    message: "You must accept the Terms of Use and Privacy Policy",
-  }),
-});
-
-type RegisterForm = z.infer<typeof registerSchema>;
+import { useTranslation } from "react-i18next";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const registerSchema = z.object({
+    first_name: z.string().min(1, t("signuppage.errors.firstNameRequired")),
+    last_name: z.string().min(1, t("signuppage.errors.lastNameRequired")),
+    email: z.string().email(t("signuppage.errors.invalidEmail")),
+    password: z.string().min(8, t("signuppage.errors.passwordMin")),
+    accepted_terms: z.boolean().refine((val) => val === true, {
+      message: t("signuppage.errors.acceptTerms"),
+    }),
+  });
+
+  type RegisterForm = z.infer<typeof registerSchema>;
 
   const {
     register,
@@ -52,8 +54,7 @@ export default function SignUpPage() {
       navigate(`/app/${rolePath}`, { replace: true });
     } catch {
       setError("root", {
-        message:
-          "Account created, but automatic login failed. Please log in manually.",
+        message: t("signuppage.autoLoginFailed"),
       });
     }
   };
@@ -61,7 +62,7 @@ export default function SignUpPage() {
   return (
     <section className={styles.auth}>
       <div className={styles.auth__container}>
-        <h1 className={styles.auth__title}>Create an account</h1>
+        <h1 className={styles.auth__title}>{t("signuppage.title")}</h1>
 
         {errors.root && (
           <p role="alert" className={styles.rootError}>
@@ -79,10 +80,10 @@ export default function SignUpPage() {
               <input
                 id="first_name"
                 type="text"
-                placeholder="First name"
+                placeholder={t("signuppage.firstname")}
                 autoFocus
                 disabled={isSubmitting}
-                aria-label="First name"
+                aria-label={t("signuppage.firstname")}
                 aria-invalid={!!errors.first_name}
                 aria-describedby={
                   errors.first_name ? "first_name-error" : undefined
@@ -104,9 +105,9 @@ export default function SignUpPage() {
               <input
                 id="last_name"
                 type="text"
-                placeholder="Last name"
+                placeholder={t("signuppage.lastname")}
                 disabled={isSubmitting}
-                aria-label="Last name"
+                aria-label={t("signuppage.lastname")}
                 aria-invalid={!!errors.last_name}
                 aria-describedby={
                   errors.last_name ? "last_name-error" : undefined
@@ -130,9 +131,9 @@ export default function SignUpPage() {
             <input
               id="email"
               type="email"
-              placeholder="Email"
+              placeholder={t("signuppage.email")}
               disabled={isSubmitting}
-              aria-label="Email"
+              aria-label={t("signuppage.email")}
               aria-invalid={!!errors.email}
               aria-describedby={errors.email ? "email-error" : undefined}
               className={`${styles.auth__input} ${errors.email ? styles.auth__inputError : ""}`}
@@ -150,9 +151,9 @@ export default function SignUpPage() {
               <input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Password"
+                placeholder={t("signuppage.password")}
                 disabled={isSubmitting}
-                aria-label="Password"
+                aria-label={t("signuppage.password")}
                 aria-invalid={!!errors.password}
                 aria-describedby={
                   errors.password ? "password-error" : undefined
@@ -163,7 +164,11 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-label={
+                  showPassword
+                    ? t("signuppage.hidePassword")
+                    : t("signuppage.showPassword")
+                }
                 aria-pressed={showPassword}
                 disabled={isSubmitting}
                 className={styles.eyeButton}
@@ -196,17 +201,17 @@ export default function SignUpPage() {
                 {...register("accepted_terms")}
               />
               <span>
-                I agree to the{" "}
+                {t("signuppage.termsAgree")}{" "}
                 <Link to="/terms" target="_blank" className={styles.auth__link}>
-                  Terms of Use
+                  {t("footer.terms")}
                 </Link>{" "}
-                and{" "}
+                {t("signuppage.and")}{" "}
                 <Link
                   to="/privacy"
                   target="_blank"
                   className={styles.auth__link}
                 >
-                  Privacy and Cookie Policy
+                  {t("footer.privacy")}
                 </Link>
               </span>
             </label>
@@ -223,14 +228,14 @@ export default function SignUpPage() {
             disabled={isSubmitting}
             aria-busy={isSubmitting}
           >
-            {isSubmitting ? "Signing up…" : "Sign up"}
+            {isSubmitting ? t("signuppage.submitting") : t("signuppage.submit")}
           </button>
         </form>
 
         <p className={styles.auth__footer}>
-          Already have an account?{" "}
+          {t("signuppage.loginPrompt")}{" "}
           <Link to="/login" className={styles.auth__link}>
-            Log in
+            {t("header.login")}
           </Link>
         </p>
       </div>

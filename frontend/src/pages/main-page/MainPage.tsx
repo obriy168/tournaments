@@ -4,6 +4,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import TournamentCard from "@/features/Tournaments/components/tournamentCard/TournamentCard";
 import styles from "./MainPage.module.css";
+import { useTranslation } from "react-i18next";
 
 type FilterStatus = "All" | "Registration" | "Running" | "Finished";
 
@@ -21,6 +22,7 @@ export default function MainPage() {
   const [filter, setFilter] = useState<FilterStatus>("All");
   const [search, setSearch] = useState("");
   const [showAll, setShowAll] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!initializing && user) {
@@ -42,7 +44,7 @@ export default function MainPage() {
       res = res.filter(
         (t) =>
           t.name.toLowerCase().includes(q) ||
-          t.description.toLowerCase().includes(q)
+          t.description.toLowerCase().includes(q),
       );
     }
 
@@ -53,8 +55,7 @@ export default function MainPage() {
 
       if (a.status === "Running" || a.status === "Draft") {
         return (
-          new Date(a.start_date).getTime() -
-          new Date(b.start_date).getTime()
+          new Date(a.start_date).getTime() - new Date(b.start_date).getTime()
         );
       }
       if (a.status === "Registration") {
@@ -64,8 +65,7 @@ export default function MainPage() {
         );
       }
       return (
-        new Date(b.start_date).getTime() -
-        new Date(a.start_date).getTime()
+        new Date(b.start_date).getTime() - new Date(a.start_date).getTime()
       );
     });
 
@@ -77,19 +77,23 @@ export default function MainPage() {
 
   const content = useMemo(() => {
     if (isLoading)
-      return <div className={styles.loading}>Loading tournaments…</div>;
+      return (
+        <div className={styles.loading}>
+          {t("mainpage.tournaments.loading")}
+        </div>
+      );
     if (error)
       return (
         <div className={styles.error}>
           <p>{error.message}</p>
           <button onClick={() => refetch()} className={styles.retry}>
-            Retry
+            {t("mainpage.tournaments.retry")}
           </button>
         </div>
       );
     if (!filtered || filtered.length === 0)
       return (
-        <div className={styles.empty}>No tournaments match your criteria.</div>
+        <div className={styles.empty}>{t("mainpage.tournaments.empty")}</div>
       );
 
     return (
@@ -105,13 +109,13 @@ export default function MainPage() {
               className={styles.showMoreBtn}
               onClick={() => setShowAll(true)}
             >
-              Show all {filtered.length} tournaments
+              {t("mainpage.tournaments.showAll", { count: filtered.length })}
             </button>
           </div>
         )}
       </>
     );
-  }, [isLoading, error, filtered, displayed, hasMore, showAll, refetch]);
+  }, [isLoading, error, filtered, displayed, hasMore, showAll, refetch, t]);
 
   if (initializing || user) return null;
 
@@ -119,21 +123,23 @@ export default function MainPage() {
     <>
       <section className={styles.hero}>
         <div className={styles.hero__container}>
-          <h1 className={styles.hero__title}>Welcome to Skyline</h1>
+          <h1 className={styles.hero__title}>{t("mainpage.hero.title")}</h1>
           <p className={styles.hero__description}>
-            Join the world's most prestigious online programming tournaments.
+            {t("mainpage.hero.description")}
           </p>
           <Link to="/login" className={styles.hero__button}>
-            Join a Tournament
+            {t("mainpage.hero.button")}
           </Link>
         </div>
       </section>
 
       <section className={styles.tournaments}>
         <div className={styles.tournaments__container}>
-          <h2 className={styles.tournaments__title}>Active Tournaments</h2>
+          <h2 className={styles.tournaments__title}>
+            {t("mainpage.tournaments.title")}
+          </h2>
           <p className={styles.tournaments__description}>
-            Check out the tournaments currently in progress.
+            {t("mainpage.tournaments.description")}
           </p>
 
           <div className={styles.filters}>
@@ -151,13 +157,13 @@ export default function MainPage() {
                     setShowAll(false);
                   }}
                 >
-                  {f}
+                  {t(`mainpage.tournaments.filters.${f.toLowerCase()}`)}
                 </button>
               ))}
             </div>
             <input
               type="text"
-              placeholder="Search tournaments..."
+              placeholder={t("mainpage.tournaments.search.placeholder")}
               className={styles.searchInput}
               value={search}
               onChange={(e) => {

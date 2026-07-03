@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import styles from "./Footer.module.css";
 
 export function Footer() {
+  const { t } = useTranslation();
+
   return (
     <footer className={styles.footer}>
       <div className={styles.container}>
@@ -11,16 +14,16 @@ export function Footer() {
             <Link to="/" className={styles.logo}>
               Skyline
             </Link>
-            <p className={styles.tagline}>Online tournaments platform</p>
+            <p className={styles.tagline}>{t("footer.tagline")}</p>
           </div>
           <div className={styles.links}>
             <div className={styles.column}>
-              <h4 className={styles.heading}>Account</h4>
+              <h4 className={styles.heading}>{t("footer.account")}</h4>
               <Link to="/signup" className={styles.link}>
-                Sign up
+                {t("header.signup")}
               </Link>
               <Link to="/login" className={styles.link}>
-                Log in
+                {t("header.login")}
               </Link>
             </div>
           </div>
@@ -29,10 +32,10 @@ export function Footer() {
           <p className={styles.copyright}>© 2026 Skyline.</p>
           <div className={styles.legal}>
             <Link to="/privacy" className={styles.legal__link}>
-              Privacy and Cookie Policy
+              {t("footer.privacy")}
             </Link>
             <Link to="/terms" className={styles.legal__link}>
-              Terms of Service
+              {t("footer.terms")}
             </Link>
           </div>
         </div>
@@ -42,16 +45,18 @@ export function Footer() {
 }
 
 export function FooterMinimal() {
+  const { t } = useTranslation();
+
   return (
     <footer className={styles.footer__minimal}>
       <div className={styles.container}>
         <p className={styles.copyright}>© 2026 Skyline.</p>
         <div className={styles.legal}>
           <Link to="/privacy" className={styles.legal__link}>
-            Privacy and Cookie Policy
+            {t("footer.privacy")}
           </Link>
           <Link to="/terms" className={styles.legal__link}>
-            Terms of Service
+            {t("footer.terms")}
           </Link>
         </div>
       </div>

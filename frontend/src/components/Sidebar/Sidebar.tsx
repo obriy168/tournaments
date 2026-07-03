@@ -1,10 +1,11 @@
-import React, { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/hooks/useLogout";
 import TournamentSwitcher from "@/components/TournamentSwitcher/TournamentSwitcher";
 import type { LinkItem, SafeUserRole } from "./Sidebar.types";
 import styles from "./Sidebar.module.css";
+import { LanguageSwitcher } from "../LanguageSwitcher/LanguageSwitcher";
 
 export default function Sidebar() {
   const user = useAuthStore((s) => s.user);
@@ -101,6 +102,7 @@ export default function Sidebar() {
         <NavLink to="/app" className={styles.logo}>
           Skyline
         </NavLink>
+        <LanguageSwitcher />
       </div>
 
       <nav ref={navRef} className={styles.nav}>
