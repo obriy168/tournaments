@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
+from sqlalchemy import select
 
 from database.schemas.schema import Team, Tournament, UserRole
 from enums.role_enum import RoleEnum

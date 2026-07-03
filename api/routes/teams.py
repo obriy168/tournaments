@@ -37,6 +37,13 @@ async def search_tournament(teams_service: Annotated[TeamsService, Depends(Teams
                             text: Optional[str] = Query(None)):
     return await teams_service.search_teams(text=text, pagination=pagination)
 
+@team_router.get("/tournament/{tournament_id}/leaderboard")
+async def get_leaderboard_by_tournament_id(tournament_id: int, 
+                                           teams_service: Annotated[TeamsService, Depends(TeamsService)],
+                                           pagination: Annotated[PaginationModel, Depends()]):
+    return await teams_service.get_leaderboard_by_tournament_id(tournament_id, pagination)
+
+
 @team_router.post("/")
 async def create_team(team: TeamRegistrationModel, teams_service: Annotated[TeamsService, Depends(TeamsService)],
                       user_session: Annotated[UserSession, Depends(validate_session)]):
