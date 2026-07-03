@@ -1,11 +1,13 @@
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 
 from routes.models.user_session import UserSession
 from services.models.pagination_model import PaginationModel
 from services.models.team_model import TeamModel, TeamRegistrationModel
 from services.teams_service import TeamsService
+from services.export_service import ExportService
 from util.access.team_access import TeamAccess
 from util.auth import validate_session
 
@@ -75,3 +77,18 @@ async def get_teams_by_tournament_id(tournament_id: int, teams_service: Annotate
                                      user_session: Annotated[UserSession, Depends(validate_session)]):
     teams = await teams_service.get_teams_by_tournament_id(tournament_id)
     return teams
+
+
+@team_router.get("/{tournament_id}/export/leaderboard")
+async def export_leaderboard(tournament_id: int, teams_service: Annotated[TeamsService, Depends(TeamsService)],
+                             user_session: Annotated[UserSession, Depends(validate_session)],
+                             export_service: Annotated[ExportService, Depends(ExportService)]):
+    leaderboard = await teams_service.get_leaderboard_by_tournament_id(tournament_id)
+
+    csv_stream = await export_service.export_tournament_leaderboard(leaderboard)
+
+    return StreamingResponse(
+        csv_stream,
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename=leaderboard_{tournament_id}.csv"}
+    )

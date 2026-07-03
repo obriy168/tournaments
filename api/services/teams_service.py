@@ -1,6 +1,6 @@
 import math
 
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends
 
@@ -50,43 +50,43 @@ class TeamsService:
         }
     
     
-    async def get_leaderboard_by_tournament_id(self, tournament_id: int, pagination: PaginationModel):
-        leaderboard_db, total_count = await self.team_repository.get_leaderboard_by_tournament_id(tournament_id=tournament_id, limit=pagination.limit, offset=pagination.offset)
+    async def get_leaderboard_by_tournament_id(self, tournament_id: int, pagination: PaginationModel | None = None):
+        limit = None
+        offset = None
+        start = 0
+
+        if pagination is not None:
+            limit = pagination.limit
+            offset = pagination.offset
+            start = offset
+        
+        leaderboard_db, total_count = await self.team_repository.get_leaderboard_by_tournament_id(tournament_id=tournament_id, limit=limit, offset=offset)
         
         leaderboard = []
 
-        for team in leaderboard_db:
-            score = 0
-            submission_count = len(team.submissions)
-
-            for sub in team.submissions:
-                for assignment in sub.assignments:
-                    for ev in assignment.evaluations:
-                        score += ev.scores
-
+        for index, team in enumerate(leaderboard_db, start=start + 1):
             leaderboard.append({
+                "place": index,
                 "team_id": team.id,
                 "team_name": team.name,
                 "city": team.city,
                 "organization": team.organization,
-                "score": score,
-                "submission_count": submission_count
+                "score": team.total_score,
+                "submission_count": team.sub_count
             })
 
-        leaderboard.sort(key=lambda x: x["score"], reverse=True)
-
-        for i, item in enumerate(leaderboard, start=1):
-            item["place"] = i
-
-        return {
-            "items": leaderboard,
-            "meta": {
-                "page": pagination.page,
-                "page_size": pagination.limit,
-                "total": total_count,
-                "pages": math.ceil(total_count / pagination.limit)
+        if pagination is not None:
+            return {
+                "items": leaderboard,
+                "meta": {
+                    "page": pagination.page,
+                    "page_size": pagination.limit,
+                    "total": total_count,
+                    "pages": math.ceil(total_count / pagination.limit)
+                }
             }
-        }
+        else:
+            return leaderboard
 
     async def create_team(self, team: TeamRegistrationModel) -> TeamRegistrationModel:
         team_entity = Team(**team.model_dump(exclude={"id", "user_teams"}),
