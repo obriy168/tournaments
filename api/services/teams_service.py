@@ -48,6 +48,45 @@ class TeamsService:
                 "pages": math.ceil(total_count / pagination.limit)
             }
         }
+    
+    
+    async def get_leaderboard_by_tournament_id(self, tournament_id: int, pagination: PaginationModel):
+        leaderboard_db, total_count = await self.team_repository.get_leaderboard_by_tournament_id(tournament_id=tournament_id, limit=pagination.limit, offset=pagination.offset)
+        
+        leaderboard = []
+
+        for team in leaderboard_db:
+            score = 0
+            submission_count = len(team.submissions)
+
+            for sub in team.submissions:
+                for assignment in sub.assignments:
+                    for ev in assignment.evaluations:
+                        score += ev.scores
+
+            leaderboard.append({
+                "team_id": team.id,
+                "team_name": team.name,
+                "city": team.city,
+                "organization": team.organization,
+                "score": score,
+                "submission_count": submission_count
+            })
+
+        leaderboard.sort(key=lambda x: x["score"], reverse=True)
+
+        for i, item in enumerate(leaderboard, start=1):
+            item["place"] = i
+
+        return {
+            "items": leaderboard,
+            "meta": {
+                "page": pagination.page,
+                "page_size": pagination.limit,
+                "total": total_count,
+                "pages": math.ceil(total_count / pagination.limit)
+            }
+        }
 
     async def create_team(self, team: TeamRegistrationModel) -> TeamRegistrationModel:
         team_entity = Team(**team.model_dump(exclude={"id", "user_teams"}),
