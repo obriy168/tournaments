@@ -1,4 +1,4 @@
-import { useState, useRef, useLayoutEffect } from "react";
+import { useState, useRef, useLayoutEffect, useMemo } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useLogout } from "@/features/auth/hooks/useLogout";
@@ -6,6 +6,7 @@ import TournamentSwitcher from "@/components/TournamentSwitcher/TournamentSwitch
 import type { LinkItem, SafeUserRole } from "./Sidebar.types";
 import styles from "./Sidebar.module.css";
 import { LanguageSwitcher } from "../LanguageSwitcher/LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 export default function Sidebar() {
   const user = useAuthStore((s) => s.user);
@@ -14,6 +15,7 @@ export default function Sidebar() {
   const initializing = useAuthStore((s) => s.initializing);
   const logout = useLogout();
   const location = useLocation();
+  const { t } = useTranslation();
 
   const navRef = useRef<HTMLElement>(null);
   const [indicatorStyle, setIndicatorStyle] = useState<React.CSSProperties>({
@@ -30,9 +32,7 @@ export default function Sidebar() {
 
       for (const link of activeLinks) {
         const htmlLink = link as HTMLElement;
-        
         const isVisible = document.hidden || htmlLink.offsetParent !== null;
-        
         if (isVisible) {
           activeLink = htmlLink;
           break;
@@ -47,9 +47,7 @@ export default function Sidebar() {
       const containerRect = navElement.getBoundingClientRect();
       const activeRect = activeLink.getBoundingClientRect();
 
-      if (activeRect.width === 0 && activeRect.height === 0) {
-        return;
-      }
+      if (activeRect.width === 0 && activeRect.height === 0) return;
 
       const top = activeRect.top - containerRect.top + navElement.scrollTop;
       const left = activeRect.left - containerRect.left + navElement.scrollLeft;
@@ -66,10 +64,7 @@ export default function Sidebar() {
 
     updateIndicator();
 
-    const resizeObserver = new ResizeObserver(() => {
-      updateIndicator();
-    });
-
+    const resizeObserver = new ResizeObserver(() => updateIndicator());
     resizeObserver.observe(navElement);
     const children = navElement.querySelectorAll(`.${styles.link}`);
     children.forEach((child) => resizeObserver.observe(child));
@@ -79,7 +74,6 @@ export default function Sidebar() {
         requestAnimationFrame(updateIndicator);
       }
     };
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("focus", updateIndicator);
 
@@ -90,11 +84,56 @@ export default function Sidebar() {
     };
   }, [location.pathname, initializing, user, activeRole, hasTeam]);
 
-  if (initializing || !user) return null;
-
-  const rawRole = activeRole || user.role || "participant";
+  const rawRole = activeRole || user?.role || "participant";
   const effectiveRole: SafeUserRole = rawRole as SafeUserRole;
-  const links = getLinksByRole(effectiveRole, hasTeam);
+
+  const links = useMemo<LinkItem[]>(() => {
+    switch (effectiveRole) {
+      case "admin":
+        return [
+          { to: "/app/admin", label: t("sidebar.btns.dashboard"), end: true },
+          { to: "/app/admin/tournaments", label: t("sidebar.btns.tournaments"), end: false },
+          { to: "/app/admin/teams", label: t("sidebar.btns.teams"), end: false },
+          { to: "/app/admin/tasks", label: t("sidebar.btns.tasks"), end: false },
+          { to: "/app/admin/submissions", label: t("sidebar.btns.submissions"), end: false },
+          { to: "/app/admin/jury", label: t("sidebar.btns.jury"), end: false },
+        ];
+      case "organizer":
+        return [
+          { to: "/app/organizer", label: t("sidebar.btns.dashboard"), end: true },
+          { to: "/app/organizer/tournaments", label: t("sidebar.btns.tournament"), end: false },
+          { to: "/app/organizer/tasks", label: t("sidebar.btns.tasks"), end: false },
+          { to: "/app/organizer/teams", label: t("sidebar.btns.teams"), end: false },
+        ];
+      case "jury":
+        return [
+          { to: "/app/jury", label: t("sidebar.btns.dashboard"), end: true },
+          { to: "/app/jury/assignments", label: t("sidebar.btns.assignments"), end: false },
+          { to: "/app/jury/evaluation", label: t("sidebar.btns.evaluation"), end: false },
+        ];
+      case "participant":
+        if (hasTeam) {
+          return [
+            { to: "/app/participant", label: t("sidebar.btns.dashboard"), end: true },
+            { to: "/app/participant/team", label: t("sidebar.btns.myTeam"), end: false },
+            { to: "/app/participant/tournament", label: t("sidebar.btns.tournament"), end: false },
+            { to: "/app/participant/submissions", label: t("sidebar.btns.submissions"), end: false },
+          ];
+        }
+        return [{ to: "/app/participant", label: t("sidebar.btns.dashboard"), end: true }];
+      case "captain":
+        return [
+          { to: "/app/participant", label: t("sidebar.btns.dashboard"), end: true },
+          { to: "/app/participant/team", label: t("sidebar.btns.myTeam"), end: false },
+          { to: "/app/participant/tournament", label: t("sidebar.btns.tournament"), end: false },
+          { to: "/app/participant/submissions", label: t("sidebar.btns.submissions"), end: false },
+        ];
+      default:
+        return [];
+    }
+  }, [effectiveRole, hasTeam, t]);
+
+  if (initializing || !user) return null;
 
   return (
     <aside className={styles.sidebar} aria-label="Main navigation">
@@ -133,14 +172,14 @@ export default function Sidebar() {
             }`
           }
         >
-          Profile
+          {t("sidebar.mainbtns.profile")}
         </NavLink>
         <button
           onClick={logout}
           className={`${styles.link} ${styles.mobileOnly} ${styles.linkDanger}`}
           type="button"
         >
-          Log out
+          {t("sidebar.mainbtns.logout")}
         </button>
       </nav>
 
@@ -153,63 +192,16 @@ export default function Sidebar() {
             isActive ? `${styles.link} ${styles.linkCurrent}` : styles.link
           }
         >
-          Profile
+          {t("sidebar.mainbtns.profile")}
         </NavLink>
         <button
           onClick={logout}
           className={`${styles.link} ${styles.linkDanger}`}
           type="button"
         >
-          Log out
+          {t("sidebar.mainbtns.logout")}
         </button>
       </div>
     </aside>
   );
-}
-
-function getLinksByRole(role: SafeUserRole, hasTeam: boolean): LinkItem[] {
-  switch (role) {
-    case "admin":
-      return [
-        { to: "/app/admin", label: "Dashboard", end: true },
-        { to: "/app/admin/tournaments", label: "Tournaments", end: false },
-        { to: "/app/admin/teams", label: "Teams", end: false },
-        { to: "/app/admin/tasks", label: "Tasks", end: false },
-        { to: "/app/admin/submissions", label: "Submissions", end: false },
-        { to: "/app/admin/jury", label: "Jury", end: false },
-      ];
-    case "organizer":
-      return [
-        { to: "/app/organizer", label: "Dashboard", end: true },
-        { to: "/app/organizer/tournaments", label: "Tournament", end: false },
-        { to: "/app/organizer/tasks", label: "Tasks", end: false},
-      //  { to: "/app/organizer/submissions", label: "Submissions", end: false },
-        { to: "/app/organizer/teams", label: "Teams", end: false },
-      ];
-    case "jury":
-      return [
-        { to: "/app/jury", label: "Dashboard", end: true },
-        { to: "/app/jury/assignments", label: "Assignments", end: false },
-        { to: "/app/jury/evaluation", label: "Evaluation", end: false },
-      ];
-    case "participant":
-      if (hasTeam) {
-        return [
-          { to: "/app/participant", label: "Dashboard", end: true },
-          { to: "/app/participant/team", label: "My Team", end: false },
-          { to: "/app/participant/tournament", label: "Tournament", end: false },
-          { to: "/app/participant/submissions", label: "Submissions", end: false },
-        ];
-      }
-      return [{ to: "/app/participant", label: "Dashboard", end: true }];
-    case "captain":
-      return [
-        { to: "/app/participant", label: "Dashboard", end: true },
-        { to: "/app/participant/team", label: "My Team", end: false },
-        { to: "/app/participant/tournament", label: "Tournament", end: false },
-        { to: "/app/participant/submissions", label: "Submissions", end: false },
-      ];
-    default:
-      return [];
-  }
 }

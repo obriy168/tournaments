@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useTournaments } from "@/features/Tournaments/hooks/useTournaments";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import styles from "./TournamentSwitcher.module.css";
 
 interface TournamentOption {
@@ -23,11 +24,12 @@ export default function TournamentSwitcher() {
   const activeRole = useAuthStore((s) => s.activeRole);
   const setActiveTournament = useAuthStore((s) => s.setActiveTournament);
   const { data: tournaments, isLoading } = useTournaments();
+  const { t } = useTranslation();
 
   const isGlobalAdmin = useMemo(() => {
     if (!user?.roles) return false;
     return user.roles.some(
-      (r) => !r.tournament_id && normalizeRole(r.role) === "admin"
+      (r) => !r.tournament_id && normalizeRole(r.role) === "admin",
     );
   }, [user]);
 
@@ -38,7 +40,7 @@ export default function TournamentSwitcher() {
     if (isGlobalAdmin) {
       opts.push({
         id: null,
-        name: "All Tournaments",
+        name: t("tournamentSwitcher.allTournaments"),
         role: "admin",
         key: "global-admin",
       });
@@ -47,18 +49,18 @@ export default function TournamentSwitcher() {
 
     for (const r of user.roles) {
       if (!r.tournament_id) continue;
-      const t = tournaments.find((tour) => tour.id === r.tournament_id);
+      const tName = tournaments.find((tour) => tour.id === r.tournament_id);
       const normalizedRole = normalizeRole(r.role);
       opts.push({
         id: r.tournament_id,
-        name: t?.name || `Tournament #${r.tournament_id}`,
+        name: tName?.name || `Tournament #${r.tournament_id}`,
         role: normalizedRole,
         key: `${r.tournament_id}-${normalizedRole}`,
       });
     }
 
     return opts;
-  }, [user, tournaments, isGlobalAdmin]);
+  }, [user, tournaments, isGlobalAdmin, t]);
 
   const currentValue = useMemo(() => {
     if (isGlobalAdmin) {
@@ -69,7 +71,7 @@ export default function TournamentSwitcher() {
 
     if (activeTournamentId && normalizedActiveRole) {
       const match = options.find(
-        (o) => o.id === activeTournamentId && o.role === normalizedActiveRole
+        (o) => o.id === activeTournamentId && o.role === normalizedActiveRole,
       );
       if (match) return match.key;
     }
@@ -85,7 +87,7 @@ export default function TournamentSwitcher() {
   if (isLoading) {
     return (
       <div className={styles.switcher}>
-        <div className={styles.loading}>Loading…</div>
+        <div className={styles.loading}>{t("tournamentSwitcher.loading")}</div>
       </div>
     );
   }
@@ -109,15 +111,22 @@ export default function TournamentSwitcher() {
     const path = newRole === "captain" ? "participant" : newRole;
     const targetPath = `/app/${path}`;
 
-    if (location.pathname !== targetPath && !location.pathname.startsWith(targetPath)) {
+    if (
+      location.pathname !== targetPath &&
+      !location.pathname.startsWith(targetPath)
+    ) {
       navigate(targetPath, { replace: true });
     }
   };
 
   return (
     <div className={styles.switcher}>
-      <label className={styles.label}>Active Tournament</label>
-      <select className={styles.select} value={currentValue} onChange={handleChange}>
+      <label className={styles.label}>{t("tournamentSwitcher.label")}</label>
+      <select
+        className={styles.select}
+        value={currentValue}
+        onChange={handleChange}
+      >
         {options.map((opt) => (
           <option key={opt.key} value={opt.key}>
             {opt.name} ({opt.role})

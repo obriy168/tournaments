@@ -1,14 +1,14 @@
 .hero {
+  margin: clamp(12px, 3vw, 20px) clamp(16px, 8vw, 10%);
+  border-radius: clamp(24px, 5vw, 50px);
   background-color: #ffffff;
   border: 2px solid black;
-  border-radius: 50px;
-  margin: 20px 10% 20px 10%;
-  height: 82vh;
+  min-height: clamp(60vh, 82vh, 90vh);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding: 0 10%;
+  padding: clamp(40px, 8vh, 80px) clamp(24px, 8vw, 10%);
   position: relative;
   overflow: hidden;
 }
@@ -20,40 +20,17 @@
   z-index: 1;
 }
 
-.hero__background {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 100%;
-  opacity: 0.5;
-  pointer-events: none;
-}
-
-.hero__grid {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 50%;
-  height: 100%;
-  background-image:
-    linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  opacity: 0.6;
-}
-
 .hero__title {
-  font-size: 50px;
+  font-size: clamp(2rem, 5vw, 3.125rem);
   font-weight: 600;
-  margin-bottom: 20px;
-  letter-spacing: -1.5px;
+  margin-bottom: clamp(12px, 2vw, 20px);
+  letter-spacing: clamp(-0.5px, -0.1vw, -1.5px);
 }
 
 .hero__description {
-  font-size: 18px;
+  font-size: clamp(1rem, 2.2vw, 1.125rem);
   color: #555;
-  margin-bottom: 40px;
+  margin-bottom: clamp(24px, 4vw, 40px);
   max-width: 600px;
   line-height: 1.6;
 }
@@ -62,12 +39,13 @@
   display: inline-block;
   color: white;
   background-color: black;
-  padding: 15px 30px;
+  padding: clamp(12px, 2.5vw, 15px) clamp(24px, 4vw, 30px);
   border: 2px solid black;
-  border-radius: 24px;
-  font-size: 20px;
+  border-radius: clamp(16px, 3vw, 24px);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
   font-weight: 600;
   transition: 0.2s;
+  text-decoration: none;
 }
 
 .hero__button:hover {
@@ -76,7 +54,7 @@
 }
 
 .tournaments {
-  margin: 60px 10% 40px 10%;
+  margin: clamp(32px, 6vw, 60px) clamp(16px, 8vw, 10%) clamp(24px, 5vw, 40px);
 }
 
 .tournaments__container {
@@ -84,45 +62,45 @@
 }
 
 .tournaments__title {
-  font-size: 36px;
+  font-size: clamp(1.5rem, 4vw, 2.25rem);
   font-weight: 700;
-  margin-bottom: 12px;
+  margin-bottom: clamp(8px, 1.5vw, 12px);
   letter-spacing: -1px;
 }
 
 .tournaments__description {
-  font-size: 16px;
+  font-size: clamp(0.875rem, 1.8vw, 1rem);
   color: #555;
-  margin-bottom: 40px;
+  margin-bottom: clamp(24px, 4vw, 40px);
 }
 
 .tournaments__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 24px;
+  gap: clamp(16px, 3vw, 24px);
 }
 
 .loading,
 .error,
 .empty {
   text-align: center;
-  padding: 60px 20px;
+  padding: clamp(40px, 8vh, 60px) clamp(16px, 5vw, 20px);
   color: #666;
-  font-size: 16px;
+  font-size: clamp(0.875rem, 1.8vw, 1rem);
 }
 
 .error {
   color: #dc2626;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: clamp(12px, 2vw, 16px);
   align-items: center;
 }
 
 .retry {
-  padding: 10px 24px;
+  padding: clamp(8px, 1.5vw, 10px) clamp(20px, 3vw, 24px);
   border: 2px solid black;
-  border-radius: 12px;
+  border-radius: clamp(8px, 1.5vw, 12px);
   background: white;
   font-weight: 600;
   cursor: pointer;
@@ -136,8 +114,8 @@
 
 .filters {
   display: flex;
-  gap: 16px;
-  margin-bottom: 32px;
+  gap: clamp(12px, 2vw, 16px);
+  margin-bottom: clamp(24px, 4vw, 32px);
   flex-wrap: wrap;
   align-items: center;
 }
@@ -149,16 +127,17 @@
 }
 
 .filterBtn {
-  padding: 8px 16px;
+  padding: clamp(6px, 1.2vw, 8px) clamp(12px, 2vw, 16px);
   border: 2px solid #eee;
-  border-radius: 12px;
+  border-radius: clamp(8px, 1.5vw, 12px);
   background: #fff;
-  font-size: 14px;
+  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
   font-weight: 600;
   color: #555;
   cursor: pointer;
   transition: 0.2s;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .filterBtn:hover {
@@ -172,13 +151,15 @@
 }
 
 .searchInput {
-  padding: 10px 16px;
+  width: clamp(200px, 30vw, 320px);
+  max-width: 100%;
+  padding: clamp(8px, 1.5vw, 10px) clamp(12px, 2vw, 16px);
   border: 2px solid #eee;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: clamp(8px, 1.5vw, 12px);
+  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
   font-family: "Inter", sans-serif;
-  min-width: 240px;
   transition: 0.2s;
+  box-sizing: border-box;
 }
 
 .searchInput:focus {
@@ -189,15 +170,15 @@
 .showMoreWrap {
   display: flex;
   justify-content: center;
-  margin-top: 32px;
+  margin-top: clamp(24px, 4vw, 32px);
 }
 
 .showMoreBtn {
-  padding: 12px 28px;
+  padding: clamp(10px, 2vw, 12px) clamp(24px, 4vw, 28px);
   border: 2px solid black;
-  border-radius: 24px;
+  border-radius: clamp(16px, 3vw, 24px);
   background: white;
-  font-size: 15px;
+  font-size: clamp(0.875rem, 2vw, 0.9375rem);
   font-weight: 600;
   cursor: pointer;
   transition: 0.2s;
@@ -208,76 +189,4 @@
   background: black;
   color: white;
   transform: translateY(-2px);
-}
-
-@media (max-width: 768px) {
-  .hero {
-    margin: 12px 16px;
-    border-radius: 24px;
-    padding: 40px 24px;
-    height: auto;
-    min-height: 60vh;
-  }
-
-  .hero__title {
-    font-size: 32px;
-    letter-spacing: -1px;
-  }
-
-  .hero__description {
-    font-size: 16px;
-    margin-bottom: 24px;
-  }
-
-  .hero__button {
-    font-size: 16px;
-    padding: 12px 24px;
-    border-radius: 16px;
-  }
-
-  .hero__grid,
-  .hero__background {
-    display: none;
-  }
-
-  .tournaments {
-    margin: 32px 16px;
-  }
-
-  .tournaments__title {
-    font-size: 24px;
-  }
-
-  .tournaments__description {
-    font-size: 14px;
-    margin-bottom: 24px;
-  }
-
-  .tournaments__grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .filterGroup {
-    overflow-x: auto;
-    flex-wrap: nowrap;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: 4px;
-  }
-
-  .filterBtn {
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-
-  .searchInput {
-    min-width: 0;
-    width: 100%;
-  }
 }

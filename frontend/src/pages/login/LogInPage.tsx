@@ -132,16 +132,16 @@ export default function LogInPage() {
               >
                 <EyeToggle visible={showPassword} />
               </button>
-              {errors.password && (
-                <span
-                  id="password-error"
-                  role="alert"
-                  className={styles.fieldError}
-                >
-                  {errors.password.message}
-                </span>
-              )}
             </div>
+            {errors.password && (
+              <span
+                id="password-error"
+                role="alert"
+                className={styles.fieldError}
+              >
+                {errors.password.message}
+              </span>
+            )}
           </div>
 
           <button

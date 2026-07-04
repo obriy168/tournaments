@@ -76,7 +76,7 @@ export default function SignUpPage() {
           noValidate
         >
           <div className={styles.auth__field__row}>
-            <div style={{ flex: 1 }}>
+            <div>
               <input
                 id="first_name"
                 type="text"
@@ -101,7 +101,7 @@ export default function SignUpPage() {
                 </span>
               )}
             </div>
-            <div style={{ flex: 1 }}>
+            <div>
               <input
                 id="last_name"
                 type="text"

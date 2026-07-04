@@ -2,6 +2,7 @@ import { memo, useMemo } from "react";
 import { Link } from "react-router-dom";
 import type { Tournament } from "@/services/api";
 import styles from "./TournamentCard.module.css";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   tournament: Tournament;
@@ -13,10 +14,11 @@ interface Props {
 function TournamentCard({
   tournament,
   actionUrl = "/login",
-  actionLabel = "Join Tournament",
+  actionLabel = "mainpage.hero.button",
   hideAction = false,
 }: Props) {
-  const isOpen = tournament.status === "Registration";
+  const { t } = useTranslation();
+  const statusKey = tournament.status.toLowerCase();
 
   const dates = useMemo(() => {
     const fmt = (d: string) =>
@@ -38,6 +40,8 @@ function TournamentCard({
     tournament.start_date,
   ]);
 
+  const statusTranslated = t(`mainpage.tournaments.status.${statusKey}`);
+
   return (
     <article className={styles.card}>
       <div className={styles.content}>
@@ -45,24 +49,30 @@ function TournamentCard({
         <p className={styles.description}>{tournament.description}</p>
 
         <div className={styles.info}>
-          <span className={`${styles.status} ${isOpen ? styles.statusOpen : ""}`}>
+          <span className={`${styles.status} ${styles[statusKey]}`}>
             <span className={styles.dot} aria-hidden="true" />
-            {tournament.status}
+            {statusTranslated}
           </span>
 
           <dl className={styles.dates}>
             {dates.regStart && (
               <div className={styles.dateRow}>
-                <dt className={styles.dateLabel}>Registration opens</dt>
+                <dt className={styles.dateLabel}>
+                  {t("mainpage.tournaments.dates.opens")}
+                </dt>
                 <dd className={styles.dateValue}>{dates.regStart}</dd>
               </div>
             )}
             <div className={styles.dateRow}>
-              <dt className={styles.dateLabel}>Registration closes</dt>
+              <dt className={styles.dateLabel}>
+                {t("mainpage.tournaments.dates.closes")}
+              </dt>
               <dd className={styles.dateValue}>{dates.regEnd}</dd>
             </div>
             <div className={styles.dateRow}>
-              <dt className={styles.dateLabel}>Tournament starts</dt>
+              <dt className={styles.dateLabel}>
+                {t("mainpage.tournaments.dates.starts")}
+              </dt>
               <dd className={styles.dateValue}>{dates.start}</dd>
             </div>
           </dl>
@@ -70,15 +80,15 @@ function TournamentCard({
       </div>
 
       {!hideAction &&
-        (isOpen ? (
+        (tournament.status === "Registration" ? (
           <Link to={actionUrl} className={styles.button}>
-            {actionLabel}
+            {t(actionLabel)}
           </Link>
         ) : (
           <span className={styles.closedBadge}>
             {tournament.status === "Running"
-              ? "Registration Closed"
-              : "Finished"}
+              ? t("mainpage.tournaments.registrationClosed")
+              : t("mainpage.tournaments.finished")}
           </span>
         ))}
     </article>

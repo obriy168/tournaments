@@ -54,16 +54,39 @@
   gap: 8px;
 }
 
-.statusOpen {
-  color: #15803d;
+.status.registration {
+  color: #16a34a;
+}
+.status.running {
+  color: #b45309;
+}
+.status.finished {
+  color: #6b7280;
+}
+.status.draft {
+  color: #a16207;
 }
 
 .dot {
   width: 8px;
   height: 8px;
-  background-color: #22c55e;
   border-radius: 50%;
+  background-color: #9e9e9e;
+}
+
+.status.registration .dot {
+  background-color: #16a34a;
   animation: pulse 2s infinite;
+}
+.status.running .dot {
+  background-color: #b45309;
+  animation: pulse 2s infinite;
+}
+.status.finished .dot {
+  background-color: #6b7280;
+}
+.status.draft .dot {
+  background-color: #a16207;
 }
 
 @keyframes pulse {
