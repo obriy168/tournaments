@@ -185,16 +185,6 @@
   margin-bottom: 4px;
 }
 
-.cellDesc {
-  font-size: 13px;
-  color: #666;
-  max-width: clamp(100px, 18vw - 10px, 300px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  margin-top: 2px;
-}
-
 .status {
   font-size: 12px;
   font-weight: 600;
@@ -203,6 +193,7 @@
   padding: 6px 12px;
   border-radius: 8px;
   display: inline-block;
+  white-space: nowrap;
 }
 
 .statusDraft {
