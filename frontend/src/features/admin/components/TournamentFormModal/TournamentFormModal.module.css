@@ -11,7 +11,7 @@
 
 .modal {
   background: #fff;
-  border: 2px solid black;
+  border: 2px solid #eee;
   border-radius: 24px;
   width: 100%;
   max-width: 640px;
@@ -25,7 +25,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 24px 32px;
+  padding: 22px 32px;
   border-bottom: 1px solid #eee;
 }
 
@@ -57,7 +57,7 @@
 }
 
 .form {
-  padding: 32px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
   gap: 20px;

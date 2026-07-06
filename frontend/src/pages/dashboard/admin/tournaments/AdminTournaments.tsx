@@ -7,6 +7,7 @@ import {
 import TournamentFormModal from "@/features/admin/components/TournamentFormModal/TournamentFormModal";
 import Pagination from "@/components/Pagination/Pagination";
 import type { Tournament } from "@/services/api";
+import { useTranslation } from "react-i18next";
 import styles from "./AdminTournaments.module.css";
 
 type FilterStatus = "All" | Tournament["status"];
@@ -15,7 +16,10 @@ export default function AdminTournaments() {
   const [filter, setFilter] = useState<FilterStatus>("All");
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingTournament, setEditingTournament] = useState<Tournament | null>(null);
+  const [editingTournament, setEditingTournament] = useState<Tournament | null>(
+    null,
+  );
+  const { t } = useTranslation();
 
   const statusFilter = filter === "All" ? undefined : filter;
 
@@ -32,22 +36,39 @@ export default function AdminTournaments() {
   const deleteMutation = useDeleteTournament();
   const statusMutation = useUpdateTournamentStatus();
 
-  const handleFilterChange = useCallback((f: FilterStatus) => {
-    setFilter(f);
-    setPage(1);
-  }, [setPage]);
+  const filterLabels: Record<FilterStatus, string> = {
+    All: t("mainpage.tournaments.filters.all"),
+    Draft: t("mainpage.tournaments.status.draft"),
+    Registration: t("mainpage.tournaments.status.registration"),
+    Running: t("mainpage.tournaments.status.running"),
+    Finished: t("mainpage.tournaments.status.finished"),
+  };
 
-  const handleDelete = useCallback((id: number) => {
-    if (!window.confirm("Are you sure you want to delete this tournament?")) return;
-    deleteMutation.mutate(id);
-  }, [deleteMutation]);
+  const handleFilterChange = useCallback(
+    (f: FilterStatus) => {
+      setFilter(f);
+      setPage(1);
+    },
+    [setPage],
+  );
 
-  const handleStatusChange = useCallback((id: number, status: Tournament["status"]) => {
-    statusMutation.mutate({ id, status });
-  }, [statusMutation]);
+  const handleDelete = useCallback(
+    (id: number) => {
+      if (!window.confirm(t("admin.tournaments.confirmDelete"))) return;
+      deleteMutation.mutate(id);
+    },
+    [deleteMutation, t],
+  );
 
-  const openEdit = useCallback((t: Tournament) => {
-    setEditingTournament(t);
+  const handleStatusChange = useCallback(
+    (id: number, status: Tournament["status"]) => {
+      statusMutation.mutate({ id, status });
+    },
+    [statusMutation],
+  );
+
+  const openEdit = useCallback((tournament: Tournament) => {
+    setEditingTournament(tournament);
     setModalOpen(true);
   }, []);
 
@@ -55,33 +76,28 @@ export default function AdminTournaments() {
     <div className={styles.container}>
       <header className={styles.header}>
         <div>
-          <h1 className={styles.title}>Tournaments</h1>
-          <p className={styles.subtitle}>Manage all platform tournaments</p>
+          <h1 className={styles.title}>{t("admin.tournaments.title")}</h1>
+          <p className={styles.subtitle}>{t("admin.tournaments.subtitle")}</p>
         </div>
-        <button className={styles.createBtn} onClick={() => setModalOpen(true)}>
-          + New Tournament
-        </button>
       </header>
 
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          {(["All", "Draft", "Registration", "Running", "Finished"] as FilterStatus[]).map(
-            (f) => (
-              <button
-                key={f}
-                className={`${styles.filterBtn} ${
-                  filter === f ? styles.filterBtnActive : ""
-                }`}
-                onClick={() => handleFilterChange(f)}
-              >
-                {f}
-              </button>
-            )
-          )}
+          {(Object.keys(filterLabels) as FilterStatus[]).map((f) => (
+            <button
+              key={f}
+              className={`${styles.filterBtn} ${
+                filter === f ? styles.filterBtnActive : ""
+              }`}
+              onClick={() => handleFilterChange(f)}
+            >
+              {filterLabels[f]}
+            </button>
+          ))}
         </div>
         <input
           type="text"
-          placeholder="Search tournaments..."
+          placeholder={t("admin.tournaments.filters.search")}
           className={styles.searchInput}
           value={search}
           onChange={(e) => {
@@ -89,74 +105,95 @@ export default function AdminTournaments() {
             setPage(1);
           }}
         />
+        <button className={styles.createBtn} onClick={() => setModalOpen(true)}>
+          + {t("admin.tournaments.create")}
+        </button>
       </div>
 
       {isLoading ? (
-        <div className={styles.loading}>Loading tournaments…</div>
+        <div className={styles.loading}>{t("admin.tournaments.loading")}</div>
       ) : tournaments.length === 0 ? (
-        <div className={styles.empty}>No tournaments found</div>
+        <div className={styles.empty}>{t("admin.tournaments.empty")}</div>
       ) : (
         <>
           <div className={styles.tableWrapper}>
             <table className={styles.table}>
               <thead>
                 <tr>
-                  <th>Name</th>
-                  <th>Status</th>
-                  <th>Registration</th>
-                  <th>Starts</th>
-                  <th>Teams</th>
-                  <th>Actions</th>
+                  <th>{t("admin.tournaments.table.name")}</th>
+                  <th>{t("admin.tournaments.table.status")}</th>
+                  <th>{t("admin.tournaments.table.registration")}</th>
+                  <th>{t("admin.tournaments.table.starts")}</th>
+                  <th>{t("admin.tournaments.table.teams")}</th>
+                  <th>{t("admin.tournaments.table.actions")}</th>
                 </tr>
               </thead>
               <tbody>
-                {tournaments.map((t) => (
-                  <tr key={t.id}>
+                {tournaments.map((tournament) => (
+                  <tr key={tournament.id}>
                     <td>
-                      <div className={styles.cellName}>{t.name}</div>
-                      <div className={styles.cellDesc}>{t.description}</div>
+                      <div className={styles.cellName}>{tournament.name}</div>
                     </td>
                     <td>
-                      <span className={`${styles.status} ${styles[`status${t.status}`]}`}>
-                        {t.status}
+                      <span
+                        className={`${styles.status} ${styles[`status${tournament.status}`]}`}
+                      >
+                        {t(
+                          `mainpage.tournaments.status.${tournament.status.toLowerCase()}`,
+                        )}
                       </span>
                     </td>
                     <td>
-                      {t.registration_start_date
-                        ? `${new Date(t.registration_start_date).toLocaleDateString()} — `
+                      {tournament.registration_start_date
+                        ? `${new Date(tournament.registration_start_date).toLocaleDateString()} - `
                         : null}
-                      {new Date(t.registration_end_date).toLocaleDateString()}
+                      {new Date(
+                        tournament.registration_end_date,
+                      ).toLocaleDateString()}
                     </td>
-                    <td>{new Date(t.start_date).toLocaleDateString()}</td>
-                    <td>{t.max_teams}</td>
+                    <td>
+                      {new Date(tournament.start_date).toLocaleDateString()}
+                    </td>
+                    <td>{tournament.max_teams}</td>
                     <td>
                       <div className={styles.actions}>
                         <button
                           className={styles.actionBtn}
-                          onClick={() => openEdit(t)}
-                          title="Edit"
+                          onClick={() => openEdit(tournament)}
+                          title={t("admin.tournaments.actions.edit")}
                         >
-                          Edit
+                          {t("admin.tournaments.actions.edit")}
                         </button>
                         <select
                           className={styles.statusSelect}
-                          value={t.status}
+                          value={tournament.status}
                           onChange={(e) =>
-                            handleStatusChange(t.id, e.target.value as Tournament["status"])
+                            handleStatusChange(
+                              tournament.id,
+                              e.target.value as Tournament["status"],
+                            )
                           }
-                          title="Change status"
+                          title={t("admin.tournaments.actions.changeStatus")}
                         >
-                          <option value="Draft">Draft</option>
-                          <option value="Registration">Registration</option>
-                          <option value="Running">Running</option>
-                          <option value="Finished">Finished</option>
+                          <option value="Draft">
+                            {t("mainpage.tournaments.status.draft")}
+                          </option>
+                          <option value="Registration">
+                            {t("mainpage.tournaments.status.registration")}
+                          </option>
+                          <option value="Running">
+                            {t("mainpage.tournaments.status.running")}
+                          </option>
+                          <option value="Finished">
+                            {t("mainpage.tournaments.status.finished")}
+                          </option>
                         </select>
                         <button
                           className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
-                          onClick={() => handleDelete(t.id)}
-                          title="Delete"
+                          onClick={() => handleDelete(tournament.id)}
+                          title={t("admin.tournaments.actions.delete")}
                         >
-                          Delete
+                          {t("admin.tournaments.actions.delete")}
                         </button>
                       </div>
                     </td>

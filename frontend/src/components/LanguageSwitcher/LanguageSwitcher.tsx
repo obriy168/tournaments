@@ -4,8 +4,9 @@ import styles from "./LanguageSwitcher.module.css";
 
 const LANGUAGES = [
   { code: "en", label: "EN" },
-  { code: "ru", label: "RU" },
   { code: "pl", label: "PL" },
+  { code: "ru", label: "RU" },
+  { code: "uk", label: "UA" },
 ] as const;
 
 export function LanguageSwitcher() {
@@ -16,7 +17,6 @@ export function LanguageSwitcher() {
   const currentLanguage =
     LANGUAGES.find((l) => l.code === i18n.language)?.label || "EN";
 
-  // Закрытие при клике вне компонента
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -29,7 +29,8 @@ export function LanguageSwitcher() {
 
     if (open) {
       document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
+      return () =>
+        document.removeEventListener("mousedown", handleClickOutside);
     }
   }, [open]);
 

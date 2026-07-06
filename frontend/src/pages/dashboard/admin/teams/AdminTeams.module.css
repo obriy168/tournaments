@@ -5,7 +5,7 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
   margin-bottom: 32px;
   gap: 16px;
   flex-wrap: wrap;
@@ -49,7 +49,7 @@
 
 .tableWrapper {
   background: #ffffff;
-  border: 2px solid black;
+  border: 2px solid #eee;
   border-radius: 24px;
   padding: 24px;
   overflow-x: auto;
